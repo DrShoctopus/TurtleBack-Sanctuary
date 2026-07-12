@@ -19,6 +19,7 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - 2026-07-12 — Landscape foundation: shell terrain now blends multi-scale, rotated surface samples with broad habitat variation, irregular path/rock borders, subtle physical normals, and material-specific rain darkening.
 - 2026-07-12 — Vegetation foundation: deterministic habitat fields form meadows, clearings, and thickets; shared grass tufts, clustered shrubs, branching broadleaf crowns, and denser pine whorls replace the most obvious isolated primitives while retaining instanced draw calls.
 - 2026-07-12 — Weather polish: rain streaks use softer non-additive blending and small terrain-following deterministic ripples instead of bright metre-wide rings.
+- 2026-07-12 — Aurora rebuild: ten repeated billboard curtains were replaced by one continuous direction-space spherical veil with layered flowing arcs, high/medium/low detail scaling, near-static Reduced Motion behavior, subtle sky color spill, and decisive overcast suppression.
 
 ## Phase 1 — Art bible and benchmark views
 

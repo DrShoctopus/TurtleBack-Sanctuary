@@ -50,7 +50,7 @@ export function SkyDome() {
     uniforms.uAurora.value =
       c.nightFactor *
       c.nightFactor *
-      (1 - runtime.weather.rain * 0.92) *
+      Math.max(0, 1 - runtime.weather.rain * 1.45) *
       (runtime.quality.level === 'low' ? 0.78 : 1.35)
     uniforms.uMotion.value = runtime.reducedMotion ? 0.16 : 1
   })
@@ -129,27 +129,18 @@ void main() {
   vec3 moonCol = vec3(0.82, 0.88, 0.98);
   col += (moonCol * mdisc * 1.6 + moonCol * mhalo) * uMoonPhase;
 
-  // A broad, translucent aurora curtain in the northern sky. It is deliberately
-  // low-frequency and slow so it reads as a breathing atmosphere, not an effect.
+  // Very low-energy auroral color spill behind the dedicated continuous veil.
+  // Keeping this diffuse prevents the sky behind the ribbons from reading black.
   float north = 0.5 + 0.5 * smoothstep(-0.75, 0.3, dir.z);
-  float auroraHeight = smoothstep(0.08, 0.2, dir.y) * (1.0 - smoothstep(0.82, 0.98, dir.y));
+  float auroraHeight = smoothstep(0.08, 0.22, dir.y) * (1.0 - smoothstep(0.78, 0.96, dir.y));
   float azimuth = atan(dir.x, max(0.02, dir.z));
-  float drift = uTime * 0.018 * uMotion;
-  float broadNoise = noise21(vec2(azimuth * 1.2 + drift, dir.y * 3.1 - drift * 0.4));
-  float foldA = sin(azimuth * 7.0 + broadNoise * 3.2 + drift * 2.0);
-  float foldB = sin(azimuth * 11.0 - dir.y * 5.0 - drift * 1.4);
-  float curtain = pow(clamp(0.5 + 0.32 * foldA + 0.18 * foldB, 0.0, 1.0), 2.4);
-  curtain *= 0.55 + 0.45 * noise21(vec2(azimuth * 3.0 - drift, dir.y * 7.0));
-  float lowerVeil = exp(-pow((dir.y - 0.28 - foldA * 0.035) * 7.5, 2.0));
-  float upperVeil = exp(-pow((dir.y - 0.53 - foldB * 0.028) * 9.0, 2.0));
-  float auroraAlpha = (curtain * 0.62 + lowerVeil * 0.82 + upperVeil * 0.44) * north * auroraHeight * uAurora;
-  float flowingBand = (0.5 + 0.5 * sin(azimuth * 5.5 + broadNoise * 2.4 + drift)) *
-                      smoothstep(0.05, 0.18, dir.y) * (1.0 - smoothstep(0.7, 0.92, dir.y));
-  auroraAlpha = max(auroraAlpha, flowingBand * north * uAurora * 0.34);
+  float drift = uTime * 0.006 * uMotion;
+  float broadNoise = noise21(vec2(azimuth * 0.8 + drift, dir.y * 2.6 - drift * 0.2));
+  float auroraAlpha = (0.28 + broadNoise * 0.38) * north * auroraHeight * uAurora;
   vec3 auroraGreen = vec3(0.18, 0.92, 0.67);
   vec3 auroraViolet = vec3(0.45, 0.32, 0.92);
-  vec3 auroraColor = mix(auroraGreen, auroraViolet, smoothstep(0.42, 0.78, dir.y) + broadNoise * 0.12);
-  col += auroraColor * (auroraAlpha * 1.08 + auroraHeight * uAurora * 0.075);
+  vec3 auroraColor = mix(auroraGreen, auroraViolet, smoothstep(0.4, 0.78, dir.y));
+  col += auroraColor * auroraAlpha * 0.075;
 
   // rain mutes and cools everything
   float g = dot(col, vec3(0.299, 0.587, 0.114));

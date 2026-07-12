@@ -1,141 +1,153 @@
-import { useMemo, useRef } from 'react'
+import { useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
-import {
-  AdditiveBlending,
-  CanvasTexture,
-  Color,
-  DoubleSide,
-  Group,
-  LinearFilter,
-  MeshBasicMaterial,
-  PlaneGeometry,
-  RepeatWrapping,
-} from 'three'
+import { AdditiveBlending, BackSide, Color, ShaderMaterial, SphereGeometry } from 'three'
 import { runtime } from '../../core/runtime'
 
-const CURTAINS = 10
+const AURORA_RADIUS = 1420
 
 /**
- * Layered translucent aurora ribbons. The strips surround the sanctuary so a
- * slow curtain is visible from every district, while their low-frequency sway
- * remains gentle enough for the comfort-focused camera.
+ * A continuous spherical aurora veil. All folds are evaluated in sky direction
+ * space, so there are no billboard edges or repeated curtain panels as the
+ * player turns around the sanctuary.
  */
 export function Aurora() {
-  const groupRef = useRef<Group>(null)
-  const geometry = useMemo(() => buildCurtainGeometry(), [])
-  const texture = useMemo(() => buildAuroraTexture(), [])
-  const materials = useMemo(
+  const geometry = useMemo(() => new SphereGeometry(AURORA_RADIUS, 48, 32), [])
+  const material = useMemo(
     () =>
-      Array.from(
-        { length: CURTAINS },
-        (_, i) =>
-          new MeshBasicMaterial({
-            color: new Color().setHSL(0.46 + (i % 3) * 0.025, 0.5, 0.78),
-            map: texture,
-            transparent: true,
-            opacity: 0,
-            depthWrite: false,
-            depthTest: true,
-            side: DoubleSide,
-            blending: AdditiveBlending,
-            toneMapped: false,
-          }),
-      ),
-    [texture],
+      new ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        side: BackSide,
+        blending: AdditiveBlending,
+        toneMapped: false,
+        fog: false,
+        uniforms: {
+          uTime: { value: 0 },
+          uStrength: { value: 0 },
+          uMotion: { value: 1 },
+          uDetail: { value: 2 },
+          uGreen: { value: new Color('#42e8ae') },
+          uCyan: { value: new Color('#60d7dc') },
+          uViolet: { value: new Color('#a477e8') },
+        },
+        vertexShader: AURORA_VERT,
+        fragmentShader: AURORA_FRAG,
+      }),
+    [],
   )
 
   useFrame((state) => {
-    const group = groupRef.current
-    if (!group) return
     const night = runtime.time.celest.starIntensity
-    const strength =
+    material.uniforms.uTime.value = state.clock.elapsedTime
+    material.uniforms.uMotion.value = runtime.reducedMotion ? 0.08 : 1
+    material.uniforms.uDetail.value =
+      runtime.quality.level === 'low' ? 0 : runtime.quality.level === 'medium' ? 1 : 2
+    material.uniforms.uStrength.value =
       night *
       night *
-      (1 - runtime.weather.rain * 0.95) *
-      (runtime.quality.level === 'low' ? 0.52 : 1)
-    const motion = runtime.reducedMotion ? 0.12 : 1
-    const t = state.clock.elapsedTime
-    group.rotation.y = t * 0.0025 * motion
-    texture.offset.x = (t * 0.0018 * motion) % 1
-    group.children.forEach((child, i) => {
-      materials[i].opacity = strength * (0.24 + (i % 3) * 0.035)
-      child.position.y = 250 + Math.sin(t * 0.045 * motion + i * 1.7) * 18
-      child.scale.y = 0.92 + Math.sin(t * 0.055 * motion + i) * 0.08
-    })
+      Math.max(0, 1 - runtime.weather.rain * 1.45) *
+      (runtime.quality.level === 'low' ? 0.4 : runtime.quality.level === 'medium' ? 0.58 : 0.72)
   })
 
-  return (
-    <group ref={groupRef} renderOrder={-97}>
-      {materials.map((material, i) => {
-        const angle = (i / CURTAINS) * Math.PI * 2
-        const radius = 720 + (i % 2) * 55
-        return (
-          <mesh
-            key={i}
-            geometry={geometry}
-            material={material}
-            position={[Math.sin(angle) * radius, 250, Math.cos(angle) * radius]}
-            rotation={[0, angle, (i % 2 ? -1 : 1) * 0.055]}
-            frustumCulled={false}
-            renderOrder={-97}
-          />
-        )
-      })}
-    </group>
-  )
+  return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={-97} />
 }
 
-function buildCurtainGeometry(): PlaneGeometry {
-  const geometry = new PlaneGeometry(430, 300, 36, 10)
-  const positions = geometry.getAttribute('position')
-  for (let i = 0; i < positions.count; i++) {
-    const x = positions.getX(i)
-    const y = positions.getY(i)
-    const vertical = (y + 150) / 300
-    positions.setX(i, x + Math.sin(x * 0.025 + vertical * 3.4) * (12 + vertical * 18))
-    positions.setZ(i, Math.sin(x * 0.031 + vertical * 5.2) * 22 + Math.sin(x * 0.011) * 14)
+const AURORA_VERT = /* glsl */ `
+varying vec3 vDir;
+
+void main() {
+  vDir = normalize(position);
+  vec4 pos = modelMatrix * vec4(position, 1.0);
+  gl_Position = projectionMatrix * viewMatrix * pos;
+}
+`
+
+const AURORA_FRAG = /* glsl */ `
+varying vec3 vDir;
+uniform float uTime;
+uniform float uStrength;
+uniform float uMotion;
+uniform float uDetail;
+uniform vec3 uGreen;
+uniform vec3 uCyan;
+uniform vec3 uViolet;
+
+float hash21(vec2 p) {
+  p = fract(p * vec2(123.34, 345.45));
+  p += dot(p, p + 34.345);
+  return fract(p.x * p.y);
+}
+
+float noise21(vec2 p) {
+  vec2 i = floor(p);
+  vec2 f = fract(p);
+  f = f * f * (3.0 - 2.0 * f);
+  return mix(
+    mix(hash21(i), hash21(i + vec2(1.0, 0.0)), f.x),
+    mix(hash21(i + vec2(0.0, 1.0)), hash21(i + 1.0), f.x),
+    f.y
+  );
+}
+
+float fbm(vec2 p) {
+  float value = noise21(p) * 0.56;
+  if (uDetail > 0.5) {
+    p = mat2(1.62, 1.18, -1.18, 1.62) * p;
+    value += noise21(p) * 0.27;
   }
-  positions.needsUpdate = true
-  geometry.computeVertexNormals()
-  return geometry
-}
-
-function buildAuroraTexture(): CanvasTexture {
-  const canvas = document.createElement('canvas')
-  canvas.width = 512
-  canvas.height = 256
-  const ctx = canvas.getContext('2d')!
-  const image = ctx.createImageData(canvas.width, canvas.height)
-  for (let y = 0; y < canvas.height; y++) {
-    const v = y / (canvas.height - 1)
-    for (let x = 0; x < canvas.width; x++) {
-      const u = x / (canvas.width - 1)
-      const wave = Math.sin(u * Math.PI * 8) * 0.035 + Math.sin(u * Math.PI * 19) * 0.014
-      const center = 0.43 + wave
-      const lower = Math.exp(-Math.pow((v - center) * 7.2, 2))
-      const upper = Math.exp(-Math.pow((v - center - 0.2) * 10.5, 2))
-      const threads = 0.35 + 0.65 * Math.pow(Math.abs(Math.sin(u * Math.PI * 27)), 1.5)
-      const edge = Math.pow(Math.sin(u * Math.PI), 0.42)
-      const verticalFade = smooth01(v / 0.1) * smooth01((1 - v) / 0.14)
-      const alpha = Math.min(1, (lower * 0.74 + upper * 0.36) * threads * edge * verticalFade)
-      const violet = smooth01((v - 0.48) / 0.32)
-      const i = (y * canvas.width + x) * 4
-      image.data[i] = Math.round(55 + violet * 75)
-      image.data[i + 1] = Math.round(225 - violet * 95)
-      image.data[i + 2] = Math.round(165 + violet * 80)
-      image.data[i + 3] = Math.round(alpha * 255)
-    }
+  if (uDetail > 1.5) {
+    p = mat2(1.7, 1.12, -1.12, 1.7) * p;
+    value += noise21(p) * 0.13;
   }
-  ctx.putImageData(image, 0, 0)
-  const texture = new CanvasTexture(canvas)
-  texture.wrapS = RepeatWrapping
-  texture.minFilter = LinearFilter
-  texture.magFilter = LinearFilter
-  texture.needsUpdate = true
-  return texture
+  return value;
 }
 
-function smooth01(value: number): number {
-  const x = Math.min(1, Math.max(0, value))
-  return x * x * (3 - 2 * x)
+float ribbon(float y, float centre, float width) {
+  float d = (y - centre) / width;
+  return exp(-d * d);
 }
+
+void main() {
+  vec3 dir = normalize(vDir);
+  if (dir.y < 0.035 || uStrength < 0.002) discard;
+
+  float azimuth = atan(dir.x, dir.z);
+  float drift = uTime * 0.012 * uMotion;
+  float north = smoothstep(-0.88, 0.34, dir.z);
+  float horizon = smoothstep(0.055, 0.17, dir.y);
+  float zenith = 1.0 - smoothstep(0.78, 0.98, dir.y);
+
+  float broad = fbm(vec2(azimuth * 0.72 + drift * 0.42, dir.y * 2.4 - drift * 0.16));
+  float folds = fbm(vec2(azimuth * 2.65 - drift * 0.6, dir.y * 6.2 + drift * 0.2));
+  float fine = noise21(vec2(azimuth * 7.8 + drift, dir.y * 12.0 - drift * 0.35));
+
+  // Three independently travelling arcs create depth without duplicating mesh
+  // layers. Their centres warp slowly across azimuth and never meet at a seam.
+  float centreA = 0.23 + sin(azimuth * 1.7 + drift + broad * 2.1) * 0.07;
+  float centreB = 0.42 + sin(azimuth * 1.16 - drift * 0.72 + folds * 1.7) * 0.085;
+  float centreC = 0.61 + sin(azimuth * 0.82 + drift * 0.4 + broad * 1.3) * 0.07;
+  float bandA = ribbon(dir.y, centreA, 0.058);
+  float bandB = ribbon(dir.y, centreB, 0.072);
+  float bandC = ribbon(dir.y, centreC, 0.086);
+
+  float verticalFolds = pow(clamp(0.3 + folds * 0.58 + fine * 0.18, 0.0, 1.0), 2.75);
+  float strands = 0.48 + 0.52 * pow(0.5 + 0.5 * sin(azimuth * 19.0 + broad * 7.0 + drift * 1.4), 2.0);
+  float veil = (bandA * 0.88 + bandB * 0.68 + bandC * 0.52) * verticalFolds;
+  veil *= mix(0.62, 1.0, strands);
+
+  // Broader translucent emission integrates the ribbons with surrounding sky.
+  float haze = ribbon(dir.y, 0.39 + (broad - 0.5) * 0.12, 0.3) * (0.22 + broad * 0.18);
+  float alpha = (veil + haze * 0.045) * north * horizon * zenith * uStrength;
+  alpha *= smoothstep(-2.8, -1.55, azimuth) * (1.0 - smoothstep(2.45, 3.05, azimuth));
+
+  float heightMix = smoothstep(0.28, 0.72, dir.y + (broad - 0.5) * 0.12);
+  vec3 lowColor = mix(uGreen, uCyan, folds * 0.42);
+  vec3 highColor = mix(uCyan, uViolet, 0.38 + fine * 0.42);
+  vec3 color = mix(lowColor, highColor, heightMix);
+  color *= 0.58 + fine * 0.22;
+
+  gl_FragColor = vec4(color, clamp(alpha * 0.38, 0.0, 0.34));
+  #include <colorspace_fragment>
+}
+`
