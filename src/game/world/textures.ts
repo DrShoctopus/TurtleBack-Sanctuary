@@ -10,7 +10,7 @@ const cache = new Map<string, CanvasTexture>()
 const surfaceCache = new Map<string, { normalMap: CanvasTexture; roughnessMap: CanvasTexture }>()
 
 export type SurfaceDetailName =
-  'plaster' | 'woodFine' | 'woodPlanks' | 'concrete' | 'fabric' | 'brushedMetal'
+  'plaster' | 'woodFine' | 'woodPlanks' | 'concrete' | 'fabric' | 'brushedMetal' | 'ground'
 
 function makeCanvas(size: number): { c: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const c = document.createElement('canvas')
@@ -131,6 +131,13 @@ const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
     normalStrength: 1.8,
     roughness: 0.42,
     roughnessVariance: 0.2,
+  },
+  ground: {
+    seed: 2012,
+    kind: 'mineral',
+    normalStrength: 3.4,
+    roughness: 0.92,
+    roughnessVariance: 0.1,
   },
 }
 

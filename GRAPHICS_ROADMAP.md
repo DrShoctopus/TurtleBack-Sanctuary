@@ -16,6 +16,9 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - 2026-07-12 — Shared architecture foundation: village box parts now use physically sized rounded geometry while collision remains simple; UVs tile in world-scale metres instead of stretching across long walls.
 - 2026-07-12 — Shared PBR foundation: deterministic tileable normal and roughness detail now covers plaster, timber, decking, concrete, fabric, painted finishes, and brushed metal.
 - 2026-07-12 — Visual smoke review: noon and deep-night renders completed without broken merged geometry, shader failures, or browser console errors. This is the material/geometry baseline; it does not close the terrain, foliage, hero-asset, or composition phases below.
+- 2026-07-12 — Landscape foundation: shell terrain now blends multi-scale, rotated surface samples with broad habitat variation, irregular path/rock borders, subtle physical normals, and material-specific rain darkening.
+- 2026-07-12 — Vegetation foundation: deterministic habitat fields form meadows, clearings, and thickets; shared grass tufts, clustered shrubs, branching broadleaf crowns, and denser pine whorls replace the most obvious isolated primitives while retaining instanced draw calls.
+- 2026-07-12 — Weather polish: rain streaks use softer non-additive blending and small terrain-following deterministic ripples instead of bright metre-wide rings.
 
 ## Phase 1 — Art bible and benchmark views
 

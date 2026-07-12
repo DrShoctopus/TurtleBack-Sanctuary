@@ -62,6 +62,14 @@ function scatter(
   return out
 }
 
+/** Broad deterministic habitat fields create meadows, clearings and thickets. */
+function habitatDensity(x: number, z: number): number {
+  const broad = Math.sin(x * 0.047 + z * 0.021) * 0.28
+  const cross = Math.sin(z * 0.064 - x * 0.033 + 1.7) * 0.22
+  const pockets = Math.sin(Math.hypot(x + 22, z - 35) * 0.075) * 0.16
+  return Math.min(1, Math.max(0, 0.52 + broad + cross + pockets))
+}
+
 let windUniform: { value: number } | null = null
 
 function makeSwayMaterial(base: MeshStandardMaterial, strength: number): MeshStandardMaterial {
@@ -163,26 +171,17 @@ function Instanced({ set }: { set: InstSet }) {
 }
 
 function buildVegetation(rng: Rng, density: number) {
-  // grass: three crossed blades with a dark→light vertical gradient (baked into
-  // vertex colors) so tips catch light and clumps read soft rather than flat.
+  // Grass is a compact seven-blade tuft. Instancing several blades together
+  // makes the meadow feel continuous without increasing draw calls.
   const grassGeo = (() => {
-    const blade = () => makeTaperedBlade()
-    const p1 = blade()
-    const p2 = blade()
-    p2.rotateY(Math.PI / 3)
-    const p3 = blade()
-    p3.rotateY((Math.PI * 2) / 3)
-    const merged = mergeGeometries([p1, p2, p3], false)!
-    p1.dispose()
-    p2.dispose()
-    p3.dispose()
+    const merged = makeGrassTuft()
     // vertex-color gradient: darker near root, brighter at tip
     const posAttr = merged.getAttribute('position')
     const cols = new Float32Array(posAttr.count * 3)
     for (let i = 0; i < posAttr.count; i++) {
       const y = posAttr.getY(i)
-      const t = Math.min(1, y / 0.28)
-      const shade = 0.72 + t * 0.5
+      const t = Math.min(1, y / 0.42)
+      const shade = 0.68 + t * 0.48
       cols[i * 3] = shade
       cols[i * 3 + 1] = shade
       cols[i * 3 + 2] = shade
@@ -200,9 +199,10 @@ function buildVegetation(rng: Rng, density: number) {
     }),
     0.05,
   )
-  const grassSpots = scatter(rng, Math.floor(7000 * density), (x, z) => {
+  const grassSpots = scatter(rng, Math.floor(8200 * density), (x, z) => {
     if (!clearOfStructures(x, z, 1.6)) return false
-    return splatWeights(x, z).grass > 0.35 + rng() * 0.3
+    const habitat = habitatDensity(x, z)
+    return splatWeights(x, z).grass > 0.3 + rng() * 0.3 && rng() < 0.24 + habitat * 0.9
   })
   const grass: InstSet = {
     geometry: grassGeo,
@@ -211,14 +211,14 @@ function buildVegetation(rng: Rng, density: number) {
       x,
       y: terrainHeight(x, z) - 0.02,
       z,
-      s: 0.7 + rng() * 0.8,
+      s: 0.66 + rng() * 0.62,
       ry: rng() * Math.PI,
     })),
     colors: [
-      new Color('#9cbf6f'),
-      new Color('#a8c97b'),
-      new Color('#8fb266'),
-      new Color('#b6d488'),
+      new Color('#799e57'),
+      new Color('#89ad62'),
+      new Color('#6e914f'),
+      new Color('#9ab86d'),
     ],
   }
 
@@ -237,7 +237,11 @@ function buildVegetation(rng: Rng, density: number) {
   const flowerSpots = scatter(rng, Math.floor(1400 * density), (x, z) => {
     if (!clearOfStructures(x, z, 1.8)) return false
     const gardenPull = Math.hypot(x + 58, z - 74) < 45 ? 0.25 : 0.62
-    return splatWeights(x, z).grass > 0.3 && rng() > gardenPull
+    return (
+      splatWeights(x, z).grass > 0.3 &&
+      rng() > gardenPull &&
+      rng() < 0.36 + habitatDensity(x, z) * 0.72
+    )
   })
   const flowers: InstSet = {
     geometry: flowerGeo,
@@ -258,11 +262,15 @@ function buildVegetation(rng: Rng, density: number) {
     ],
   }
 
-  // bushes — rounder (detail 2), softer greens, kept to shrub scale
-  const bushGeo = new IcosahedronGeometry(0.5, 2)
+  // Bushes use overlapping lobes instead of isolated geometric balls.
+  const bushGeo = makeBushCluster()
   const bushMat = new MeshStandardMaterial({ color: '#ffffff', roughness: 1 })
   const bushSpots = scatter(rng, Math.floor(300 * density), (x, z) => {
-    return clearOfStructures(x, z, 2.4) && splatWeights(x, z).grass > 0.4
+    return (
+      clearOfStructures(x, z, 2.4) &&
+      splatWeights(x, z).grass > 0.4 &&
+      rng() < 0.18 + habitatDensity(x, z) * 0.88
+    )
   })
   const bushes: InstSet = {
     geometry: bushGeo,
@@ -307,7 +315,7 @@ function buildVegetation(rng: Rng, density: number) {
   const treeSpots = scatter(rng, Math.floor(150 * Math.max(0.55, density)), (x, z) => {
     if (!clearOfStructures(x, z, 3.4)) return false
     const w = splatWeights(x, z)
-    return w.grass > 0.25 && w.rock < 0.4
+    return w.grass > 0.25 && w.rock < 0.4 && rng() < 0.12 + habitatDensity(x, z)
   })
   const trees = treeSpots.map(([x, z]) => ({
     x,
@@ -321,19 +329,77 @@ function buildVegetation(rng: Rng, density: number) {
   return { grass, flowers, bushes, rocks, trees }
 }
 
+function makeGrassTuft(): BufferGeometry {
+  const specs = [
+    { angle: 0.15, radius: 0.02, height: 0.39, width: 0.052, bend: 0.035 },
+    { angle: 0.98, radius: 0.12, height: 0.31, width: 0.046, bend: -0.045 },
+    { angle: 1.92, radius: 0.09, height: 0.35, width: 0.05, bend: 0.055 },
+    { angle: 2.8, radius: 0.14, height: 0.27, width: 0.043, bend: -0.03 },
+    { angle: 3.72, radius: 0.1, height: 0.33, width: 0.048, bend: 0.04 },
+    { angle: 4.65, radius: 0.13, height: 0.29, width: 0.044, bend: -0.052 },
+    { angle: 5.58, radius: 0.07, height: 0.37, width: 0.05, bend: 0.025 },
+  ]
+  const blades = specs.map((spec) => {
+    const blade = makeTaperedBlade(spec.height, spec.width, spec.bend)
+    blade.rotateY(spec.angle)
+    blade.translate(Math.cos(spec.angle) * spec.radius, 0, Math.sin(spec.angle) * spec.radius)
+    return blade
+  })
+  const merged = mergeGeometries(blades, false)!
+  for (const blade of blades) blade.dispose()
+  return merged
+}
+
 /** A five-point blade silhouette, wide at the root and tapered to a soft tip. */
-function makeTaperedBlade(): BufferGeometry {
+function makeTaperedBlade(height: number, width: number, bend: number): BufferGeometry {
   const g = new BufferGeometry()
+  const shoulder = height * 0.58
   g.setAttribute(
     'position',
     new BufferAttribute(
-      new Float32Array([-0.055, 0, 0, 0.055, 0, 0, 0.034, 0.2, 0, 0, 0.34, 0, -0.034, 0.2, 0]),
+      new Float32Array([
+        -width,
+        0,
+        0,
+        width,
+        0,
+        0,
+        width * 0.62 + bend * 0.32,
+        shoulder,
+        0,
+        bend,
+        height,
+        0,
+        -width * 0.62 + bend * 0.32,
+        shoulder,
+        0,
+      ]),
       3,
     ),
   )
   g.setIndex([0, 1, 2, 0, 2, 4, 4, 2, 3])
   g.computeVertexNormals()
   return g
+}
+
+function makeBushCluster(): BufferGeometry {
+  const specs = [
+    [0, 0.34, 0, 1, 0.8, 0.95],
+    [0.36, 0.28, 0.08, 0.7, 0.62, 0.74],
+    [-0.34, 0.26, -0.04, 0.74, 0.58, 0.7],
+    [0.08, 0.32, 0.34, 0.66, 0.62, 0.7],
+    [-0.08, 0.29, -0.31, 0.62, 0.56, 0.68],
+  ] as const
+  const lobes = specs.map(([x, y, z, sx, sy, sz]) => {
+    const lobe = new IcosahedronGeometry(0.52, 1)
+    lobe.scale(sx, sy, sz)
+    lobe.translate(x, y, z)
+    return lobe
+  })
+  const merged = mergeGeometries(lobes, false)!
+  for (const lobe of lobes) lobe.dispose()
+  merged.computeVertexNormals()
+  return merged
 }
 
 /** Crossed low-poly flower with a narrow green stem and distinct petals. */
@@ -382,29 +448,53 @@ function Trees({
   trees: Array<{ x: number; y: number; z: number; kind: number; s: number; ry: number }>
 }) {
   const { geos, mats } = useMemo(() => {
-    // kind 0: broadleaf — trunk + 3 canopy blobs
+    // kind 0: broadleaf — branching trunk and an asymmetric crown
     const trunk = new CylinderGeometry(0.09, 0.16, 1.6, 7)
     trunk.translate(0, 0.8, 0)
-    const blob = new IcosahedronGeometry(0.9, 1)
+    const branchA = new CylinderGeometry(0.045, 0.075, 0.9, 6)
+    branchA.rotateZ(-0.55)
+    branchA.translate(0.23, 1.38, 0)
+    const branchB = new CylinderGeometry(0.04, 0.07, 0.78, 6)
+    branchB.rotateZ(0.62)
+    branchB.rotateY(1.2)
+    branchB.translate(-0.2, 1.42, 0.12)
+    const broadTrunk = mergeGeometries([trunk, branchA, branchB], false)!
+    const blob = new IcosahedronGeometry(0.82, 2)
     const c1 = blob.clone()
-    c1.translate(0, 2.1, 0)
+    c1.scale(1.05, 0.88, 1)
+    c1.translate(0, 2.12, 0)
     const c2 = blob.clone()
-    c2.scale(0.75, 0.7, 0.75)
-    c2.translate(0.55, 1.75, 0.2)
+    c2.scale(0.78, 0.68, 0.78)
+    c2.translate(0.62, 1.92, 0.16)
     const c3 = blob.clone()
-    c3.scale(0.65, 0.6, 0.65)
-    c3.translate(-0.5, 1.85, -0.25)
-    const broadCanopy = mergeGeometries([c1, c2, c3], false)!
-    // kind 1: coastal pine — trunk + stacked cones
+    c3.scale(0.72, 0.64, 0.76)
+    c3.translate(-0.58, 1.95, -0.22)
+    const c4 = blob.clone()
+    c4.scale(0.65, 0.58, 0.68)
+    c4.translate(0.15, 2.48, 0.1)
+    const c5 = blob.clone()
+    c5.scale(0.62, 0.54, 0.64)
+    c5.translate(-0.08, 1.88, 0.58)
+    const c6 = blob.clone()
+    c6.scale(0.58, 0.52, 0.62)
+    c6.translate(0.24, 1.86, -0.56)
+    const broadCanopy = mergeGeometries([c1, c2, c3, c4, c5, c6], false)!
+    // kind 1: coastal pine — overlapping tapered whorls
     const pTrunk = new CylinderGeometry(0.07, 0.13, 2.0, 7)
     pTrunk.translate(0, 1, 0)
     const cone = (r: number, h: number, y: number) => {
-      const c = new CylinderGeometry(0.03, r, h, 8)
+      const c = new CylinderGeometry(0.025, r, h, 12)
       c.translate(0, y, 0)
       return c
     }
     const pineCanopy = mergeGeometries(
-      [cone(0.85, 1.1, 2.0), cone(0.62, 0.9, 2.7), cone(0.4, 0.7, 3.3)],
+      [
+        cone(0.92, 0.92, 1.72),
+        cone(0.8, 0.9, 2.18),
+        cone(0.66, 0.82, 2.62),
+        cone(0.5, 0.72, 3.02),
+        cone(0.32, 0.58, 3.36),
+      ],
       false,
     )!
     // kind 2: dracaena-ish — slim trunk + tufts
@@ -420,12 +510,12 @@ function Trees({
     const dracCanopy = mergeGeometries([t1, t2], false)!
 
     const trunkMat = new MeshStandardMaterial({ color: '#6a4e38', roughness: 0.95 })
-    const leafMat = new MeshStandardMaterial({ color: '#55793f', roughness: 1, flatShading: true })
-    const pineMat = new MeshStandardMaterial({ color: '#3f6247', roughness: 1, flatShading: true })
-    const dracMat = new MeshStandardMaterial({ color: '#5d8a5a', roughness: 1, flatShading: true })
+    const leafMat = new MeshStandardMaterial({ color: '#567d42', roughness: 0.96 })
+    const pineMat = new MeshStandardMaterial({ color: '#3f6949', roughness: 0.98 })
+    const dracMat = new MeshStandardMaterial({ color: '#628e59', roughness: 0.96 })
     return {
       geos: [
-        { trunk, canopy: broadCanopy },
+        { trunk: broadTrunk, canopy: broadCanopy },
         { trunk: pTrunk, canopy: pineCanopy },
         { trunk: dTrunk, canopy: dracCanopy },
       ],
