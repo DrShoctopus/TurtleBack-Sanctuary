@@ -11,6 +11,12 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - Night presentation: functional bloom for emissive seams, windows, stars, and aurora highlights.
 - Ground dressing: shaped grass and flower silhouettes replacing opaque rectangular cards.
 
+## Rescue progress
+
+- 2026-07-12 — Shared architecture foundation: village box parts now use physically sized rounded geometry while collision remains simple; UVs tile in world-scale metres instead of stretching across long walls.
+- 2026-07-12 — Shared PBR foundation: deterministic tileable normal and roughness detail now covers plaster, timber, decking, concrete, fabric, painted finishes, and brushed metal.
+- 2026-07-12 — Visual smoke review: noon and deep-night renders completed without broken merged geometry, shader failures, or browser console errors. This is the material/geometry baseline; it does not close the terrain, foliage, hero-asset, or composition phases below.
+
 ## Phase 1 — Art bible and benchmark views
 
 - Lock a palette for dawn, noon, rain, sunset, blue hour, and deep night.

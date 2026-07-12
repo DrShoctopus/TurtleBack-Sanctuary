@@ -13,12 +13,14 @@ import {
   SphereGeometry,
   Vector3,
 } from 'three'
+import { RoundedBoxGeometry, mergeVertices } from 'three-stdlib'
 import { mergeGeometries } from './merge'
 import type { MatKey } from './materials'
 
 // -- primitive cache ---------------------------------------------------------
 
 const geoCache = new Map<string, BufferGeometry>()
+const roundedBoxCache = new Map<string, BufferGeometry>()
 
 export function boxGeo(): BufferGeometry {
   let g = geoCache.get('box')
@@ -27,6 +29,57 @@ export function boxGeo(): BufferGeometry {
     geoCache.set('box', g)
   }
   return g
+}
+
+/**
+ * Physically sized rounded box. Unlike scaling a single unit bevel, generating
+ * at final dimensions keeps the radius consistent on thin walls and long trim.
+ */
+function roundedBoxGeo(size: [number, number, number]): BufferGeometry {
+  const minSide = Math.min(...size)
+  const radius = Math.min(0.065, minSide * 0.19)
+  const segments = minSide < 0.035 ? 0 : minSide < 0.12 ? 1 : 2
+  const key = `${size.map((v) => v.toFixed(3)).join('x')}@${radius.toFixed(3)}:${segments}`
+  let geometry = roundedBoxCache.get(key)
+  if (!geometry) {
+    if (segments === 0) {
+      geometry = new BoxGeometry(...size)
+    } else {
+      geometry = new RoundedBoxGeometry(...size, segments, radius)
+    }
+    applyPhysicalBoxUvs(geometry, 1.8)
+    if (geometry.index === null) geometry = mergeVertices(geometry)
+    geometry.computeBoundingBox()
+    geometry.computeBoundingSphere()
+    roundedBoxCache.set(key, geometry)
+  }
+  return geometry
+}
+
+/** Project UVs in local metres so a ten-metre wall does not stretch one tile. */
+function applyPhysicalBoxUvs(geometry: BufferGeometry, metresPerTile: number): void {
+  const positions = geometry.getAttribute('position')
+  const normals = geometry.getAttribute('normal')
+  const uvs = geometry.getAttribute('uv')
+  for (let i = 0; i < positions.count; i++) {
+    const nx = Math.abs(normals.getX(i))
+    const ny = Math.abs(normals.getY(i))
+    const nz = Math.abs(normals.getZ(i))
+    let u: number
+    let v: number
+    if (nx >= ny && nx >= nz) {
+      u = positions.getZ(i) / metresPerTile
+      v = positions.getY(i) / metresPerTile
+    } else if (ny >= nx && ny >= nz) {
+      u = positions.getX(i) / metresPerTile
+      v = positions.getZ(i) / metresPerTile
+    } else {
+      u = positions.getX(i) / metresPerTile
+      v = positions.getY(i) / metresPerTile
+    }
+    uvs.setXY(i, u, v)
+  }
+  uvs.needsUpdate = true
 }
 
 export function cylGeo(segments = 16): BufferGeometry {
@@ -101,7 +154,8 @@ export class BuildPlan {
   }
 
   box(mat: MatKey, t: PartTransform): void {
-    this.add(boxGeo(), mat, t)
+    const size = t.size ?? [1, 1, 1]
+    this.add(roundedBoxGeo(size), mat, { ...t, size: [1, 1, 1] })
   }
 
   cyl(mat: MatKey, t: PartTransform, segments = 16): void {

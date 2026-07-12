@@ -3,8 +3,8 @@
  * from these keys so the whole village stays within a handful of draw calls
  * per structure and reads as one coherent place.
  */
-import { Color, DoubleSide, MeshStandardMaterial } from 'three'
-import { getTexture } from '../../world/textures'
+import { Color, DoubleSide, MeshStandardMaterial, Vector2 } from 'three'
+import { getSurfaceDetail, getTexture, type SurfaceDetailName } from '../../world/textures'
 
 export type MatKey =
   | 'plasterWarm'
@@ -41,48 +41,110 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
     mat.name = key
     m.set(key, mat)
   }
+  const detail = (name: SurfaceDetailName, scale: number) => ({
+    ...getSurfaceDetail(name),
+    normalScale: new Vector2(scale, scale),
+  })
 
   mk(
     'plasterWarm',
-    new MeshStandardMaterial({ map: getTexture('plaster'), color: '#efe4d0', roughness: 0.94 }),
+    new MeshStandardMaterial({
+      map: getTexture('plaster'),
+      color: '#efe4d0',
+      roughness: 0.94,
+      ...detail('plaster', 0.2),
+    }),
   )
   mk(
     'plasterCool',
-    new MeshStandardMaterial({ map: getTexture('plaster'), color: '#dde4e2', roughness: 0.94 }),
+    new MeshStandardMaterial({
+      map: getTexture('plaster'),
+      color: '#dde4e2',
+      roughness: 0.94,
+      ...detail('plaster', 0.2),
+    }),
   )
   mk(
     'plasterSage',
-    new MeshStandardMaterial({ map: getTexture('plaster'), color: '#cdd8c4', roughness: 0.94 }),
+    new MeshStandardMaterial({
+      map: getTexture('plaster'),
+      color: '#cdd8c4',
+      roughness: 0.94,
+      ...detail('plaster', 0.2),
+    }),
   )
   mk(
     'woodWarm',
-    new MeshStandardMaterial({ map: getTexture('woodFine'), color: '#c89a6d', roughness: 0.62 }),
+    new MeshStandardMaterial({
+      map: getTexture('woodFine'),
+      color: '#c89a6d',
+      roughness: 0.7,
+      ...detail('woodFine', 0.34),
+    }),
   )
   mk(
     'woodDeck',
-    new MeshStandardMaterial({ map: getTexture('woodPlanks'), color: '#b98f68', roughness: 0.78 }),
+    new MeshStandardMaterial({
+      map: getTexture('woodPlanks'),
+      color: '#b98f68',
+      roughness: 0.82,
+      ...detail('woodPlanks', 0.42),
+    }),
   )
   mk(
     'woodDark',
-    new MeshStandardMaterial({ map: getTexture('woodFine'), color: '#6d4f38', roughness: 0.66 }),
+    new MeshStandardMaterial({
+      map: getTexture('woodFine'),
+      color: '#6d4f38',
+      roughness: 0.72,
+      ...detail('woodFine', 0.36),
+    }),
   )
   mk(
     'woodPale',
-    new MeshStandardMaterial({ map: getTexture('woodFine'), color: '#e2c9a4', roughness: 0.6 }),
+    new MeshStandardMaterial({
+      map: getTexture('woodFine'),
+      color: '#e2c9a4',
+      roughness: 0.68,
+      ...detail('woodFine', 0.3),
+    }),
   )
   mk(
     'concrete',
-    new MeshStandardMaterial({ map: getTexture('concrete'), color: '#b7b3a8', roughness: 0.9 }),
+    new MeshStandardMaterial({
+      map: getTexture('concrete'),
+      color: '#b7b3a8',
+      roughness: 0.94,
+      ...detail('concrete', 0.38),
+    }),
   )
   mk(
     'stoneCounter',
-    new MeshStandardMaterial({ map: getTexture('concrete'), color: '#8d9295', roughness: 0.35 }),
+    new MeshStandardMaterial({
+      map: getTexture('concrete'),
+      color: '#8d9295',
+      roughness: 0.42,
+      ...detail('concrete', 0.22),
+    }),
   )
   mk(
     'metalBrushed',
-    new MeshStandardMaterial({ color: '#9aa4ab', roughness: 0.38, metalness: 0.8 }),
+    new MeshStandardMaterial({
+      color: '#a7b0b5',
+      roughness: 0.46,
+      metalness: 0.82,
+      ...detail('brushedMetal', 0.2),
+    }),
   )
-  mk('metalDark', new MeshStandardMaterial({ color: '#3c444c', roughness: 0.5, metalness: 0.6 }))
+  mk(
+    'metalDark',
+    new MeshStandardMaterial({
+      color: '#3c444c',
+      roughness: 0.58,
+      metalness: 0.62,
+      ...detail('brushedMetal', 0.16),
+    }),
+  )
   mk(
     'glass',
     new MeshStandardMaterial({
@@ -97,27 +159,63 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
   )
   mk(
     'fabricSand',
-    new MeshStandardMaterial({ map: getTexture('fabric'), color: '#d6c4a8', roughness: 0.95 }),
+    new MeshStandardMaterial({
+      map: getTexture('fabric'),
+      color: '#d6c4a8',
+      roughness: 0.98,
+      ...detail('fabric', 0.32),
+    }),
   )
   mk(
     'fabricTeal',
-    new MeshStandardMaterial({ map: getTexture('fabric'), color: '#7fa8a0', roughness: 0.95 }),
+    new MeshStandardMaterial({
+      map: getTexture('fabric'),
+      color: '#7fa8a0',
+      roughness: 0.98,
+      ...detail('fabric', 0.32),
+    }),
   )
   mk(
     'fabricRust',
-    new MeshStandardMaterial({ map: getTexture('fabric'), color: '#c08560', roughness: 0.95 }),
+    new MeshStandardMaterial({
+      map: getTexture('fabric'),
+      color: '#c08560',
+      roughness: 0.98,
+      ...detail('fabric', 0.32),
+    }),
   )
   mk(
     'rugWeave',
-    new MeshStandardMaterial({ map: getTexture('fabric'), color: '#a9917a', roughness: 1 }),
+    new MeshStandardMaterial({
+      map: getTexture('fabric'),
+      color: '#a9917a',
+      roughness: 1,
+      ...detail('fabric', 0.4),
+    }),
   )
   mk('paperShade', new MeshStandardMaterial({ color: '#f6ead2', roughness: 0.9, side: DoubleSide }))
   mk('ceramicWhite', new MeshStandardMaterial({ color: '#eef0ec', roughness: 0.22 }))
   mk('ceramicTerracotta', new MeshStandardMaterial({ color: '#b06a4a', roughness: 0.8 }))
   mk('leafGreen', new MeshStandardMaterial({ color: '#5f8a4e', roughness: 0.95 }))
   mk('leafDeep', new MeshStandardMaterial({ color: '#3f6b42', roughness: 0.95 }))
-  mk('paint.coral', new MeshStandardMaterial({ color: '#cf7f63', roughness: 0.85 }))
-  mk('paint.night', new MeshStandardMaterial({ color: '#31465a', roughness: 0.85 }))
+  mk(
+    'paint.coral',
+    new MeshStandardMaterial({
+      map: getTexture('plaster'),
+      color: '#cf7f63',
+      roughness: 0.9,
+      ...detail('plaster', 0.18),
+    }),
+  )
+  mk(
+    'paint.night',
+    new MeshStandardMaterial({
+      map: getTexture('plaster'),
+      color: '#31465a',
+      roughness: 0.9,
+      ...detail('plaster', 0.18),
+    }),
+  )
   mk(
     'water',
     new MeshStandardMaterial({

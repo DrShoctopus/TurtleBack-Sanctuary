@@ -7,6 +7,10 @@ import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace } from 'three'
 import { mulberry32, type Rng } from '../core/rng'
 
 const cache = new Map<string, CanvasTexture>()
+const surfaceCache = new Map<string, { normalMap: CanvasTexture; roughnessMap: CanvasTexture }>()
+
+export type SurfaceDetailName =
+  'plaster' | 'woodFine' | 'woodPlanks' | 'concrete' | 'fabric' | 'brushedMetal'
 
 function makeCanvas(size: number): { c: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const c = document.createElement('canvas')
@@ -57,7 +61,148 @@ export function getTexture(name: string): CanvasTexture {
 
 export function disposeAllTextures(): void {
   for (const t of cache.values()) t.dispose()
+  for (const detail of surfaceCache.values()) {
+    detail.normalMap.dispose()
+    detail.roughnessMap.dispose()
+  }
   cache.clear()
+  surfaceCache.clear()
+}
+
+/** Seeded, tileable tangent-space normal + roughness detail for PBR materials. */
+export function getSurfaceDetail(name: SurfaceDetailName): {
+  normalMap: CanvasTexture
+  roughnessMap: CanvasTexture
+} {
+  const cached = surfaceCache.get(name)
+  if (cached) return cached
+  const generated = generateSurfaceDetail(SURFACE_CONFIG[name])
+  surfaceCache.set(name, generated)
+  return generated
+}
+
+interface SurfaceConfig {
+  seed: number
+  kind: 'mineral' | 'wood' | 'weave' | 'brushed'
+  normalStrength: number
+  roughness: number
+  roughnessVariance: number
+}
+
+const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
+  plaster: {
+    seed: 1606,
+    kind: 'mineral',
+    normalStrength: 2.2,
+    roughness: 0.92,
+    roughnessVariance: 0.08,
+  },
+  woodFine: {
+    seed: 1505,
+    kind: 'wood',
+    normalStrength: 3.2,
+    roughness: 0.68,
+    roughnessVariance: 0.16,
+  },
+  woodPlanks: {
+    seed: 1404,
+    kind: 'wood',
+    normalStrength: 4,
+    roughness: 0.76,
+    roughnessVariance: 0.18,
+  },
+  concrete: {
+    seed: 1707,
+    kind: 'mineral',
+    normalStrength: 4.4,
+    roughness: 0.88,
+    roughnessVariance: 0.12,
+  },
+  fabric: {
+    seed: 1808,
+    kind: 'weave',
+    normalStrength: 2.4,
+    roughness: 0.96,
+    roughnessVariance: 0.06,
+  },
+  brushedMetal: {
+    seed: 1901,
+    kind: 'brushed',
+    normalStrength: 1.8,
+    roughness: 0.42,
+    roughnessVariance: 0.2,
+  },
+}
+
+function generateSurfaceDetail(config: SurfaceConfig): {
+  normalMap: CanvasTexture
+  roughnessMap: CanvasTexture
+} {
+  const size = 128
+  const rng = mulberry32(config.seed)
+  const waves = Array.from({ length: 7 }, (_, i) => ({
+    fx: 1 + Math.floor(rng() * (5 + i * 2)),
+    fy: 1 + Math.floor(rng() * (5 + i * 2)),
+    phase: rng() * Math.PI * 2,
+    amp: Math.pow(0.58, i),
+  }))
+  const heights = new Float32Array(size * size)
+  let min = Infinity
+  let max = -Infinity
+  for (let y = 0; y < size; y++) {
+    const v = y / size
+    for (let x = 0; x < size; x++) {
+      const u = x / size
+      let h = 0
+      for (const wave of waves) {
+        h += Math.sin(Math.PI * 2 * (u * wave.fx + v * wave.fy) + wave.phase) * wave.amp
+      }
+      if (config.kind === 'wood') {
+        h += Math.sin(Math.PI * 2 * (v * 18 + Math.sin(u * Math.PI * 4) * 0.16)) * 0.72
+        h += Math.sin(Math.PI * 2 * v * 37) * 0.18
+      } else if (config.kind === 'weave') {
+        h += Math.sin(Math.PI * 2 * u * 32) * 0.52 + Math.sin(Math.PI * 2 * v * 32) * 0.52
+      } else if (config.kind === 'brushed') {
+        h += Math.sin(Math.PI * 2 * v * 52) * 0.45 + Math.sin(Math.PI * 2 * v * 91) * 0.16
+      }
+      heights[y * size + x] = h
+      min = Math.min(min, h)
+      max = Math.max(max, h)
+    }
+  }
+  const span = Math.max(0.0001, max - min)
+  for (let i = 0; i < heights.length; i++) heights[i] = (heights[i] - min) / span
+
+  const normalCanvas = makeCanvas(size)
+  const roughCanvas = makeCanvas(size)
+  const normalData = normalCanvas.ctx.createImageData(size, size)
+  const roughData = roughCanvas.ctx.createImageData(size, size)
+  const at = (x: number, y: number) => heights[((y + size) % size) * size + ((x + size) % size)]
+  for (let y = 0; y < size; y++) {
+    for (let x = 0; x < size; x++) {
+      const dx = (at(x + 1, y) - at(x - 1, y)) * config.normalStrength
+      const dy = (at(x, y + 1) - at(x, y - 1)) * config.normalStrength
+      const invLen = 1 / Math.hypot(dx, dy, 1)
+      const i = (y * size + x) * 4
+      normalData.data[i] = Math.round((-dx * invLen * 0.5 + 0.5) * 255)
+      normalData.data[i + 1] = Math.round((-dy * invLen * 0.5 + 0.5) * 255)
+      normalData.data[i + 2] = Math.round((invLen * 0.5 + 0.5) * 255)
+      normalData.data[i + 3] = 255
+      const local = at(x, y) - 0.5
+      const rough = Math.min(1, Math.max(0.08, config.roughness + local * config.roughnessVariance))
+      const grey = Math.round(rough * 255)
+      roughData.data[i] = grey
+      roughData.data[i + 1] = grey
+      roughData.data[i + 2] = grey
+      roughData.data[i + 3] = 255
+    }
+  }
+  normalCanvas.ctx.putImageData(normalData, 0, 0)
+  roughCanvas.ctx.putImageData(roughData, 0, 0)
+  return {
+    normalMap: finish(normalCanvas.c, false),
+    roughnessMap: finish(roughCanvas.c, false),
+  }
 }
 
 const GENERATORS: Record<string, () => CanvasTexture> = {
@@ -157,7 +302,14 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
         ctx.beginPath()
         const yy = y * plankH + rng() * plankH
         ctx.moveTo(0, yy)
-        ctx.bezierCurveTo(size * 0.3, yy + (rng() - 0.5) * 4, size * 0.7, yy + (rng() - 0.5) * 4, size, yy)
+        ctx.bezierCurveTo(
+          size * 0.3,
+          yy + (rng() - 0.5) * 4,
+          size * 0.7,
+          yy + (rng() - 0.5) * 4,
+          size,
+          yy,
+        )
         ctx.stroke()
       }
       ctx.fillStyle = 'rgba(40,25,15,0.5)'
@@ -178,7 +330,14 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
       ctx.beginPath()
       const yy = rng() * size
       ctx.moveTo(0, yy)
-      ctx.bezierCurveTo(size * 0.33, yy + (rng() - 0.5) * 7, size * 0.66, yy + (rng() - 0.5) * 7, size, yy)
+      ctx.bezierCurveTo(
+        size * 0.33,
+        yy + (rng() - 0.5) * 7,
+        size * 0.66,
+        yy + (rng() - 0.5) * 7,
+        size,
+        yy,
+      )
       ctx.stroke()
     }
     return finish(c)
