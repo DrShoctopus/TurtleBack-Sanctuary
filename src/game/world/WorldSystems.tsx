@@ -1,8 +1,15 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { updatePlayerZone } from '../village/zones'
 import { applySimpleWetness } from '../weather/simpleWet'
 import { runtime } from '../core/runtime'
+import { events } from '../core/events'
+import { terrainHeight } from './shell/shellShape'
+
+interface TurtlebackDebug {
+  teleport: (x: number, z: number, yaw?: number, pitch?: number) => void
+  player: () => { x: number; y: number; z: number; yaw: number }
+}
 
 /**
  * Low-frequency world housekeeping that doesn't belong to any single object:
@@ -10,9 +17,48 @@ import { runtime } from '../core/runtime'
  */
 export function WorldSystems() {
   const scene = useThree((s) => s.scene)
+  const camera = useThree((s) => s.camera)
+  const portraitCamera = useRef(false)
   useEffect(() => {
     if (import.meta.env.DEV) {
-      ;(window as unknown as Record<string, unknown>).__scene = scene
+      const devWindow = window as unknown as Record<string, unknown>
+      const teleport = (x: number, z: number, yaw = 0, pitch = 0) => {
+        events.emit('teleport', {
+          x,
+          y: terrainHeight(x, z) + 0.08,
+          z,
+          yaw,
+          reason: 'debug',
+        })
+        runtime.player.pitch = pitch
+      }
+      devWindow.__scene = scene
+      devWindow.__turtlebackDebug = {
+        teleport,
+        player: () => ({
+          x: runtime.player.pos.x,
+          y: runtime.player.pos.y,
+          z: runtime.player.pos.z,
+          yaw: runtime.player.yaw,
+        }),
+      } satisfies TurtlebackDebug
+      const onBenchmarkKey = (event: KeyboardEvent) => {
+        if (!event.altKey) return
+        if (event.code === 'Digit1') teleport(0, -238, 0, -0.25)
+        else if (event.code === 'Digit2') teleport(166, 58, -Math.PI / 2, -0.55)
+        else if (event.code === 'Digit3') teleport(2, 232, Math.PI, -0.18)
+        else if (event.code === 'Digit4') teleport(-166, -24, Math.PI / 2, -0.55)
+        else if (event.code === 'Digit5') portraitCamera.current = true
+        else if (event.code === 'Digit0') portraitCamera.current = false
+        else return
+        event.preventDefault()
+      }
+      window.addEventListener('keydown', onBenchmarkKey)
+      return () => {
+        window.removeEventListener('keydown', onBenchmarkKey)
+        delete devWindow.__scene
+        delete devWindow.__turtlebackDebug
+      }
     }
   }, [scene])
   let zoneAcc = 0
@@ -23,6 +69,10 @@ export function WorldSystems() {
       updatePlayerZone()
     }
     applySimpleWetness(runtime.weather.wetness)
+    if (import.meta.env.DEV && portraitCamera.current) {
+      camera.position.set(0, 7.5, -336)
+      camera.lookAt(0, 4.5, -295)
+    }
   })
   return null
 }

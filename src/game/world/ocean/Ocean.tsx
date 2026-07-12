@@ -1,6 +1,14 @@
 import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { Color, Mesh, PlaneGeometry, Vector3 } from 'three'
+import {
+  Color,
+  DoubleSide,
+  Mesh,
+  PlaneGeometry,
+  RingGeometry,
+  ShaderMaterial,
+  Vector3,
+} from 'three'
 import { runtime } from '../../core/runtime'
 import { FOG_COLOR, SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from '../sky/palette'
 
@@ -66,16 +74,113 @@ export function Ocean() {
   })
 
   return (
-    <mesh ref={meshRef} geometry={geometry} frustumCulled={false} renderOrder={-90}>
-      <shaderMaterial uniforms={uniforms} vertexShader={VERT} fragmentShader={FRAG} fog={false} />
-    </mesh>
+    <>
+      <mesh ref={meshRef} geometry={geometry} frustumCulled={false} renderOrder={-90}>
+        <shaderMaterial uniforms={uniforms} vertexShader={VERT} fragmentShader={FRAG} fog={false} />
+      </mesh>
+      <EdgeLappingWaves />
+    </>
   )
 }
+
+/** One translucent elliptical veil for readable, calm foam at every shell edge. */
+function EdgeLappingWaves() {
+  const geometry = useMemo(() => {
+    const ring = new RingGeometry(1.095, 1.29, 256, 12)
+    ring.rotateX(-Math.PI / 2)
+    return ring
+  }, [])
+  const material = useMemo(
+    () =>
+      new ShaderMaterial({
+        transparent: true,
+        depthWrite: false,
+        depthTest: true,
+        side: DoubleSide,
+        fog: false,
+        uniforms: {
+          uTime: { value: 0 },
+          uNight: { value: 0 },
+          uRain: { value: 0 },
+          uMotion: { value: 1 },
+        },
+        vertexShader: EDGE_VERT,
+        fragmentShader: EDGE_FRAG,
+      }),
+    [],
+  )
+
+  useFrame((state) => {
+    material.uniforms.uTime.value = state.clock.elapsedTime
+    material.uniforms.uNight.value = runtime.time.celest.nightFactor
+    material.uniforms.uRain.value = runtime.weather.rain
+    material.uniforms.uMotion.value = runtime.reducedMotion ? 0.1 : 1
+  })
+
+  return (
+    <mesh
+      geometry={geometry}
+      material={material}
+      position={[0, 0.16, 0]}
+      scale={[170, 1, 250]}
+      frustumCulled={false}
+      renderOrder={-89}
+    />
+  )
+}
+
+const EDGE_VERT = /* glsl */ `
+varying vec2 vRingPos;
+uniform float uTime;
+uniform float uMotion;
+
+void main() {
+  vRingPos = vec2(position.x, -position.z);
+  vec3 transformed = position;
+  float angle = atan(vRingPos.y, vRingPos.x);
+  transformed.y += sin(angle * 3.0 - uTime * 0.18 * uMotion) * 0.035;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(transformed, 1.0);
+}
+`
+
+const EDGE_FRAG = /* glsl */ `
+varying vec2 vRingPos;
+uniform float uTime;
+uniform float uNight;
+uniform float uRain;
+uniform float uMotion;
+
+float hash21(vec2 p) {
+  return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+}
+
+void main() {
+  float radius = length(vRingPos);
+  float angle = atan(vRingPos.y, vRingPos.x);
+  float travel = uTime * 0.045 * uMotion;
+  float noise = hash21(vec2(floor(angle * 11.0), floor(travel * 3.0)));
+  float curl = sin(angle * 5.0 - travel * 3.2 + noise * 2.4) * 0.006;
+  float bandA = exp(-pow((radius - 1.132 - curl) * 118.0, 2.0));
+  float bandB = exp(-pow((radius - 1.182 + curl * 0.6) * 84.0, 2.0));
+  float bandC = exp(-pow((radius - 1.248 - curl * 0.35) * 62.0, 2.0));
+  float broken = smoothstep(0.18, 0.78,
+    0.5 + 0.32 * sin(angle * 13.0 + travel * 2.0) +
+    0.18 * sin(angle * 29.0 - travel * 1.3 + noise * 4.0));
+  float alpha = (bandA * 0.62 + bandB * 0.4 + bandC * 0.22) *
+                mix(0.72, 1.0, broken) * (1.0 - uRain * 0.42);
+  if (alpha < 0.008) discard;
+  vec3 dayFoam = vec3(0.46, 0.82, 0.76);
+  vec3 nightFoam = vec3(0.12, 0.38, 0.4);
+  gl_FragColor = vec4(mix(dayFoam, nightFoam, uNight), alpha);
+  #include <colorspace_fragment>
+}
+`
 
 const VERT = /* glsl */ `
 uniform float uTime;
 uniform float uTravel;
 uniform vec3 uOffset;
+uniform float uMotion;
 varying vec3 vWorldPos;
 varying vec3 vNormal;
 varying float vCrest;
@@ -106,7 +211,7 @@ void main() {
   vec3 tangent = vec3(1.0, 0.0, 0.0);
   vec3 binormal = vec3(0.0, 0.0, 1.0);
   vec3 disp = vec3(0.0);
-  float t = uTime;
+  float t = uTime * max(0.08, uMotion);
   disp += gerstner(W0, p, t, tangent, binormal);
   disp += gerstner(W1, p, t, tangent, binormal);
   disp += gerstner(W2, p, t, tangent, binormal);
@@ -114,7 +219,7 @@ void main() {
   // calm the water immediately around the shell so the waterline stays gentle
   float dTurtle = length(vec2(base.x / 210.0, base.z / 290.0));
   float calm = smoothstep(0.85, 1.35, dTurtle);
-  disp *= mix(0.25, 1.0, calm);
+  disp *= mix(0.14, 1.0, calm);
   vec3 pos = vec3(base.x + disp.x, disp.y, base.z + disp.z);
   vWorldPos = pos;
   vNormal = normalize(cross(binormal, tangent));
@@ -173,21 +278,27 @@ void main() {
 
   vec3 V = normalize(uCamPos - vWorldPos);
   float fresnel = pow(1.0 - max(dot(N, V), 0.0), 5.0);
-  fresnel = 0.04 + 0.9 * fresnel;
+  fresnel = 0.04 + 0.72 * fresnel;
 
   // water body color: deep teal → soft shallow near the turtle
   vec3 deep = mix(vec3(0.02, 0.09, 0.13), vec3(0.006, 0.02, 0.045), uNight);
   vec3 shallow = mix(vec3(0.05, 0.2, 0.23), vec3(0.01, 0.05, 0.09), uNight);
   float dTurtle = length(vec2(vWorldPos.x / 230.0, vWorldPos.z / 310.0));
+  float shellR = length(vec2(vWorldPos.x / 170.0, vWorldPos.z / 250.0));
   vec3 body = mix(shallow, deep, smoothstep(0.7, 1.6, dTurtle));
+  float shoreline = exp(-pow((shellR - 1.035) * 11.5, 2.0));
+  vec3 edgeTint = mix(vec3(0.07, 0.29, 0.29), vec3(0.018, 0.11, 0.14), uNight);
+  body = mix(body, edgeTint, shoreline * (0.38 + (1.0 - uRain) * 0.28));
 
   // sky reflection approximation
   vec3 R = reflect(-V, N);
   float up = clamp(R.y, 0.0, 1.0);
   vec3 skyRef = mix(uHorizon, uSkyTop, pow(up, 0.6));
+  skyRef *= mix(0.82, 0.9, uNight);
   skyRef = mix(skyRef, skyRef * vec3(0.75, 0.82, 0.92), uRain * 0.5);
 
-  vec3 col = mix(body, skyRef, fresnel);
+  float edgeFresnel = fresnel * (1.0 - shoreline * 0.44);
+  vec3 col = mix(body, skyRef, edgeFresnel);
 
   // A faint aurora reflection in the northern water at night. This is not a
   // mirror; it is a wide, broken colour path shaped by the moving surface.
@@ -202,27 +313,34 @@ void main() {
   col += uSunColor * sunSpec * (1.2 - uNight) * (1.0 - uRain * 0.5);
   // moon glitter
   float moonSpec = pow(max(dot(R, normalize(uMoonDir)), 0.0), 420.0);
-  col += vec3(0.75, 0.82, 0.95) * moonSpec * uNight * 0.9;
+  col += vec3(0.68, 0.78, 0.92) * moonSpec * uNight * 0.32;
 
   // foam: wave crests + the churned ring around the turtle body
   float crestFoam = smoothstep(0.75, 1.35, vCrest) * 0.5;
-  float ring = exp(-pow((dTurtle - 0.86) * 11.0, 2.0));
-  float wake = ring * (0.35 + 0.65 * vnoise(flow * 0.6 + uTime * 0.22));
+  float ring = exp(-pow((shellR - 1.055) * 26.0, 2.0));
+  float wake = ring * (0.18 + 0.42 * vnoise(flow * 0.48 + uTime * 0.14 * uMotion));
+  wake += shoreline * 0.14 * (1.0 - uRain * 0.3);
   // Slow lapping bands travel around the shell perimeter. From the viewing
   // decks these read as calm waves folding into the turtle's wake.
-  float edgeAngle = atan(vWorldPos.z / 310.0, vWorldPos.x / 230.0);
-  float lapPhase = uTime * 0.16 * uMotion + edgeAngle * 2.2 + vnoise(flow * 0.025) * 1.4;
-  float edgeRadius = 0.805 + sin(lapPhase) * 0.012;
-  float lapA = exp(-pow((dTurtle - edgeRadius) * 72.0, 2.0));
-  float lapB = exp(-pow((dTurtle - edgeRadius - 0.035) * 58.0, 2.0));
-  float lapBreak = 0.45 + 0.55 * vnoise(flow * 0.11 + vec2(uTime * 0.025 * uMotion, 0.0));
-  wake += (lapA * 0.7 + lapB * 0.32) * lapBreak * (1.0 - uRain * 0.35);
+  float edgeAngle = atan(vWorldPos.z / 250.0, vWorldPos.x / 170.0);
+  float lapPhase = uTime * 0.115 * uMotion + edgeAngle * 1.75 + vnoise(flow * 0.021) * 1.65;
+  float edgeRadius = 1.025 + sin(lapPhase) * 0.008;
+  float lapA = exp(-pow((shellR - edgeRadius) * 82.0, 2.0));
+  float lapB = exp(-pow((shellR - edgeRadius - 0.032) * 70.0, 2.0));
+  float lapC = exp(-pow((shellR - edgeRadius - 0.068) * 56.0, 2.0));
+  float foamNoise = vnoise(flow * 0.09 + vec2(uTime * 0.018 * uMotion, edgeAngle));
+  float strand = 0.5 + 0.5 * sin(edgeAngle * 8.0 - uTime * 0.07 * uMotion + foamNoise * 4.0);
+  float lapBreak = smoothstep(0.22, 0.62, foamNoise * 0.68 + strand * 0.32);
+  wake += (lapA * 0.66 + lapB * 0.38 + lapC * 0.18) * lapBreak * (1.0 - uRain * 0.42);
+  // A translucent jade line just below the foam gives the shell edge depth.
+  col += mix(vec3(0.08, 0.34, 0.31), vec3(0.04, 0.16, 0.2), uNight) *
+         shoreline * (0.028 + lapBreak * 0.025);
   // bow push at the head (head sits toward -z)
   float bow = exp(-length(vec2(vWorldPos.x * 0.02, (vWorldPos.z + 300.0) * 0.012)));
   wake += bow * vnoise(flow * 0.8 + uTime * 0.35) * 0.9;
   float foam = clamp(crestFoam + wake, 0.0, 1.0);
-  vec3 foamCol = mix(vec3(0.9, 0.96, 0.97), vec3(0.25, 0.32, 0.42), uNight);
-  col = mix(col, foamCol, foam * 0.8);
+  vec3 foamCol = mix(vec3(0.82, 0.94, 0.91), vec3(0.25, 0.32, 0.42), uNight);
+  col = mix(col, foamCol, foam * 0.82);
 
   // distance fog
   float dist = length(uCamPos - vWorldPos);

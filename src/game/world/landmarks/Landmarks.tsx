@@ -360,9 +360,19 @@ const BUILDERS: Record<LandmarkType, Builder> = {
     const g = new Group()
     const rng = mulberry32(21)
     const lanterns: Mesh[] = []
+    const lanternGeometry = new SphereGeometry(1, 12, 8)
     for (let i = 0; i < 34; i++) {
-      const l = new Mesh(new BoxGeometry(2.4, 3.2, 2.4), glowWarm.clone())
+      const material = new MeshBasicMaterial({
+        color: '#ffc879',
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+        toneMapped: false,
+      })
+      const l = new Mesh(lanternGeometry, material)
       l.position.set((rng() - 0.5) * 260, 1.5, (rng() - 0.5) * 340)
+      const scale = 0.8 + rng() * 0.55
+      l.scale.set(scale, scale * 0.72, scale)
       l.userData.phase = rng() * Math.PI * 2
       lanterns.push(l)
       g.add(l)
@@ -372,11 +382,10 @@ const BUILDERS: Record<LandmarkType, Builder> = {
         const ph = l.userData.phase as number
         l.position.y = 1.5 + Math.sin(t * 0.7 + ph) * 0.7
         l.rotation.y = Math.sin(t * 0.3 + ph) * 0.4
-        ;(l.material as MeshBasicMaterial).color.setHSL(
-          0.085,
-          0.85,
-          0.35 + night * 0.3 + Math.sin(t * 1.3 + ph) * 0.06,
-        )
+        const material = l.material as MeshBasicMaterial
+        material.opacity = Math.max(0, (night - 0.16) / 0.84) * 0.82
+        l.visible = material.opacity > 0.01
+        material.color.setHSL(0.085, 0.72, 0.42 + night * 0.22 + Math.sin(t * 1.3 + ph) * 0.045)
       }
     })
   },

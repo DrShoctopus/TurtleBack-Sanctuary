@@ -10,7 +10,14 @@ const cache = new Map<string, CanvasTexture>()
 const surfaceCache = new Map<string, { normalMap: CanvasTexture; roughnessMap: CanvasTexture }>()
 
 export type SurfaceDetailName =
-  'plaster' | 'woodFine' | 'woodPlanks' | 'concrete' | 'fabric' | 'brushedMetal' | 'ground'
+  | 'plaster'
+  | 'woodFine'
+  | 'woodPlanks'
+  | 'concrete'
+  | 'fabric'
+  | 'brushedMetal'
+  | 'ground'
+  | 'turtleSkin'
 
 function makeCanvas(size: number): { c: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const c = document.createElement('canvas')
@@ -138,6 +145,13 @@ const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
     normalStrength: 3.4,
     roughness: 0.92,
     roughnessVariance: 0.1,
+  },
+  turtleSkin: {
+    seed: 2113,
+    kind: 'mineral',
+    normalStrength: 4.6,
+    roughness: 0.8,
+    roughnessVariance: 0.15,
   },
 }
 
@@ -289,6 +303,46 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
       ctx.stroke()
     }
     ctx.globalAlpha = 1
+    return finish(c)
+  },
+
+  turtleSkin: () => {
+    const size = 256
+    const { c, ctx } = makeCanvas(size)
+    const rng = mulberry32(313)
+    ctx.fillStyle = '#77826d'
+    ctx.fillRect(0, 0, size, size)
+    speckle(
+      ctx,
+      rng,
+      size,
+      1100,
+      0.7,
+      4.5,
+      ['#87927b', '#606b59', '#929b86', '#536052', '#76816b'],
+      0.38,
+    )
+    // Soft irregular scale rosettes. Repeated wrapped copies at the edges keep
+    // the procedural texture seamless on the head and neck.
+    for (let i = 0; i < 58; i++) {
+      const cx = rng() * size
+      const cy = rng() * size
+      const rx = 5 + rng() * 12
+      const ry = rx * (0.55 + rng() * 0.5)
+      ctx.strokeStyle = rng() < 0.55 ? 'rgba(40,52,40,0.22)' : 'rgba(165,174,143,0.16)'
+      ctx.lineWidth = 0.7 + rng() * 1.2
+      for (const [ox, oy] of [
+        [0, 0],
+        [-size, 0],
+        [size, 0],
+        [0, -size],
+        [0, size],
+      ]) {
+        ctx.beginPath()
+        ctx.ellipse(cx + ox, cy + oy, rx, ry, rng() * Math.PI, 0, Math.PI * 2)
+        ctx.stroke()
+      }
+    }
     return finish(c)
   },
 
