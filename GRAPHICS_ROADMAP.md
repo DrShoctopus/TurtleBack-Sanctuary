@@ -23,6 +23,8 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - 2026-07-12 — Turtle hero rebuild: dedicated procedural skin albedo/normal/roughness, organic head and snout forms, a tapered neck, sculpted flippers, readable iris/pupil/catchlight eyes, correct deterministic blinking, stable head height, breathing motion, and Reduced Motion support replace the stretched-sphere prototype.
 - 2026-07-12 — Shell-edge water: true shell-rim distance now drives shallow color and foam, Gerstner motion respects Reduced Motion, and a single elliptical shader veil adds three broken slow lap fronts outside the visual skirt. Day-only cube lantern placeholders were replaced with rounded night-fading lights.
 - 2026-07-12 — Benchmark QA support: development builds expose deterministic bow, stern, east/west edge, and turtle-portrait camera positions so hero and shoreline art can be reviewed without pointer lock; production behavior is unchanged.
+- 2026-07-12 — District composition foundation: a merged outdoor kit now supplies threshold frames, market canopies, raised garden beds, pale residential fences, and abstract sculpture plinths. Plaza, Market Lane, Greenhouse Gardens, Quiet Path, Arts, Wellness, and Observatory approaches each receive authored clusters and distinct silhouettes without increasing prop-object draw calls.
+- 2026-07-12 — Garden focal repair: the solid cylinder that covered the garden pond was replaced with a low ring of merged rim stones, restoring the animated water surface and its approach sightline.
 
 ## Phase 1 — Art bible and benchmark views
 

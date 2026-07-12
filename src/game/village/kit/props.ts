@@ -5,6 +5,7 @@
  */
 import { BuildPlan, cylGeo, sphereGeo } from './geometry'
 import { mulberry32 } from '../../core/rng'
+import type { MatKey } from './materials'
 
 type P = BuildPlan
 
@@ -15,7 +16,13 @@ const rot = (x: number, z: number, r: number, dx: number, dz: number): [number, 
 }
 
 /** low seating — sofa with arms and cushions */
-export function sofa(p: P, x: number, z: number, r: number, fabric: 'fabricSand' | 'fabricTeal' | 'fabricRust' = 'fabricSand'): void {
+export function sofa(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  fabric: 'fabricSand' | 'fabricTeal' | 'fabricRust' = 'fabricSand',
+): void {
   const at = (dx: number, dz: number): [number, number] => rot(x, z, r, dx, dz)
   const [bx, bz] = at(0, 0)
   p.solid(fabric, { pos: [bx, 0.24, bz], size: [2.1, 0.48, 0.95], rot: [0, r, 0] })
@@ -37,7 +44,13 @@ export function sofa(p: P, x: number, z: number, r: number, fabric: 'fabricSand'
   p.box('woodDark', { pos: [lx, 0.06, lz], size: [2.0, 0.12, 0.85], rot: [0, r, 0] })
 }
 
-export function armchair(p: P, x: number, z: number, r: number, fabric: 'fabricSand' | 'fabricTeal' | 'fabricRust' = 'fabricTeal'): void {
+export function armchair(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  fabric: 'fabricSand' | 'fabricTeal' | 'fabricRust' = 'fabricTeal',
+): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
   const [bx, bz] = at(0, 0)
   p.solid(fabric, { pos: [bx, 0.26, bz], size: [0.85, 0.5, 0.85], rot: [0, r, 0] })
@@ -51,7 +64,12 @@ export function armchair(p: P, x: number, z: number, r: number, fabric: 'fabricS
 
 export function coffeeTable(p: P, x: number, z: number, r: number): void {
   p.solid('woodWarm', { pos: [x, 0.36, z], size: [1.15, 0.06, 0.6], rot: [0, r, 0] })
-  for (const [dx, dz] of [[-0.5, -0.22], [0.5, -0.22], [-0.5, 0.22], [0.5, 0.22]]) {
+  for (const [dx, dz] of [
+    [-0.5, -0.22],
+    [0.5, -0.22],
+    [-0.5, 0.22],
+    [0.5, 0.22],
+  ]) {
     const [lx, lz] = rot(x, z, r, dx, dz)
     p.box('woodDark', { pos: [lx, 0.17, lz], size: [0.07, 0.34, 0.07], rot: [0, r, 0] })
   }
@@ -79,7 +97,12 @@ export function chair(p: P, x: number, z: number, r: number): void {
   p.box('woodWarm', { pos: [sx, 0.45, sz], size: [0.46, 0.05, 0.46], rot: [0, r, 0] })
   const [bx, bz] = at(0, -0.21)
   p.box('woodWarm', { pos: [bx, 0.78, bz], size: [0.46, 0.62, 0.05], rot: [0, r, 0] })
-  for (const [dx, dz] of [[-0.19, -0.19], [0.19, -0.19], [-0.19, 0.19], [0.19, 0.19]]) {
+  for (const [dx, dz] of [
+    [-0.19, -0.19],
+    [0.19, -0.19],
+    [-0.19, 0.19],
+    [0.19, 0.19],
+  ]) {
     const [lx, lz] = at(dx, dz)
     p.box('woodDark', { pos: [lx, 0.22, lz], size: [0.05, 0.45, 0.05], rot: [0, r, 0] })
   }
@@ -102,7 +125,8 @@ export function bed(p: P, x: number, z: number, r: number, wide = true): void {
   const [px1, pz1] = at(-w / 4 - 0.05, -0.7)
   const [px2, pz2] = at(w / 4 + 0.05, -0.7)
   p.box('ceramicWhite', { pos: [px1, 0.58, pz1], size: [0.55, 0.12, 0.35], rot: [0, r, 0] })
-  if (wide) p.box('ceramicWhite', { pos: [px2, 0.58, pz2], size: [0.55, 0.12, 0.35], rot: [0, r, 0] })
+  if (wide)
+    p.box('ceramicWhite', { pos: [px2, 0.58, pz2], size: [0.55, 0.12, 0.35], rot: [0, r, 0] })
   const [tx, tz] = at(0, 0.45)
   p.box('fabricTeal', { pos: [tx, 0.56, tz], size: [w + 0.02, 0.06, 1.1], rot: [0, r, 0] })
 }
@@ -137,7 +161,16 @@ export function kitchenette(p: P, x: number, z: number, r: number, length = 3.2)
   }
 }
 
-export function shelfUnit(p: P, x: number, z: number, r: number, w = 1.8, h = 2.0, withBooks = true, seed = 5): void {
+export function shelfUnit(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  w = 1.8,
+  h = 2.0,
+  withBooks = true,
+  seed = 5,
+): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
   const [bx, bz] = at(0, 0)
   p.solid('woodWarm', { pos: [bx, h / 2, bz], size: [w, h, 0.34], rot: [0, r, 0] })
@@ -153,7 +186,13 @@ export function shelfUnit(p: P, x: number, z: number, r: number, w = 1.8, h = 2.
         const bw = 0.05 + rng() * 0.07
         if (rng() < 0.82) {
           const bh = 0.2 + rng() * 0.1
-          const mats = ['paint.coral', 'paint.night', 'fabricTeal', 'ceramicTerracotta', 'fabricRust'] as const
+          const mats = [
+            'paint.coral',
+            'paint.night',
+            'fabricTeal',
+            'ceramicTerracotta',
+            'fabricRust',
+          ] as const
           const [bx2, bz2] = at(cx2 + bw / 2, 0.03)
           p.box(mats[Math.floor(rng() * mats.length)], {
             pos: [bx2, y + bh / 2 - 0.14, bz2],
@@ -193,7 +232,10 @@ export function rug(p: P, x: number, z: number, r: number, w = 2.4, d = 1.7): vo
 
 export function plantPot(p: P, x: number, z: number, size: 's' | 'm' | 'l' = 'm', seed = 3): void {
   const s = size === 's' ? 0.55 : size === 'm' ? 0.85 : 1.25
-  p.add(cylGeo(12), 'ceramicTerracotta', { pos: [x, 0.14 * s, z], size: [0.36 * s, 0.3 * s, 0.36 * s] })
+  p.add(cylGeo(12), 'ceramicTerracotta', {
+    pos: [x, 0.14 * s, z],
+    size: [0.36 * s, 0.3 * s, 0.36 * s],
+  })
   const rng = mulberry32(seed)
   const blobs = size === 's' ? 2 : 4
   for (let i = 0; i < blobs; i++) {
@@ -207,7 +249,15 @@ export function plantPot(p: P, x: number, z: number, size: 's' | 'm' | 'l' = 'm'
   }
 }
 
-export function paintingFrame(p: P, x: number, y: number, z: number, r: number, w = 1.1, h = 0.8): void {
+export function paintingFrame(
+  p: P,
+  x: number,
+  y: number,
+  z: number,
+  r: number,
+  w = 1.1,
+  h = 0.8,
+): void {
   p.box('woodDark', { pos: [x, y, z], size: [w + 0.08, h + 0.08, 0.05], rot: [0, r, 0] })
 }
 
@@ -226,7 +276,11 @@ export function stereoCabinet(p: P, x: number, z: number, r: number): void {
     const [sx, sz] = at(side, 0)
     p.box('fabricSand', { pos: [sx, 0.55, sz], size: [0.34, 1.1, 0.34], rot: [0, r, 0] })
     const [gx, gz] = at(side, 0.18)
-    p.add(cylGeo(12), 'metalDark', { pos: [gx, 0.75, gz], size: [0.2, 0.02, 0.2], rot: [Math.PI / 2, r, 0] })
+    p.add(cylGeo(12), 'metalDark', {
+      pos: [gx, 0.75, gz],
+      size: [0.2, 0.02, 0.2],
+      rot: [Math.PI / 2, r, 0],
+    })
   }
 }
 
@@ -272,9 +326,14 @@ export function plinth(p: P, x: number, z: number, sculptSeed = 1): void {
   p.solid('concrete', { pos: [x, 0.55, z], size: [0.5, 1.1, 0.5] })
   const rng = mulberry32(sculptSeed)
   const kind = Math.floor(rng() * 3)
-  if (kind === 0) p.add(sphereGeo(16), 'metalBrushed', { pos: [x, 1.4, z], size: [0.42, 0.58, 0.42] })
+  if (kind === 0)
+    p.add(sphereGeo(16), 'metalBrushed', { pos: [x, 1.4, z], size: [0.42, 0.58, 0.42] })
   else if (kind === 1) {
-    p.add(cylGeo(14), 'ceramicTerracotta', { pos: [x, 1.32, z], size: [0.3, 0.44, 0.3], rot: [0.3, 0.5, 0.2] })
+    p.add(cylGeo(14), 'ceramicTerracotta', {
+      pos: [x, 1.32, z],
+      size: [0.3, 0.44, 0.3],
+      rot: [0.3, 0.5, 0.2],
+    })
   } else {
     p.box('paint.night', { pos: [x, 1.35, z], size: [0.3, 0.5, 0.3], rot: [0.6, 0.8, 0.3] })
   }
@@ -319,7 +378,10 @@ export function planterBox(p: P, x: number, z: number, r: number, w = 1.6, y0 = 
 
 export function towelStack(p: P, x: number, y: number, z: number): void {
   for (let i = 0; i < 3; i++) {
-    p.box(i % 2 ? 'ceramicWhite' : 'fabricTeal', { pos: [x, y + i * 0.09, z], size: [0.45, 0.08, 0.32] })
+    p.box(i % 2 ? 'ceramicWhite' : 'fabricTeal', {
+      pos: [x, y + i * 0.09, z],
+      size: [0.45, 0.08, 0.32],
+    })
   }
 }
 
@@ -343,7 +405,11 @@ export function telescopeProp(p: P, x: number, z: number, r: number): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
   for (const a of [0, 2.1, 4.2]) {
     const [lx, lz] = at(Math.cos(a) * 0.4, Math.sin(a) * 0.4)
-    p.box('woodDark', { pos: [lx, 0.6, lz], size: [0.06, 1.2, 0.06], rot: [0.3 * Math.cos(a), 0, 0.3 * Math.sin(a)] })
+    p.box('woodDark', {
+      pos: [lx, 0.6, lz],
+      size: [0.06, 1.2, 0.06],
+      rot: [0.3 * Math.cos(a), 0, 0.3 * Math.sin(a)],
+    })
   }
   const [tx, tz] = at(0, 0.15)
   p.add(cylGeo(14), 'metalBrushed', {
@@ -362,7 +428,13 @@ export function storeShelf(p: P, x: number, z: number, r: number, seed = 8): voi
     for (let i = 0; i < 6; i++) {
       if (rng() < 0.3) continue
       const [gx, gz] = at(-0.8 + i * 0.32, 0.05)
-      const mats = ['ceramicWhite', 'ceramicTerracotta', 'paint.coral', 'fabricSand', 'paint.night'] as const
+      const mats = [
+        'ceramicWhite',
+        'ceramicTerracotta',
+        'paint.coral',
+        'fabricSand',
+        'paint.night',
+      ] as const
       const kind = rng()
       if (kind < 0.5) {
         p.add(cylGeo(8), mats[Math.floor(rng() * mats.length)], {
@@ -390,4 +462,167 @@ export function windChime(p: P, x: number, y: number, z: number): void {
       size: [0.018, 0.3 + (i % 3) * 0.08, 0.018],
     })
   }
+}
+
+// ---------------------------------------------------------------------------
+// Authored outdoor district kit
+// ---------------------------------------------------------------------------
+
+export function thresholdFrame(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  accent: MatKey = 'fabricTeal',
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (const side of [-1, 1]) {
+    const [px, pz] = at(side * 1.65, 0)
+    p.box('woodDark', {
+      pos: [px, y0 + 1.45, pz],
+      size: [0.18, 2.9, 0.18],
+      rot: [0, r, 0],
+    })
+    p.add(cylGeo(12), 'concrete', {
+      pos: [px, y0 + 0.1, pz],
+      size: [0.42, 0.2, 0.42],
+    })
+    p.collider({ pos: [px, y0 + 1.35, pz], size: [0.28, 2.7, 0.28] })
+  }
+  const [tx, tz] = at(0, 0)
+  p.box('woodDark', {
+    pos: [tx, y0 + 2.82, tz],
+    size: [3.6, 0.18, 0.25],
+    rot: [0, r, 0],
+  })
+  p.box(accent, {
+    pos: [tx, y0 + 2.57, tz],
+    size: [1.45, 0.28, 0.12],
+    rot: [0, r, 0],
+  })
+}
+
+export function marketCanopy(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  fabric: 'fabricTeal' | 'fabricRust' | 'fabricSand' = 'fabricTeal',
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (const [dx, dz] of [
+    [-1.35, -0.85],
+    [1.35, -0.85],
+    [-1.35, 0.85],
+    [1.35, 0.85],
+  ]) {
+    const [px, pz] = at(dx, dz)
+    p.box('woodDark', {
+      pos: [px, y0 + 1.25, pz],
+      size: [0.1, 2.5, 0.1],
+      rot: [0, r, 0],
+    })
+  }
+  p.box(fabric, {
+    pos: [x, y0 + 2.52, z],
+    size: [3.15, 0.12, 2.2],
+    rot: [-0.035, r, 0.025],
+  })
+  p.solid('woodWarm', {
+    pos: [x, y0 + 0.78, z],
+    size: [2.45, 0.12, 0.72],
+    rot: [0, r, 0],
+  })
+  const [baseX, baseZ] = at(0, 0.12)
+  p.box('woodDark', {
+    pos: [baseX, y0 + 0.38, baseZ],
+    size: [1.8, 0.76, 0.48],
+    rot: [0, r, 0],
+  })
+}
+
+export function raisedGardenBed(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  w = 3.8,
+  d = 1.35,
+  seed = 1,
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  p.box('woodDeck', {
+    pos: [x, y0 + 0.28, z],
+    size: [w, 0.5, d],
+    rot: [0, r, 0],
+  })
+  p.box('paint.night', {
+    pos: [x, y0 + 0.52, z],
+    size: [w - 0.24, 0.08, d - 0.22],
+    rot: [0, r, 0],
+  })
+  const rng = mulberry32(seed)
+  const plants = Math.max(5, Math.floor(w * 2.2))
+  for (let i = 0; i < plants; i++) {
+    const dx = -w * 0.42 + (i / Math.max(1, plants - 1)) * w * 0.84
+    const [px, pz] = at(dx, (rng() - 0.5) * d * 0.38)
+    const height = 0.28 + rng() * 0.3
+    p.add(sphereGeo(8), i % 3 === 0 ? 'leafDeep' : 'leafGreen', {
+      pos: [px, y0 + 0.58 + height * 0.55, pz],
+      size: [0.25 + rng() * 0.18, height, 0.25 + rng() * 0.15],
+    })
+  }
+}
+
+export function fenceRun(p: P, x: number, z: number, r: number, length: number, y0: number): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (const h of [0.42, 0.82]) {
+    p.box('woodPale', {
+      pos: [x, y0 + h, z],
+      size: [length, 0.08, 0.1],
+      rot: [0, r, 0],
+    })
+  }
+  const posts = Math.max(2, Math.ceil(length / 1.5))
+  for (let i = 0; i <= posts; i++) {
+    const [px, pz] = at(-length / 2 + (i / posts) * length, 0)
+    p.box('woodDark', {
+      pos: [px, y0 + 0.48, pz],
+      size: [0.1, 0.96, 0.1],
+      rot: [0, r, 0],
+    })
+  }
+}
+
+export function outdoorSculpture(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  accent: 'paint.coral' | 'paint.night' | 'fabricTeal' = 'paint.coral',
+  seed = 1,
+): void {
+  const rng = mulberry32(seed)
+  p.add(cylGeo(24), 'concrete', {
+    pos: [x, y0 + 0.2, z],
+    size: [1.45, 0.4, 1.45],
+  })
+  for (let i = 0; i < 3; i++) {
+    const a = r + i * 1.95 + rng() * 0.25
+    const h = 1.4 + rng() * 1.05
+    p.box(i === 1 ? 'metalBrushed' : accent, {
+      pos: [
+        x + Math.cos(a) * (0.18 + i * 0.12),
+        y0 + 0.38 + h / 2,
+        z + Math.sin(a) * (0.18 + i * 0.12),
+      ],
+      size: [0.22 + rng() * 0.12, h, 0.38 + rng() * 0.16],
+      rot: [0.08 * (i - 1), a, (i - 1) * 0.18],
+    })
+  }
+  p.collider({ pos: [x, y0 + 0.7, z], size: [1.6, 1.4, 1.6] })
 }

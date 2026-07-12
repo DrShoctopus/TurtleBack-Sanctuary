@@ -49,6 +49,10 @@ export function WorldSystems() {
         else if (event.code === 'Digit3') teleport(2, 232, Math.PI, -0.18)
         else if (event.code === 'Digit4') teleport(-166, -24, Math.PI / 2, -0.55)
         else if (event.code === 'Digit5') portraitCamera.current = true
+        else if (event.code === 'Digit6') teleport(0, -60, Math.PI, -0.04)
+        else if (event.code === 'Digit7') teleport(-54, 98, 0, -0.08)
+        else if (event.code === 'Digit8') teleport(70, 43, -2.18, -0.04)
+        else if (event.code === 'Digit9') teleport(-110, -38, -2.77, -0.04)
         else if (event.code === 'Digit0') portraitCamera.current = false
         else return
         event.preventDefault()

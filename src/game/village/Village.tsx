@@ -71,7 +71,10 @@ function collectLampSpots(): Array<[number, number]> {
         const side = rng() < 0.5 ? 1 : -1
         const nx = -(b.z - a.z) / len
         const nz = (b.x - a.x) / len
-        lampSpots.push([a.x + (b.x - a.x) * f + nx * side * 2.4, a.z + (b.z - a.z) * f + nz * side * 2.4])
+        lampSpots.push([
+          a.x + (b.x - a.x) * f + nx * side * 2.4,
+          a.z + (b.z - a.z) * f + nz * side * 2.4,
+        ])
         t += 26 + rng() * 10
       }
       acc = t - len
@@ -116,7 +119,13 @@ function OutdoorProps() {
     // deck surface tags (wood footsteps)
     for (const d of DECKS) {
       unsubs.push(
-        registerSurfaceBox({ minX: d.x - 5, maxX: d.x + 5, minZ: d.z - 5, maxZ: d.z + 5, surface: 'wood' }),
+        registerSurfaceBox({
+          minX: d.x - 5,
+          maxX: d.x + 5,
+          minZ: d.z - 5,
+          maxZ: d.z + 5,
+          surface: 'wood',
+        }),
       )
     }
     return () => unsubs.forEach((fn) => fn())
@@ -179,9 +188,21 @@ function buildOutdoor() {
     const rail = (dx: number, dz: number, len: number, ry: number) => {
       const wx = d.x + dx * cos + dz * sin
       const wz = d.z - dx * sin + dz * cos
-      plan.box('woodDark', { pos: [wx, d.h + 1.14, wz], size: [len, 0.08, 0.08], rot: [0, -yaw + ry, 0] })
-      plan.box('woodDark', { pos: [wx, d.h + 0.7, wz], size: [len, 0.05, 0.05], rot: [0, -yaw + ry, 0] })
-      plan.collider({ pos: [wx, d.h + 0.8, wz], size: [ry === 0 ? len : 0.15, 1.35, ry === 0 ? 0.15 : len], rotY: -yaw })
+      plan.box('woodDark', {
+        pos: [wx, d.h + 1.14, wz],
+        size: [len, 0.08, 0.08],
+        rot: [0, -yaw + ry, 0],
+      })
+      plan.box('woodDark', {
+        pos: [wx, d.h + 0.7, wz],
+        size: [len, 0.05, 0.05],
+        rot: [0, -yaw + ry, 0],
+      })
+      plan.collider({
+        pos: [wx, d.h + 0.8, wz],
+        size: [ry === 0 ? len : 0.15, 1.35, ry === 0 ? 0.15 : len],
+        rotY: -yaw,
+      })
       const posts = Math.floor(len / 1.4)
       for (let i = 0; i <= posts; i++) {
         const off = -len / 2 + (i * len) / posts
@@ -200,8 +221,21 @@ function buildOutdoor() {
     seats.push({ x: bx, y: d.h + 0.24, z: bz, yaw: yaw, label: 'Listen to the sea', listen: true })
   }
 
-  // --- garden pond ring + chime post ---
-  plan.cyl('stoneCounter', { pos: [-52, 13.05, 80], size: [11.6, 0.22, 11.6] }, 30)
+  // --- garden pond rim + chime post ---
+  // Individual merged stones leave the animated water disc visible; the old
+  // solid cylinder covered the entire pond.
+  for (let i = 0; i < 32; i++) {
+    const angle = (i / 32) * Math.PI * 2
+    plan.box('concrete', {
+      pos: [
+        -52 + Math.cos(angle) * 5.65,
+        13.12 + Math.sin(i * 2.1) * 0.018,
+        80 + Math.sin(angle) * 5.65,
+      ],
+      size: [1.12, 0.2, 0.54],
+      rot: [0, -angle, ((i % 3) - 1) * 0.018],
+    })
+  }
   p.lampPostBase(plan, -58, 56 - 0.4)
   plan.box('woodDark', { pos: [-58, 2.9 + H(-58, 56), 56], size: [0.6, 0.06, 0.06] })
   p.windChime(plan, -58, 2.72 + H(-58, 56), 56.35)
@@ -218,12 +252,84 @@ function buildOutdoor() {
     seats.push({ x: sx, y: sy, z: sz, yaw, label })
   }
 
+  buildDistrictDressing(plan, H, seats)
+
   // --- lamp posts along all paths ---
   for (const [lx, lz] of collectLampSpots()) {
     p.lampPostBase(plan, lx, lz, H(lx, lz))
   }
 
   return { merged: plan.merge(), colliders: plan.colliders, seats }
+}
+
+function buildDistrictDressing(
+  plan: BuildPlan,
+  heightAt: (x: number, z: number) => number,
+  seats: OutdoorSeat[],
+): void {
+  // Plaza — paired thresholds and a deeper planted perimeter turn the fountain
+  // into a room rather than an object stranded on an open pad.
+  p.thresholdFrame(plan, 0, -62, 0, heightAt(0, -62), 'fabricSand')
+  p.thresholdFrame(plan, 0, -18, 0, heightAt(0, -18), 'fabricTeal')
+  for (const [x, z, r, w] of [
+    [-18, -48, 0.18, 2.4],
+    [18, -48, -0.18, 2.4],
+    [-18, -30, -0.18, 2.2],
+    [18, -30, 0.18, 2.2],
+  ] as const) {
+    p.planterBox(plan, x, z, r, w, heightAt(x, z))
+  }
+
+  // Market Lane — two small covered counters establish a social silhouette
+  // between the café and store without competing with their interiors.
+  p.marketCanopy(plan, 29, -31, 0.28, heightAt(29, -31), 'fabricRust')
+  p.marketCanopy(plan, 48, -8, -0.38, heightAt(48, -8), 'fabricTeal')
+  p.planterBox(plan, 24, -27, 0.25, 1.5, heightAt(24, -27))
+  p.planterBox(plan, 54, -3, -0.4, 1.45, heightAt(54, -3))
+
+  // Greenhouse Gardens — an arrival frame, productive raised beds, and a low
+  // fence create foreground/midground layers around the pond and greenhouse.
+  p.thresholdFrame(plan, -44, 53, 0.38, heightAt(-44, 53), 'fabricTeal')
+  p.raisedGardenBed(plan, -76, 72, 0.18, heightAt(-76, 72), 4.2, 1.4, 71)
+  p.raisedGardenBed(plan, -72, 84, -0.12, heightAt(-72, 84), 3.6, 1.35, 72)
+  p.raisedGardenBed(plan, -64, 96, 0.32, heightAt(-64, 96), 3.4, 1.3, 73)
+  p.fenceRun(plan, -82, 84, Math.PI / 2 - 0.08, 20, heightAt(-82, 84))
+  const gardenSeatY = heightAt(-79, 94)
+  p.benchOutdoor(plan, -79, 94, 2.72, gardenSeatY)
+  seats.push({ x: -79, y: gardenSeatY, z: 94, yaw: 2.72, label: 'Sit among the garden beds' })
+
+  // Quiet Path — pale residential fences, porch planting and a tucked reading
+  // bench distinguish this lane from the commercial and garden districts.
+  p.thresholdFrame(plan, -78, -42, 1.28, heightAt(-78, -42), 'fabricSand')
+  p.fenceRun(plan, -108, -31, 0.14, 10, heightAt(-108, -31))
+  p.fenceRun(plan, -112, 1, Math.PI / 2, 13, heightAt(-112, 1))
+  p.fenceRun(plan, -104, 31, 0.2, 10, heightAt(-104, 31))
+  for (const [x, z, r] of [
+    [-106, -18, 1.45],
+    [-110, 15, 1.58],
+    [-98, 38, 1.3],
+  ] as const) {
+    p.planterBox(plan, x, z, r, 1.5, heightAt(x, z))
+  }
+  const quietSeatY = heightAt(-108, 12)
+  p.benchOutdoor(plan, -108, 12, -1.5, quietSeatY)
+  seats.push({ x: -108, y: quietSeatY, z: 12, yaw: -1.5, label: 'Read along the quiet path' })
+
+  // Arts District — a procession of abstract verticals provides recognizable
+  // navigation anchors from the plaza, gallery and east deck.
+  p.thresholdFrame(plan, 57, 25, -0.95, heightAt(57, 25), 'fabricRust')
+  p.outdoorSculpture(plan, 84, 50, 0.3, heightAt(84, 50), 'paint.coral', 91)
+  p.outdoorSculpture(plan, 101, 38, 1.2, heightAt(101, 38), 'fabricTeal', 92)
+  p.outdoorSculpture(plan, 116, 51, -0.5, heightAt(116, 51), 'paint.night', 93)
+  const artsSeatY = heightAt(78, 62)
+  p.benchOutdoor(plan, 78, 62, -2.15, artsSeatY)
+  seats.push({ x: 78, y: artsSeatY, z: 62, yaw: -2.15, label: 'Sit among the sculptures' })
+
+  // Wellness and observatory approaches receive restrained ceremonial frames
+  // so their elevation changes read as intentional transitions.
+  p.thresholdFrame(plan, -30, 103, -0.35, heightAt(-30, 103), 'fabricTeal')
+  p.planterBox(plan, -24, 112, -0.2, 2.1, heightAt(-24, 112))
+  p.thresholdFrame(plan, 2, 159, 0, heightAt(2, 159), 'paint.night')
 }
 
 // ---------------------------------------------------------------------------
