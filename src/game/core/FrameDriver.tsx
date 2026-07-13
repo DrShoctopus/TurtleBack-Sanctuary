@@ -83,7 +83,13 @@ export function FrameDriver() {
     // --- perf + auto quality ---
     runtime.perf.fps = lerp(runtime.perf.fps, 1 / dt, 0.05)
     const g = useGame.getState()
-    if (g.phase === 'playing' && settings.graphics.quality === 'auto') {
+    if (
+      g.phase === 'playing' &&
+      g.overlay === null &&
+      g.sceneReady &&
+      !document.hidden &&
+      settings.graphics.quality === 'auto'
+    ) {
       const switched = governor.update(dt)
       if (switched) {
         useGame.getState().setAutoQuality(switched)

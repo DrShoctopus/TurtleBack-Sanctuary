@@ -27,7 +27,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     dprMax: 1,
     shadowMapSize: 1024,
     shadowDistance: 55,
-    shadowsEnabled: true,
+    shadowsEnabled: false,
     oceanDetail: 0,
     oceanSegments: 96,
     rainMax: 1600,

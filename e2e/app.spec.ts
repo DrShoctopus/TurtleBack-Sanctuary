@@ -65,6 +65,71 @@ test('rain can be toggled from the Sanctuary menu', async ({ page }) => {
   expect(mode).toBe('rain')
 })
 
+test('live shaders advance and quality rebuilds geometry immediately', async ({ page }) => {
+  await page.goto('/')
+  await waitForTitle(page)
+  await enter(page)
+  await page.waitForFunction(() => Boolean((window as any).__scene), null, { timeout: 10_000 })
+
+  const probe = () =>
+    page.evaluate(() => {
+      const result: Record<string, { time: number; rain: number; vertices: number }> = {}
+      ;(window as any).__scene.traverse((object: any) => {
+        const materials = Array.isArray(object.material) ? object.material : [object.material]
+        for (const material of materials) {
+          if (
+            !material?.name ||
+            !['SkyDomeMaterial', 'CloudsMaterial', 'OceanMaterial', 'RainMaterial'].includes(
+              material.name,
+            )
+          )
+            continue
+          result[material.name] = {
+            time: material.uniforms?.uTime?.value ?? -1,
+            rain: material.uniforms?.uRain?.value ?? -1,
+            vertices: object.geometry?.getAttribute?.('position')?.count ?? 0,
+          }
+        }
+      })
+      return result
+    })
+
+  const before = await probe()
+  await page.waitForTimeout(900)
+  const after = await probe()
+  expect(after.SkyDomeMaterial.time).toBeGreaterThan(before.SkyDomeMaterial.time)
+  expect(after.CloudsMaterial.time).toBeGreaterThan(before.CloudsMaterial.time)
+  expect(after.OceanMaterial.time).toBeGreaterThan(before.OceanMaterial.time)
+
+  await page.evaluate(() =>
+    (window as any).__sanctuary.settings.getState().set('weather', {
+      mode: 'rain',
+      rainIntensity: 1,
+    }),
+  )
+  await page.waitForTimeout(1_200)
+  const rainy = await probe()
+  expect(rainy.SkyDomeMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.OceanMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.RainMaterial.rain).toBeGreaterThan(0.01)
+
+  await page.evaluate(() =>
+    (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'low' }),
+  )
+  await page.waitForTimeout(700)
+  const low = await probe()
+  expect(low.OceanMaterial.vertices).toBe(9_409)
+  expect(low.RainMaterial.vertices).toBe(1_600)
+
+  await page.evaluate(() =>
+    (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'high' }),
+  )
+  await page.waitForTimeout(900)
+  const high = await probe()
+  expect(high.OceanMaterial.vertices).toBe(50_625)
+  expect(high.RainMaterial.vertices).toBe(6_000)
+})
+
 test('settings persist across reload', async ({ page }) => {
   await page.goto('/')
   await waitForTitle(page)

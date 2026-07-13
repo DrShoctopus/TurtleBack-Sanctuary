@@ -26,6 +26,10 @@ describe('QUALITY_PROFILES', () => {
     expect(QUALITY_PROFILES.low.bloomAllowed).toBe(false)
     expect(QUALITY_PROFILES.high.bloomAllowed).toBe(true)
   })
+  it('turns off shadow rendering on low', () => {
+    expect(QUALITY_PROFILES.low.shadowsEnabled).toBe(false)
+    expect(QUALITY_PROFILES.medium.shadowsEnabled).toBe(true)
+  })
 })
 
 describe('QualityGovernor', () => {

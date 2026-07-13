@@ -2,6 +2,7 @@ import { useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, BackSide, Color, ShaderMaterial, SphereGeometry } from 'three'
 import { runtime } from '../../core/runtime'
+import { useQualityProfile } from '../../core/useQualityProfile'
 
 const AURORA_RADIUS = 1420
 
@@ -11,6 +12,7 @@ const AURORA_RADIUS = 1420
  * player turns around the sanctuary.
  */
 export function Aurora() {
+  const quality = useQualityProfile()
   const geometry = useMemo(() => new SphereGeometry(AURORA_RADIUS, 48, 32), [])
   const material = useMemo(
     () =>
@@ -42,12 +44,12 @@ export function Aurora() {
     material.uniforms.uTime.value = state.clock.elapsedTime
     material.uniforms.uMotion.value = runtime.reducedMotion ? 0.08 : 1
     material.uniforms.uDetail.value =
-      runtime.quality.level === 'low' ? 0 : runtime.quality.level === 'medium' ? 1 : 2
+      quality.level === 'low' ? 0 : quality.level === 'medium' ? 1 : 2
     material.uniforms.uStrength.value =
       night *
       night *
       Math.max(0, 1 - runtime.weather.rain * 1.45) *
-      (runtime.quality.level === 'low' ? 0.4 : runtime.quality.level === 'medium' ? 0.58 : 0.72)
+      (quality.level === 'low' ? 0.4 : quality.level === 'medium' ? 0.58 : 0.72)
   })
 
   return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={-97} />

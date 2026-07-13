@@ -4,12 +4,14 @@ import { Color, DirectionalLight, FogExp2, HemisphereLight, Object3D, Vector3 } 
 import { runtime } from '../../core/runtime'
 import { FOG_COLOR, SUN_COLOR, hemiIntensityAt, sampleColor, sunIntensityAt } from './palette'
 import { lerp } from '../../core/mathUtils'
+import { useQualityProfile } from '../../core/useQualityProfile'
 
 /**
  * Sun + moon + hemisphere lighting and scene fog, all driven per-frame from
  * runtime.time. The sun shadow frustum follows the player, snapped to texels.
  */
 export function TimeLighting() {
+  const quality = useQualityProfile()
   const sunRef = useRef<DirectionalLight>(null)
   const moonRef = useRef<DirectionalLight>(null)
   const hemiRef = useRef<HemisphereLight>(null)
@@ -41,7 +43,7 @@ export function TimeLighting() {
 
   useFrame(() => {
     const c = runtime.time.celest
-    const q = runtime.quality
+    const q = quality
     const sun = sunRef.current
     const moon = moonRef.current
     const hemi = hemiRef.current

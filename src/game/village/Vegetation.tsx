@@ -23,6 +23,7 @@ import {
 import { BUILDINGS, EXTRA_PADS, WATER_FEATURES } from '../config/layout'
 import { runtime } from '../core/runtime'
 import { useSettings } from '../state/settingsStore'
+import { useQualityProfile } from '../core/useQualityProfile'
 
 /** true when (x,z) is clear of buildings, pads, paths and water features */
 function clearOfStructures(x: number, z: number, margin = 2): boolean {
@@ -105,8 +106,9 @@ function makeSwayMaterial(base: MeshStandardMaterial, strength: number): MeshSta
 const swayShaders: Array<{ uTime: { value: number } }> = []
 
 export function Vegetation() {
+  const quality = useQualityProfile()
   const density = useSettings((s) => s.graphics.particleDensity)
-  const veg = runtime.quality.vegetationDensity * Math.max(0.4, density)
+  const veg = quality.vegetationDensity * Math.max(0.4, density)
 
   const data = useMemo(() => {
     const rng = mulberry32(useSettings.getState().worldSeed ^ 0x7e61)

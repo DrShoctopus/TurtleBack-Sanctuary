@@ -23,6 +23,7 @@ import { sitAt } from '../activities/sitting'
 import { ringChime } from '../activities/handlers'
 import { mulberry32 } from '../core/rng'
 import { buildTraversalArchitecture, type TraversalSurface } from './traversal'
+import { useQualityProfile } from '../core/useQualityProfile'
 
 export function Village() {
   return (
@@ -348,6 +349,7 @@ function buildDistrictDressing(
 
 /** Instanced lamp heads that glow at night + pooled real lights near the player. */
 function LampGlows() {
+  const quality = useQualityProfile()
   const spots = useMemo(() => {
     const all = collectLampSpots().map(([x, z]) => [x, terrainHeight(x, z) + 3.05, z] as const)
     // plus plaza + deck lamps
@@ -376,7 +378,7 @@ function LampGlows() {
     const on = Math.min(1, night * 1.4 + dusk * 0.5)
     if (matRef.current) matRef.current.emissiveIntensity = on * 2.2
     // pooled point lights: nearest N lamps
-    const maxLights = Math.min(3, runtime.quality.maxDynamicLights)
+    const maxLights = quality.maxDynamicLights
     const pp = runtime.player.pos
     const nearest = spots
       .map((s, i) => ({ i, d: (s[0] - pp.x) ** 2 + (s[2] - pp.z) ** 2 }))
@@ -406,7 +408,7 @@ function LampGlows() {
           emissiveIntensity={0}
         />
       </instancedMesh>
-      {[0, 1, 2].map((i) => (
+      {Array.from({ length: quality.maxDynamicLights }, (_, i) => (
         <pointLight
           key={i}
           ref={(el) => {

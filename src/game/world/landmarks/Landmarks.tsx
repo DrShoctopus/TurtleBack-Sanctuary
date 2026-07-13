@@ -19,8 +19,8 @@ import { runtime } from '../../core/runtime'
 import { useSettings } from '../../state/settingsStore'
 import { buildSchedule, type LandmarkEvent, type LandmarkType } from './schedule'
 import { mulberry32 } from '../../core/rng'
+import { useQualityProfile } from '../../core/useQualityProfile'
 
-const VISIBLE_RANGE = 1050
 const SCHEDULE_LENGTH = 400 // ~46 hours of voyage; effectively endless
 
 /**
@@ -28,6 +28,7 @@ const SCHEDULE_LENGTH = 400 // ~46 hours of voyage; effectively endless
  * then repositioned/reused every time its type comes up in the seeded schedule.
  */
 export function Landmarks() {
+  const quality = useQualityProfile()
   const seed = useSettings((s) => s.worldSeed)
   const schedule = useMemo(() => buildSchedule(seed, SCHEDULE_LENGTH), [seed])
   const rootRef = useRef<Group>(null)
@@ -44,7 +45,7 @@ export function Landmarks() {
     // spawn upcoming events
     while (
       cursor.current < schedule.length &&
-      schedule[cursor.current].atDistance - travel < VISIBLE_RANGE
+      schedule[cursor.current].atDistance - travel < quality.drawDistance
     ) {
       const event = schedule[cursor.current]
       cursor.current++
@@ -65,14 +66,14 @@ export function Landmarks() {
     for (let i = active.current.length - 1; i >= 0; i--) {
       const { event, node } = active.current[i]
       const rel = event.atDistance - travel // >0 ahead, <0 behind
-      if (rel < -VISIBLE_RANGE) {
+      if (rel < -quality.drawDistance) {
         node.visible = false
         node.userData.activeEvent = null
         active.current.splice(i, 1)
         continue
       }
       node.position.set(event.side * event.offset, 0, -rel)
-      node.scale.setScalar(event.scale * (runtime.quality.landmarkDetail === 0 ? 0.9 : 1))
+      node.scale.setScalar(event.scale)
       node.userData.update?.(t, night, node)
     }
   })

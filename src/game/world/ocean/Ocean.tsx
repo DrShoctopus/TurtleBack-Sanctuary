@@ -10,6 +10,7 @@ import {
   Vector3,
 } from 'three'
 import { runtime } from '../../core/runtime'
+import { useQualityProfile } from '../../core/useQualityProfile'
 import { FOG_COLOR, SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from '../sky/palette'
 
 const OCEAN_SIZE = 2600
@@ -20,8 +21,10 @@ const OCEAN_SIZE = 2600
  * forward while physics stays at the origin.
  */
 export function Ocean() {
+  const quality = useQualityProfile()
   const meshRef = useRef<Mesh>(null)
-  const segments = runtime.quality.oceanSegments
+  const matRef = useRef<ShaderMaterial>(null)
+  const segments = quality.oceanSegments
   const geometry = useMemo(() => {
     const g = new PlaneGeometry(OCEAN_SIZE, OCEAN_SIZE, segments, segments)
     g.rotateX(-Math.PI / 2)
@@ -45,38 +48,49 @@ export function Ocean() {
       uRain: { value: 0 },
       uDetail: { value: 1 },
       uMotion: { value: 1 },
+      uReflections: { value: 1 },
     }),
     [],
   )
 
   useFrame((state) => {
     const mesh = meshRef.current
-    if (!mesh) return
+    const material = matRef.current
+    if (!mesh || !material) return
+    const live = material.uniforms
     const p = runtime.player.pos
     const grid = OCEAN_SIZE / segments
     mesh.position.set(Math.round(p.x / grid) * grid, 0, Math.round(p.z / grid) * grid)
-    uniforms.uOffset.value.copy(mesh.position)
-    uniforms.uTime.value = state.clock.elapsedTime
-    uniforms.uTravel.value = runtime.travel.distance
-    uniforms.uCamPos.value.copy(state.camera.position)
+    live.uOffset.value.copy(mesh.position)
+    live.uTime.value = state.clock.elapsedTime
+    live.uTravel.value = runtime.travel.distance
+    live.uCamPos.value.copy(state.camera.position)
     const c = runtime.time.celest
-    uniforms.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
-    uniforms.uMoonDir.value.set(c.moonDir[0], c.moonDir[1], c.moonDir[2])
-    sampleColor(uniforms.uSunColor.value, SUN_COLOR, c.t)
-    sampleColor(uniforms.uSkyTop.value, SKY_TOP, c.t)
-    sampleColor(uniforms.uHorizon.value, SKY_HORIZON, c.t)
-    sampleColor(uniforms.uFogColor.value, FOG_COLOR, c.t)
-    uniforms.uNight.value = c.nightFactor
-    uniforms.uRain.value = runtime.weather.rain
-    uniforms.uFogDensity.value = 0.0015 + c.nightFactor * 0.001 + runtime.weather.rain * 0.0022
-    uniforms.uDetail.value = runtime.quality.oceanDetail
-    uniforms.uMotion.value = runtime.reducedMotion ? 0.18 : 1
+    live.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
+    live.uMoonDir.value.set(c.moonDir[0], c.moonDir[1], c.moonDir[2])
+    sampleColor(live.uSunColor.value, SUN_COLOR, c.t)
+    sampleColor(live.uSkyTop.value, SKY_TOP, c.t)
+    sampleColor(live.uHorizon.value, SKY_HORIZON, c.t)
+    sampleColor(live.uFogColor.value, FOG_COLOR, c.t)
+    live.uNight.value = c.nightFactor
+    live.uRain.value = runtime.weather.rain
+    live.uFogDensity.value = 0.0015 + c.nightFactor * 0.001 + runtime.weather.rain * 0.0022
+    live.uDetail.value = quality.oceanDetail
+    live.uMotion.value = runtime.reducedMotion ? 0.18 : 1
+    live.uReflections.value = quality.reflections
   })
 
   return (
     <>
       <mesh ref={meshRef} geometry={geometry} frustumCulled={false} renderOrder={-90}>
-        <shaderMaterial uniforms={uniforms} vertexShader={VERT} fragmentShader={FRAG} fog={false} />
+        <shaderMaterial
+          ref={matRef}
+          name="OceanMaterial"
+          uniforms={uniforms}
+          vertexShader={VERT}
+          fragmentShader={FRAG}
+          fog={false}
+        />
       </mesh>
       <EdgeLappingWaves />
     </>
@@ -246,6 +260,7 @@ uniform float uTime;
 uniform float uTravel;
 uniform float uDetail;
 uniform float uMotion;
+uniform float uReflections;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
@@ -294,6 +309,7 @@ void main() {
   vec3 R = reflect(-V, N);
   float up = clamp(R.y, 0.0, 1.0);
   vec3 skyRef = mix(uHorizon, uSkyTop, pow(up, 0.6));
+  if (uReflections < 0.5) skyRef = mix(uHorizon, uSkyTop, 0.28);
   skyRef *= mix(0.82, 0.9, uNight);
   skyRef = mix(skyRef, skyRef * vec3(0.75, 0.82, 0.92), uRain * 0.5);
 
@@ -305,7 +321,8 @@ void main() {
   float northReflection = smoothstep(-0.15, 0.65, R.z) * smoothstep(0.02, 0.42, R.y);
   float auroraRipple = 0.5 + 0.5 * sin(flow.x * 0.032 + vnoise(flow * 0.018) * 7.0 + uTime * 0.035 * uMotion);
   vec3 auroraWater = mix(vec3(0.08, 0.62, 0.48), vec3(0.34, 0.2, 0.72), auroraRipple);
-  col += auroraWater * northReflection * auroraRipple * uNight * (1.0 - uRain) * 0.075;
+  col += auroraWater * northReflection * auroraRipple * uNight * (1.0 - uRain) *
+         0.075 * step(1.5, uReflections);
 
   // sun glitter path
   float specPow = mix(340.0, 60.0, uRain);

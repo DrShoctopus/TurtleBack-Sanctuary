@@ -14,6 +14,7 @@ import { runtime } from '../core/runtime'
 import { mulberry32 } from '../core/rng'
 import { useSettings } from '../state/settingsStore'
 import { terrainHeight } from '../world/shell/shellShape'
+import { useQualityProfile } from '../core/useQualityProfile'
 
 const FALL_HEIGHT = 18
 const RADIUS = 26
@@ -24,7 +25,8 @@ const RADIUS = 26
  * the ground near the player.
  */
 export function Rain() {
-  const maxCount = runtime.quality.rainMax
+  const quality = useQualityProfile()
+  const maxCount = quality.rainMax
   const density = useSettings((s) => s.graphics.particleDensity)
   const count = Math.floor(maxCount * Math.max(0.2, density))
 
@@ -111,6 +113,7 @@ function buildRain(count: number) {
       }
     `,
   })
+  material.name = 'RainMaterial'
   return { geometry, material }
 }
 

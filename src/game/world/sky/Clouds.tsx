@@ -1,14 +1,17 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import { BackSide, Color, SphereGeometry, Vector3 } from 'three'
+import { BackSide, Color, ShaderMaterial, SphereGeometry, Vector3 } from 'three'
 import { runtime } from '../../core/runtime'
 import { lerp } from '../../core/mathUtils'
+import { useQualityProfile } from '../../core/useQualityProfile'
 
 /**
  * A noise-shader cloud shell just inside the sky dome. Coverage follows
  * weather; colors follow the sun so dawn/dusk tint the cloud bellies.
  */
 export function Clouds() {
+  const quality = useQualityProfile()
+  const matRef = useRef<ShaderMaterial>(null)
   const geometry = useMemo(() => new SphereGeometry(1350, 36, 20), [])
   const uniforms = useMemo(
     () => ({
@@ -24,21 +27,28 @@ export function Clouds() {
   )
 
   useFrame((state) => {
-    uniforms.uTime.value = state.clock.elapsedTime
-    uniforms.uTravel.value = runtime.travel.distance
+    const material = matRef.current
+    if (!material) return
+    const live = material.uniforms
+    live.uTime.value = state.clock.elapsedTime
+    live.uTravel.value = runtime.travel.distance
     const rain = runtime.weather.rain
     const night = runtime.time.celest.nightFactor
-    uniforms.uCoverage.value = lerp(0.32, 0.78, rain)
+    live.uCoverage.value = lerp(0.32, 0.78, rain)
     const c = runtime.time.celest
-    uniforms.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
-    uniforms.uLight.value.setRGB(1, 0.98, 0.95).multiplyScalar(lerp(1, 0.25, night) * lerp(1, 0.75, rain))
-    uniforms.uShade.value.setRGB(0.52, 0.58, 0.68).multiplyScalar(lerp(1, 0.22, night))
-    uniforms.uDetail.value = runtime.quality.cloudDetail
+    live.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
+    live.uLight.value
+      .setRGB(1, 0.98, 0.95)
+      .multiplyScalar(lerp(1, 0.25, night) * lerp(1, 0.75, rain))
+    live.uShade.value.setRGB(0.52, 0.58, 0.68).multiplyScalar(lerp(1, 0.22, night))
+    live.uDetail.value = quality.cloudDetail
   })
 
   return (
     <mesh geometry={geometry} frustumCulled={false} renderOrder={-98}>
       <shaderMaterial
+        ref={matRef}
+        name="CloudsMaterial"
         transparent
         depthWrite={false}
         side={BackSide}

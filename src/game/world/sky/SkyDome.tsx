@@ -13,10 +13,12 @@ import {
 import { runtime } from '../../core/runtime'
 import { SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from './palette'
 import { mulberry32 } from '../../core/rng'
+import { useQualityProfile } from '../../core/useQualityProfile'
 
 const DOME_RADIUS = 1500
 
 export function SkyDome() {
+  const quality = useQualityProfile()
   const matRef = useRef<ShaderMaterial>(null)
   const geometry = useMemo(() => new SphereGeometry(DOME_RADIUS, 40, 24), [])
   const uniforms = useMemo(
@@ -37,28 +39,32 @@ export function SkyDome() {
   )
 
   useFrame((state) => {
+    const material = matRef.current
+    if (!material) return
+    const live = material.uniforms
     const c = runtime.time.celest
-    sampleColor(uniforms.uTop.value, SKY_TOP, c.t)
-    sampleColor(uniforms.uHorizon.value, SKY_HORIZON, c.t)
-    sampleColor(uniforms.uSunColor.value, SUN_COLOR, c.t)
-    uniforms.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
-    uniforms.uMoonDir.value.set(c.moonDir[0], c.moonDir[1], c.moonDir[2])
-    uniforms.uNight.value = c.nightFactor
-    uniforms.uMoonPhase.value = c.moonPhaseVisible
-    uniforms.uRain.value = runtime.weather.rain
-    uniforms.uTime.value = state.clock.elapsedTime
-    uniforms.uAurora.value =
+    sampleColor(live.uTop.value, SKY_TOP, c.t)
+    sampleColor(live.uHorizon.value, SKY_HORIZON, c.t)
+    sampleColor(live.uSunColor.value, SUN_COLOR, c.t)
+    live.uSunDir.value.set(c.sunDir[0], c.sunDir[1], c.sunDir[2])
+    live.uMoonDir.value.set(c.moonDir[0], c.moonDir[1], c.moonDir[2])
+    live.uNight.value = c.nightFactor
+    live.uMoonPhase.value = c.moonPhaseVisible
+    live.uRain.value = runtime.weather.rain
+    live.uTime.value = state.clock.elapsedTime
+    live.uAurora.value =
       c.nightFactor *
       c.nightFactor *
       Math.max(0, 1 - runtime.weather.rain * 1.45) *
-      (runtime.quality.level === 'low' ? 0.78 : 1.35)
-    uniforms.uMotion.value = runtime.reducedMotion ? 0.16 : 1
+      (quality.level === 'low' ? 0.78 : 1.35)
+    live.uMotion.value = runtime.reducedMotion ? 0.16 : 1
   })
 
   return (
     <mesh geometry={geometry} frustumCulled={false} renderOrder={-100}>
       <shaderMaterial
         ref={matRef}
+        name="SkyDomeMaterial"
         side={BackSide}
         depthWrite={false}
         fog={false}
