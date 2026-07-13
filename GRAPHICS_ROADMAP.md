@@ -38,6 +38,7 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - Define texel density, bevel radius, roughness range, emissive range, and prop scale standards.
 - Establish benchmark cameras at the home porch, plaza, greenhouse, bathhouse, observatory, each edge deck, turtle head view, and one interior per building class.
 - Capture High/Medium/Low screenshots at every benchmark after each milestone.
+- Progress: `ART_BIBLE.md`, the named benchmark registry, and `pnpm capture:graphics` now define a repeatable review target.
 
 ## Phase 2 — Architectural kit replacement
 

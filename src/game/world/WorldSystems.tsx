@@ -5,9 +5,18 @@ import { applySimpleWetness } from '../weather/simpleWet'
 import { runtime } from '../core/runtime'
 import { events } from '../core/events'
 import { terrainHeight } from './shell/shellShape'
+import {
+  BENCHMARKS,
+  BENCHMARK_SHORTCUTS,
+  isBenchmarkId,
+  type BenchmarkId,
+  type FixedBenchmark,
+} from '../config/benchmarks'
 
 interface TurtlebackDebug {
   teleport: (x: number, z: number, yaw?: number, pitch?: number) => void
+  benchmark: (id: string) => boolean
+  benchmarks: () => BenchmarkId[]
   player: () => { x: number; y: number; z: number; yaw: number }
 }
 
@@ -18,11 +27,12 @@ interface TurtlebackDebug {
 export function WorldSystems() {
   const scene = useThree((s) => s.scene)
   const camera = useThree((s) => s.camera)
-  const portraitCamera = useRef(false)
+  const fixedCamera = useRef<FixedBenchmark | null>(null)
   useEffect(() => {
     if (import.meta.env.DEV) {
       const devWindow = window as unknown as Record<string, unknown>
       const teleport = (x: number, z: number, yaw = 0, pitch = 0) => {
+        fixedCamera.current = null
         events.emit('teleport', {
           x,
           y: terrainHeight(x, z) + 0.08,
@@ -32,9 +42,18 @@ export function WorldSystems() {
         })
         runtime.player.pitch = pitch
       }
+      const benchmark = (id: string) => {
+        if (!isBenchmarkId(id)) return false
+        const view = BENCHMARKS[id]
+        if (view.mode === 'fixed') fixedCamera.current = view
+        else teleport(view.x, view.z, view.yaw, view.pitch)
+        return true
+      }
       devWindow.__scene = scene
       devWindow.__turtlebackDebug = {
         teleport,
+        benchmark,
+        benchmarks: () => Object.keys(BENCHMARKS) as BenchmarkId[],
         player: () => ({
           x: runtime.player.pos.x,
           y: runtime.player.pos.y,
@@ -44,27 +63,15 @@ export function WorldSystems() {
       } satisfies TurtlebackDebug
       const onBenchmarkKey = (event: KeyboardEvent) => {
         if (!event.altKey) return
-        if (event.shiftKey && event.code === 'Digit1') teleport(0, -202, 0, -0.08)
-        else if (event.shiftKey && event.code === 'Digit2') teleport(123, 60, -Math.PI / 2, -0.08)
-        else if (event.shiftKey && event.code === 'Digit3') teleport(5.2, 219, Math.PI, -0.12)
-        else if (event.shiftKey && event.code === 'Digit4') teleport(-127, -31, Math.PI / 2, -0.08)
-        else if (event.shiftKey && event.code === 'Digit5') teleport(-62, -132, -1.2, -0.02)
-        else if (event.shiftKey && event.code === 'Digit6') teleport(36, -52, 0.8, -0.02)
-        else if (event.shiftKey && event.code === 'Digit7') teleport(-52, 91, 0, -0.1)
-        else if (event.shiftKey && event.code === 'Digit8') teleport(-30, -14, 0.4, -0.02)
-        else if (event.shiftKey && event.code === 'Digit9') teleport(0, 151, Math.PI, -0.08)
-        else if (event.shiftKey && event.code === 'Digit0') teleport(12, 194, Math.PI, -0.02)
-        else if (event.code === 'Digit1') teleport(0, -238, 0, -0.25)
-        else if (event.code === 'Digit2') teleport(166, 58, -Math.PI / 2, -0.55)
-        else if (event.code === 'Digit3') teleport(2, 232, Math.PI, -0.18)
-        else if (event.code === 'Digit4') teleport(-166, -24, Math.PI / 2, -0.55)
-        else if (event.code === 'Digit5') portraitCamera.current = true
-        else if (event.code === 'Digit6') teleport(0, -60, Math.PI, -0.04)
-        else if (event.code === 'Digit7') teleport(-54, 98, 0, -0.08)
-        else if (event.code === 'Digit8') teleport(70, 43, -2.18, -0.04)
-        else if (event.code === 'Digit9') teleport(-110, -38, -2.77, -0.04)
-        else if (event.code === 'Digit0') portraitCamera.current = false
-        else return
+        if (event.code === 'Digit0' && !event.shiftKey) {
+          fixedCamera.current = null
+          event.preventDefault()
+          return
+        }
+        const shortcut = `${event.shiftKey ? 'Shift+' : ''}${event.code}`
+        const id = BENCHMARK_SHORTCUTS[shortcut]
+        if (!id) return
+        benchmark(id)
         event.preventDefault()
       }
       window.addEventListener('keydown', onBenchmarkKey)
@@ -83,9 +90,10 @@ export function WorldSystems() {
       updatePlayerZone()
     }
     applySimpleWetness(runtime.weather.wetness)
-    if (import.meta.env.DEV && portraitCamera.current) {
-      camera.position.set(0, 7.5, -336)
-      camera.lookAt(0, 4.5, -295)
+    if (import.meta.env.DEV && fixedCamera.current) {
+      const view = fixedCamera.current
+      camera.position.set(...view.position)
+      camera.lookAt(...view.lookAt)
     }
   })
   return null
