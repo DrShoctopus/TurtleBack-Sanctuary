@@ -73,21 +73,31 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
 
   const probe = () =>
     page.evaluate(() => {
-      const result: Record<string, { time: number; rain: number; vertices: number }> = {}
+      const result: Record<
+        string,
+        { time: number; rain: number; vertices: number; instances: number }
+      > = {}
       ;(window as any).__scene.traverse((object: any) => {
         const materials = Array.isArray(object.material) ? object.material : [object.material]
         for (const material of materials) {
           if (
             !material?.name ||
-            !['SkyDomeMaterial', 'CloudsMaterial', 'OceanMaterial', 'RainMaterial'].includes(
-              material.name,
-            )
+            ![
+              'SkyDomeMaterial',
+              'CloudsMaterial',
+              'OceanMaterial',
+              'RainMaterial',
+              'RimMistMaterial',
+              'RoofDripMaterial',
+              'PuddleSheenMaterial',
+            ].includes(material.name)
           )
             continue
           result[material.name] = {
             time: material.uniforms?.uTime?.value ?? -1,
             rain: material.uniforms?.uRain?.value ?? -1,
             vertices: object.geometry?.getAttribute?.('position')?.count ?? 0,
+            instances: object.count ?? 0,
           }
         }
       })
@@ -100,6 +110,7 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   expect(after.SkyDomeMaterial.time).toBeGreaterThan(before.SkyDomeMaterial.time)
   expect(after.CloudsMaterial.time).toBeGreaterThan(before.CloudsMaterial.time)
   expect(after.OceanMaterial.time).toBeGreaterThan(before.OceanMaterial.time)
+  expect(after.RimMistMaterial.time).toBeGreaterThan(before.RimMistMaterial.time)
 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('weather', {
@@ -112,6 +123,7 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   expect(rainy.SkyDomeMaterial.rain).toBeGreaterThan(0.01)
   expect(rainy.OceanMaterial.rain).toBeGreaterThan(0.01)
   expect(rainy.RainMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.RoofDripMaterial.rain).toBeGreaterThan(0.01)
 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'low' }),
@@ -120,6 +132,8 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   const low = await probe()
   expect(low.OceanMaterial.vertices).toBe(9_409)
   expect(low.RainMaterial.vertices).toBe(1_600)
+  expect(low.RoofDripMaterial.vertices).toBe(39)
+  expect(low.PuddleSheenMaterial.instances).toBe(5)
 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'high' }),
@@ -128,6 +142,8 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   const high = await probe()
   expect(high.OceanMaterial.vertices).toBe(50_625)
   expect(high.RainMaterial.vertices).toBe(6_000)
+  expect(high.RoofDripMaterial.vertices).toBe(156)
+  expect(high.PuddleSheenMaterial.instances).toBe(13)
 })
 
 test('settings persist across reload', async ({ page }) => {

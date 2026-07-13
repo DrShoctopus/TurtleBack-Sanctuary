@@ -15,6 +15,7 @@ import { mulberry32 } from '../core/rng'
 import { useSettings } from '../state/settingsStore'
 import { terrainHeight } from '../world/shell/shellShape'
 import { useQualityProfile } from '../core/useQualityProfile'
+import { ComfortMotionClock, comfortMotionScale } from '../core/comfortMotion'
 
 const FALL_HEIGHT = 18
 const RADIUS = 26
@@ -32,22 +33,27 @@ export function Rain() {
 
   const { geometry, material } = useMemo(() => buildRain(count), [count])
   const pointsRef = useRef<Points>(null)
+  const motionClock = useRef(new ComfortMotionClock())
+  const shelter = useRef(1)
   const anchor = useMemo(() => new Vector3(), [])
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const pts = pointsRef.current
     if (!pts) return
     const rain = runtime.weather.rain
     const indoors = runtime.player.indoors
+    const shelterTarget = indoors ? 0 : 1
+    shelter.current += (shelterTarget - shelter.current) * Math.min(1, dt * 4)
     pts.visible = rain > 0.02
     if (!pts.visible) return
     const p = runtime.player.pos
     anchor.set(p.x, p.y, p.z)
     pts.position.copy(anchor)
     const u = (material as ShaderMaterial).uniforms
-    u.uTime.value = state.clock.elapsedTime
-    // indoors the streaks thin out — what remains reads through the windows
-    u.uRain.value = rain * (indoors ? 0.3 : 1)
+    u.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion, 0.14)
+    // Smoothly clear the player-centered volume under a roof. Exterior rain
+    // remains visible through windows because it is rendered by distant mist.
+    u.uRain.value = rain * shelter.current
     u.uWind.value = runtime.weather.wind
   })
 
@@ -138,7 +144,7 @@ function RippleRings() {
     if (!mesh.visible) return
     const p = runtime.player.pos
     states.forEach((s, i) => {
-      s.t += dt * (0.9 + rain * 0.5)
+      s.t += dt * comfortMotionScale(runtime.reducedMotion, 0.18) * (0.9 + rain * 0.5)
       if (s.t > 1.2) {
         s.t = 0
         const a = placementRng() * Math.PI * 2

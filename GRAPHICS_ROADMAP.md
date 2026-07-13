@@ -71,6 +71,7 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - Tune sun/moon shadow softness, indoor daylight fill, contact shadows, window transmission, and emissive exposure.
 - Add high-quality cloud layering, mist banks, rain shafts, roof drips, puddle response, and wet reflection breakup.
 - Keep bloom restrained and make every comfort-affecting motion obey Reduced Motion.
+- Progress: quality-scaled rim mist, eave runoff, reflective puddles, and comfort-aware rain motion are now live.
 
 ## Acceptance gates
 

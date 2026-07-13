@@ -10,6 +10,7 @@ import { AmbientLife, Landmarks } from './landmarks/Landmarks'
 import { Village } from '../village/Village'
 import { Vegetation } from '../village/Vegetation'
 import { Rain } from '../weather/Rain'
+import { AtmosphereDetails } from '../weather/AtmosphereDetails'
 import { InteractionSystem } from '../interaction/InteractionSystem'
 import { WorldSystems } from './WorldSystems'
 
@@ -31,6 +32,7 @@ export function TurtleWorld() {
       <Village />
       <Vegetation />
       <Rain />
+      <AtmosphereDetails />
       <InteractionSystem />
       <WorldSystems />
     </>
