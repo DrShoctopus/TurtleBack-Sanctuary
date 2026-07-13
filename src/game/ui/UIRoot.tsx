@@ -14,6 +14,7 @@ import { MusicOverlay } from './media/MusicOverlay'
 import { JournalOverlay } from './media/JournalOverlay'
 import { ReadingOverlay } from './media/ReadingOverlay'
 import { PerfOverlay } from './hud/PerfOverlay'
+import { keyboardActionForCode } from '../input/actions'
 
 function isTyping(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null
@@ -61,8 +62,9 @@ export function UIRoot() {
       }
       const g = useGame.getState()
       if (g.phase !== 'playing') return
-      switch (e.code) {
-        case 'Escape': {
+      const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
+      switch (action) {
+        case 'pause': {
           if (g.overlay !== null) {
             closeOverlay()
           } else {
@@ -71,7 +73,7 @@ export function UIRoot() {
           }
           break
         }
-        case 'KeyM': {
+        case 'open_sanctuary': {
           if (g.overlay === 'sanctuary') closeOverlay()
           else if (g.overlay === null) {
             g.setOverlay('sanctuary', 'time')
@@ -79,7 +81,7 @@ export function UIRoot() {
           }
           break
         }
-        case 'Tab': {
+        case 'open_map': {
           e.preventDefault()
           if (g.overlay === 'sanctuary') closeOverlay()
           else if (g.overlay === null) {
@@ -88,7 +90,7 @@ export function UIRoot() {
           }
           break
         }
-        case 'KeyH': {
+        case 'return_home': {
           if (g.overlay === null && !g.sitting) {
             g.setFade(true)
             window.setTimeout(() => {
@@ -99,7 +101,7 @@ export function UIRoot() {
           }
           break
         }
-        case 'F3': {
+        case 'performance_overlay': {
           if (import.meta.env.DEV) {
             e.preventDefault()
             g.togglePerfOverlay()

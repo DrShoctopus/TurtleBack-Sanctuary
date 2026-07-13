@@ -2,23 +2,15 @@ import { create } from 'zustand'
 import { persist, createJSONStorage } from 'zustand/middleware'
 import { safeStorage } from '../core/save/storage'
 import { SAVE_KEYS } from '../config/constants'
+import {
+  createJournalId,
+  migrateMedia,
+  type JournalEntry,
+  type RadioStation,
+  type RecentVideo,
+} from '../data/media'
 
-export interface RecentVideo {
-  id: string
-  title: string
-  addedAt: number
-}
-
-export interface RadioStation {
-  name: string
-  url: string
-}
-
-export interface JournalEntry {
-  id: number
-  at: number
-  text: string
-}
+export type { JournalEntry, RadioStation, RecentVideo } from '../data/media'
 
 interface MediaState {
   recentVideos: RecentVideo[]
@@ -29,7 +21,7 @@ interface MediaState {
   addStation: (s: RadioStation) => void
   removeStation: (url: string) => void
   addJournal: (text: string) => void
-  removeJournal: (id: number) => void
+  removeJournal: (id: string) => void
   clearJournal: () => void
 }
 
@@ -54,15 +46,22 @@ export const useMedia = create<MediaState>()(
       removeStation: (url) => set((s) => ({ stations: s.stations.filter((x) => x.url !== url) })),
       addJournal: (text) =>
         set((s) => ({
-          journal: [{ id: Date.now(), at: Date.now(), text }, ...s.journal].slice(0, 100),
+          journal: [{ id: createJournalId(), at: Date.now(), text }, ...s.journal].slice(0, 100),
         })),
       removeJournal: (id) => set((s) => ({ journal: s.journal.filter((e) => e.id !== id) })),
       clearJournal: () => set({ journal: [] }),
     }),
     {
       name: SAVE_KEYS.media,
-      version: 1,
+      version: 2,
       storage: createJSONStorage(() => safeStorage),
+      migrate: (persisted) => migrateMedia(persisted) as MediaState,
+      merge: (persisted, current) => ({ ...current, ...migrateMedia(persisted) }),
+      partialize: (state) => ({
+        recentVideos: state.recentVideos,
+        stations: state.stations,
+        journal: state.journal,
+      }) as MediaState,
     },
   ),
 )

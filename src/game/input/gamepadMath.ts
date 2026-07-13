@@ -1,5 +1,16 @@
 /** Pure gamepad processing — deadzones, curves, standard-layout mapping. Testable in node. */
 
+import {
+  DEFAULT_GAMEPAD_BINDINGS,
+  PAD_BUTTON,
+  type GamepadBindings,
+  type PadAction,
+  type PadButtonName,
+} from './actions'
+
+export { DEFAULT_GAMEPAD_BINDINGS as PAD_ACTION_MAP, PAD_BUTTON }
+export type { PadAction, PadButtonName }
+
 export interface StickValue {
   x: number
   y: number
@@ -23,80 +34,31 @@ export function lookCurve(v: number, exponent = 1.6): number {
   return s * Math.pow(Math.abs(v), exponent)
 }
 
-/** Standard-layout button indices (https://w3c.github.io/gamepad/#remapping). */
-export const PAD_BUTTON = {
-  a: 0,
-  b: 1,
-  x: 2,
-  y: 3,
-  lb: 4,
-  rb: 5,
-  lt: 6,
-  rt: 7,
-  select: 8,
-  start: 9,
-  l3: 10,
-  r3: 11,
-  up: 12,
-  down: 13,
-  left: 14,
-  right: 15,
-} as const
-
-export type PadButtonName = keyof typeof PAD_BUTTON
-
-export type PadAction =
-  | 'interact'
-  | 'back'
-  | 'secondary'
-  | 'menu'
-  | 'tabL'
-  | 'tabR'
-  | 'interactAlt'
-  | 'map'
-  | 'pause'
-  | 'jog'
-  | 'jump'
-  | 'navUp'
-  | 'navDown'
-  | 'navLeft'
-  | 'navRight'
-
-/** Default button → action map. */
-export const PAD_ACTION_MAP: Record<PadAction, number> = {
-  interact: PAD_BUTTON.a,
-  back: PAD_BUTTON.b,
-  secondary: PAD_BUTTON.x,
-  jump: PAD_BUTTON.x, // X doubles as jump while walking (no secondary target)
-  menu: PAD_BUTTON.y,
-  tabL: PAD_BUTTON.lb,
-  tabR: PAD_BUTTON.rb,
-  interactAlt: PAD_BUTTON.rt,
-  map: PAD_BUTTON.select,
-  pause: PAD_BUTTON.start,
-  jog: PAD_BUTTON.l3,
-  navUp: PAD_BUTTON.up,
-  navDown: PAD_BUTTON.down,
-  navLeft: PAD_BUTTON.left,
-  navRight: PAD_BUTTON.right,
-}
-
 export interface PadFrame {
   buttons: boolean[]
   axes: number[]
 }
 
 /** Rising-edge detection between two frames for a given action. */
-export function actionPressed(prev: PadFrame | null, cur: PadFrame, action: PadAction): boolean {
-  const idx = PAD_ACTION_MAP[action]
+export function actionPressed(
+  prev: PadFrame | null,
+  cur: PadFrame,
+  action: PadAction,
+  bindings: GamepadBindings = DEFAULT_GAMEPAD_BINDINGS,
+): boolean {
+  const idx = bindings[action]
   const now = cur.buttons[idx] ?? false
   const before = prev?.buttons[idx] ?? false
   return now && !before
 }
 
-export function actionHeld(cur: PadFrame | null, action: PadAction): boolean {
+export function actionHeld(
+  cur: PadFrame | null,
+  action: PadAction,
+  bindings: GamepadBindings = DEFAULT_GAMEPAD_BINDINGS,
+): boolean {
   if (!cur) return false
-  return cur.buttons[PAD_ACTION_MAP[action]] ?? false
+  return cur.buttons[bindings[action]] ?? false
 }
 
 /** Any button pressed or stick moved beyond deadzone → used for device detection. */

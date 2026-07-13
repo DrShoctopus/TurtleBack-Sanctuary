@@ -31,6 +31,7 @@
     "react-dom": "^19.1.0",
     "three": "^0.182.0",
     "three-stdlib": "^2.36.0",
+    "zod": "^4.4.3",
     "zustand": "^5.0.8"
   },
   "devDependencies": {
@@ -40,6 +41,9 @@
     "@types/react-dom": "^19.1.0",
     "@types/three": "^0.182.0",
     "@vitejs/plugin-react": "^5.0.0",
+    "electron": "^43.1.0",
+    "electron-builder": "^26.15.3",
+    "esbuild": "^0.28.1",
     "eslint": "^9.33.0",
     "eslint-plugin-react-hooks": "^5.2.0",
     "prettier": "^3.6.0",

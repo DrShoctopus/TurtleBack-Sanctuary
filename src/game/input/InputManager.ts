@@ -10,38 +10,12 @@ import {
   type PadAction,
   type PadFrame,
 } from './gamepadMath'
+import {
+  keyboardActionForCode,
+  type KeyboardActionId,
+} from './actions'
 
-export type KeyAction =
-  | 'forward'
-  | 'back'
-  | 'left'
-  | 'right'
-  | 'jog'
-  | 'jump'
-  | 'interact'
-  | 'menu'
-  | 'home'
-  | 'map'
-  | 'perf'
-
-const KEY_BINDINGS: Record<string, KeyAction> = {
-  KeyW: 'forward',
-  ArrowUp: 'forward',
-  KeyS: 'back',
-  ArrowDown: 'back',
-  KeyA: 'left',
-  ArrowLeft: 'left',
-  KeyD: 'right',
-  ArrowRight: 'right',
-  ShiftLeft: 'jog',
-  ShiftRight: 'jog',
-  Space: 'jump',
-  KeyE: 'interact',
-  KeyM: 'menu',
-  KeyH: 'home',
-  Tab: 'map',
-  F3: 'perf',
-}
+export type KeyAction = KeyboardActionId
 
 export type MenuNavEvent = {
   kind: 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'tabL' | 'tabR'
@@ -52,9 +26,9 @@ export type MenuNavEvent = {
  * update() is driven from the render loop; menus receive synthetic nav events.
  */
 class InputManager {
-  private keysDown = new Set<KeyAction>()
-  private keyPressedQueue = new Set<KeyAction>()
-  private keyPressTimes = new Map<KeyAction, number>()
+  private keysDown = new Set<KeyboardActionId>()
+  private keyPressedQueue = new Set<KeyboardActionId>()
+  private keyPressTimes = new Map<KeyboardActionId, number>()
   private mouseDX = 0
   private mouseDY = 0
   private padPrev: PadFrame | null = null
@@ -100,7 +74,7 @@ class InputManager {
 
   private onKeyDown = (e: KeyboardEvent) => {
     if (this.isTypingTarget(e)) return
-    const action = KEY_BINDINGS[e.code]
+    const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
     const g = useGame.getState()
     // keep browser focus/scroll behavior out of gameplay keys
     if (action && (g.phase === 'playing' || g.phase === 'title')) {
@@ -117,7 +91,7 @@ class InputManager {
   }
 
   private onKeyUp = (e: KeyboardEvent) => {
-    const action = KEY_BINDINGS[e.code]
+    const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
     if (action) this.keysDown.delete(action)
   }
 
@@ -179,10 +153,11 @@ class InputManager {
     const ax = this.padCur.axes[0] ?? 0
     const ay = this.padCur.axes[1] ?? 0
     let dir: MenuNavEvent['kind'] | null = null
-    if (actionHeld(this.padCur, 'navUp') || ay < -dz) dir = 'up'
-    else if (actionHeld(this.padCur, 'navDown') || ay > dz) dir = 'down'
-    else if (actionHeld(this.padCur, 'navLeft') || ax < -dz) dir = 'left'
-    else if (actionHeld(this.padCur, 'navRight') || ax > dz) dir = 'right'
+    const bindings = useSettings.getState().input.gamepadBindings
+    if (actionHeld(this.padCur, 'navUp', bindings) || ay < -dz) dir = 'up'
+    else if (actionHeld(this.padCur, 'navDown', bindings) || ay > dz) dir = 'down'
+    else if (actionHeld(this.padCur, 'navLeft', bindings) || ax < -dz) dir = 'left'
+    else if (actionHeld(this.padCur, 'navRight', bindings) || ax > dz) dir = 'right'
 
     if (dir) {
       if (!this.navHold || this.navHold.kind !== dir) {
@@ -215,10 +190,10 @@ class InputManager {
   getMove(): { x: number; y: number } {
     let x = 0
     let y = 0
-    if (this.keysDown.has('forward')) y += 1
-    if (this.keysDown.has('back')) y -= 1
-    if (this.keysDown.has('right')) x += 1
-    if (this.keysDown.has('left')) x -= 1
+    if (this.keysDown.has('move_forward')) y += 1
+    if (this.keysDown.has('move_backward')) y -= 1
+    if (this.keysDown.has('move_right')) x += 1
+    if (this.keysDown.has('move_left')) x -= 1
     if (x !== 0 && y !== 0) {
       const inv = 1 / Math.SQRT2
       x *= inv
@@ -261,12 +236,12 @@ class InputManager {
     return this.jogToggled
   }
 
-  keyHeld(action: KeyAction): boolean {
+  keyHeld(action: KeyboardActionId): boolean {
     return this.keysDown.has(action)
   }
 
   /** Rising-edge check for keyboard actions (consumes). Time-buffered ~180ms. */
-  consumeKey(action: KeyAction): boolean {
+  consumeKey(action: KeyboardActionId): boolean {
     const t = this.keyPressTimes.get(action)
     if (t !== undefined && performance.now() - t < 180) {
       this.keyPressTimes.delete(action)
@@ -278,11 +253,16 @@ class InputManager {
 
   padPressed(action: PadAction): boolean {
     if (!this.padCur) return false
-    return actionPressed(this.padPrev, this.padCur, action)
+    return actionPressed(
+      this.padPrev,
+      this.padCur,
+      action,
+      useSettings.getState().input.gamepadBindings,
+    )
   }
 
   padHeld(action: PadAction): boolean {
-    return actionHeld(this.padCur, action)
+    return actionHeld(this.padCur, action, useSettings.getState().input.gamepadBindings)
   }
 
   /** Clear one-frame state at end of frame. */
