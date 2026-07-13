@@ -17,6 +17,11 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, info: ErrorInfo): void {
     if (import.meta.env.DEV) console.error('[boundary]', error, info.componentStack)
+    void window.desktopApp?.logRendererError({
+      message: error.message,
+      stack: `${error.stack ?? ''}\n${info.componentStack ?? ''}`.slice(0, 16000),
+      source: 'react-boundary',
+    })
   }
 
   render() {

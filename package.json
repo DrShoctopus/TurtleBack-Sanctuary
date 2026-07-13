@@ -2,9 +2,11 @@
   "name": "turtleback-sanctuary",
   "private": true,
   "version": "1.0.0",
+  "main": "dist-desktop/main/index.cjs",
   "packageManager": "pnpm@11.12.0",
   "type": "module",
   "description": "A calming first-person exploration game set in a village on the back of a colossal sea turtle.",
+  "author": "Turtleback Sanctuary contributors",
   "engines": {
     "node": ">=20"
   },
@@ -16,6 +18,11 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "capture:graphics": "playwright test -c playwright.visual.config.ts",
+    "desktop:bundle": "node scripts/build-desktop.mjs",
+    "desktop:dev": "node scripts/desktop-dev.mjs",
+    "desktop:build": "pnpm build && pnpm desktop:bundle",
+    "desktop:run": "pnpm desktop:build && electron .",
+    "desktop:package": "pnpm desktop:build && electron-builder --dir",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""

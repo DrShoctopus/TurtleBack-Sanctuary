@@ -30,19 +30,35 @@ npm test
 
 Then open **http://localhost:5173** and click **Enter Sanctuary**. (The click is required — browsers only allow audio to start after a user gesture.)
 
+### Electron desktop development
+
+Phase 1 of the desktop conversion is in progress. The secure Electron shell and
+unpacked macOS build are runnable; durable desktop media/save adapters and
+automated packaged-app coverage remain open in the
+[Phase 1 plan](docs/phase-1-electron-vertical-slice.md).
+
+```bash
+pnpm desktop:dev      # Vite renderer + sandboxed Electron window
+pnpm desktop:build    # renderer + bundled main/preload production outputs
+pnpm desktop:package  # unpacked platform application → release/
+```
+
 ### All commands
 
-| Command           | What it does                                       |
-| ----------------- | -------------------------------------------------- |
-| `pnpm dev`        | Vite dev server with HMR                           |
-| `pnpm build`      | `tsc --noEmit` then `vite build` → `dist/`         |
-| `pnpm preview`    | Serve the production build locally                 |
-| `pnpm test`       | Vitest unit tests (124 tests)                      |
-| `pnpm test:watch` | Vitest in watch mode                               |
-| `pnpm test:e2e`   | Playwright browser tests (see [Testing](#testing)) |
-| `pnpm typecheck`  | Strict TypeScript check only                       |
-| `pnpm lint`       | ESLint                                             |
-| `pnpm format`     | Prettier                                           |
+| Command                | What it does                                       |
+| ---------------------- | -------------------------------------------------- |
+| `pnpm dev`             | Vite dev server with HMR                           |
+| `pnpm build`           | `tsc --noEmit` then `vite build` → `dist/`         |
+| `pnpm preview`         | Serve the production build locally                 |
+| `pnpm test`            | Vitest unit tests (146 tests)                      |
+| `pnpm test:watch`      | Vitest in watch mode                               |
+| `pnpm test:e2e`        | Playwright browser tests (see [Testing](#testing)) |
+| `pnpm typecheck`       | Strict TypeScript check only                       |
+| `pnpm lint`            | ESLint                                             |
+| `pnpm format`          | Prettier                                           |
+| `pnpm desktop:dev`     | Vite renderer in the sandboxed Electron shell      |
+| `pnpm desktop:build`   | Renderer plus main/preload production bundles      |
+| `pnpm desktop:package` | Unpacked desktop app in `release/`                 |
 
 ---
 

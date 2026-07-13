@@ -1,0 +1,23 @@
+appId: com.turtleback.sanctuary
+productName: Turtleback Sanctuary
+copyright: Copyright © 2026 Turtleback Sanctuary contributors
+asar: true
+beforeBuild: scripts/skip-desktop-dependencies.cjs
+removePackageScripts: true
+directories:
+  output: release
+files:
+  - dist/**/*
+  - dist-desktop/**/*
+  - package.json
+mac:
+  category: public.app-category.games
+  target:
+    - dir
+win:
+  target:
+    - nsis
+linux:
+  category: Game
+  target:
+    - AppImage

@@ -1,4 +1,3 @@
-import { isIP } from 'node:net'
 import { lookup } from 'node:dns/promises'
 
 const EXTERNAL_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'youtu.be', 'github.com'])
@@ -13,7 +12,10 @@ const EMBED_SUFFIXES = [
 
 function isPrivateIPv4(host: string): boolean {
   const parts = host.split('.').map(Number)
-  if (parts.length !== 4 || parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)) {
+  if (
+    parts.length !== 4 ||
+    parts.some((part) => !Number.isInteger(part) || part < 0 || part > 255)
+  ) {
     return false
   }
   const [a, b] = parts
@@ -64,7 +66,12 @@ export async function validateRemoteMediaUrl(input: string): Promise<URL | null>
   } catch {
     return null
   }
-  if (url.protocol !== 'https:' || url.username || url.password || isBlockedLocalHostname(url.hostname)) {
+  if (
+    url.protocol !== 'https:' ||
+    url.username ||
+    url.password ||
+    isBlockedLocalHostname(url.hostname)
+  ) {
     return null
   }
   try {
@@ -108,10 +115,20 @@ export class RemoteRequestPolicy {
   isAllowed(input: string, developmentOrigin?: string): boolean {
     try {
       const url = new URL(input)
-      if (url.protocol === 'app:' || url.protocol === 'turtleback-media:' || url.protocol === 'devtools:') {
+      if (
+        url.protocol === 'app:' ||
+        url.protocol === 'turtleback-media:' ||
+        url.protocol === 'devtools:' ||
+        url.protocol === 'data:' ||
+        url.protocol === 'blob:'
+      ) {
         return true
       }
-      if (developmentOrigin && url.origin === developmentOrigin) return true
+      if (developmentOrigin) {
+        const development = new URL(developmentOrigin)
+        const sameEndpoint = url.hostname === development.hostname && url.port === development.port
+        if (sameEndpoint && (url.protocol === 'http:' || url.protocol === 'ws:')) return true
+      }
       if (isTrustedEmbedUrl(input)) return true
       return this.authorizedMediaOrigins.has(url.origin)
     } catch {
@@ -119,4 +136,3 @@ export class RemoteRequestPolicy {
     }
   }
 }
-

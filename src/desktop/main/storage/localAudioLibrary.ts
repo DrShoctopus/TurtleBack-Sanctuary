@@ -1,8 +1,9 @@
 import { createHash, randomUUID } from 'node:crypto'
+import { createReadStream } from 'node:fs'
 import { readdir, realpath, stat } from 'node:fs/promises'
 import { basename, extname, isAbsolute, join, relative, sep } from 'node:path'
-import { pathToFileURL } from 'node:url'
-import { BrowserWindow, dialog, net, type ProtocolRequest } from 'electron'
+import { Readable } from 'node:stream'
+import { BrowserWindow, dialog } from 'electron'
 import { z } from 'zod'
 import {
   folderIdSchema,
@@ -35,7 +36,11 @@ function isWithin(root: string, candidate: string): boolean {
 }
 
 function stableTrackId(root: string, file: string): string {
-  const hex = createHash('sha256').update(root).update('\0').update(relative(root, file)).digest('hex')
+  const hex = createHash('sha256')
+    .update(root)
+    .update('\0')
+    .update(relative(root, file))
+    .digest('hex')
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-4${hex.slice(13, 16)}-a${hex.slice(17, 20)}-${hex.slice(20, 32)}`
 }
 
@@ -137,11 +142,12 @@ export class LocalAudioLibrary {
         playbackUrl: `turtleback-media://track/${id}`,
       })
     }
-    if (files.length >= MAX_TRACKS) this.logger.warn('local_audio.scan_capped', { limit: MAX_TRACKS })
+    if (files.length >= MAX_TRACKS)
+      this.logger.warn('local_audio.scan_capped', { limit: MAX_TRACKS })
     return tracks
   }
 
-  async handleProtocol(request: ProtocolRequest): Promise<Response> {
+  async handleProtocol(request: Request): Promise<Response> {
     const url = new URL(request.url)
     if (url.hostname !== 'track') return new Response('Not found', { status: 404 })
     const id = url.pathname.slice(1)
@@ -149,9 +155,81 @@ export class LocalAudioLibrary {
     const file = this.tracks.get(id)
     if (!file) return new Response('Not found', { status: 404 })
     try {
-      return await net.fetch(pathToFileURL(file).toString(), { headers: request.headers })
+      const info = await stat(file)
+      const range = parseByteRange(request.headers.get('range'), info.size)
+      if (range === 'invalid') {
+        return new Response(null, {
+          status: 416,
+          headers: { 'Content-Range': `bytes */${info.size}` },
+        })
+      }
+      const start = range?.start ?? 0
+      const end = range?.end ?? Math.max(0, info.size - 1)
+      const body = Readable.toWeb(
+        createReadStream(file, { start, end }),
+      ) as ReadableStream<Uint8Array>
+      const headers: Record<string, string> = {
+        'Accept-Ranges': 'bytes',
+        'Content-Length': String(Math.max(0, end - start + 1)),
+        'Content-Type': audioContentType(extname(file).toLowerCase()),
+        'Cache-Control': 'private, no-store',
+      }
+      if (range) headers['Content-Range'] = `bytes ${start}-${end}/${info.size}`
+      return new Response(body, { status: range ? 206 : 200, headers })
     } catch {
       return new Response('Unavailable', { status: 410 })
     }
+  }
+}
+
+interface ByteRange {
+  start: number
+  end: number
+}
+
+function parseByteRange(input: string | null, size: number): ByteRange | 'invalid' | null {
+  if (!input) return null
+  const match = /^bytes=(\d*)-(\d*)$/.exec(input.trim())
+  if (!match || size <= 0) return 'invalid'
+  const [, rawStart, rawEnd] = match
+  if (!rawStart && !rawEnd) return 'invalid'
+
+  if (!rawStart) {
+    const suffixLength = Number(rawEnd)
+    if (!Number.isSafeInteger(suffixLength) || suffixLength <= 0) return 'invalid'
+    return { start: Math.max(0, size - suffixLength), end: size - 1 }
+  }
+
+  const start = Number(rawStart)
+  const end = rawEnd ? Number(rawEnd) : size - 1
+  if (
+    !Number.isSafeInteger(start) ||
+    !Number.isSafeInteger(end) ||
+    start < 0 ||
+    start >= size ||
+    end < start
+  ) {
+    return 'invalid'
+  }
+  return { start, end: Math.min(end, size - 1) }
+}
+
+function audioContentType(extension: string): string {
+  switch (extension) {
+    case '.mp3':
+      return 'audio/mpeg'
+    case '.m4a':
+    case '.aac':
+      return 'audio/mp4'
+    case '.ogg':
+    case '.oga':
+    case '.opus':
+      return 'audio/ogg'
+    case '.wav':
+      return 'audio/wav'
+    case '.flac':
+      return 'audio/flac'
+    default:
+      return 'application/octet-stream'
   }
 }
