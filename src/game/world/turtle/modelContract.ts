@@ -39,6 +39,12 @@ export type TurtleNodeName = (typeof TURTLE_REQUIRED_NODES)[number]
 export type TurtleClipName = (typeof TURTLE_REQUIRED_CLIPS)[number]
 export type TurtleLod = 0 | 1 | 2
 
+export const TURTLE_SHELL_ANCHOR = Object.freeze({
+  semiX: WORLD.shellWidth / 2,
+  semiZ: WORLD.shellLength / 2,
+  rimY: WORLD.rimHeight,
+})
+
 export interface TurtleModelContract {
   metreScale: 1
   bowAxis: '-z'

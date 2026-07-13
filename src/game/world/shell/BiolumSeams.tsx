@@ -3,6 +3,7 @@ import { useFrame } from '@react-three/fiber'
 import { CatmullRomCurve3, Color, MeshBasicMaterial, TubeGeometry, Vector3 } from 'three'
 import { terrainHeight } from './shellShape'
 import { runtime } from '../../core/runtime'
+import { sampleShellTransitionAnchors } from '../turtle/shellAlignment'
 
 /** Bioluminescent seams tracing the shell's ridgelines — visible after dusk. */
 export function BiolumSeams() {
@@ -24,15 +25,11 @@ export function BiolumSeams() {
       lines.push(lat)
     }
     // rim ring
-    const rim: Vector3[] = []
-    const a = 170 * 0.955
-    const b = 250 * 0.955
-    for (let i = 0; i <= 64; i++) {
-      const th = (i / 64) * Math.PI * 2
-      const x = Math.cos(th) * a
-      const z = Math.sin(th) * b
-      rim.push(new Vector3(x, terrainHeight(x, z) + 0.12, z))
-    }
+    const rim: Vector3[] = sampleShellTransitionAnchors(96).map(({ x, z }) => {
+      const seamX = x * 0.955
+      const seamZ = z * 0.955
+      return new Vector3(seamX, terrainHeight(seamX, seamZ) + 0.12, seamZ)
+    })
     lines.push(rim)
     return lines.map((pts, i) => {
       const curve = new CatmullRomCurve3(pts, i === 3)
@@ -41,7 +38,13 @@ export function BiolumSeams() {
   }, [])
 
   const material = useMemo(
-    () => new MeshBasicMaterial({ color: new Color('#000000'), toneMapped: false, transparent: true, opacity: 0.85 }),
+    () =>
+      new MeshBasicMaterial({
+        color: new Color('#000000'),
+        toneMapped: false,
+        transparent: true,
+        opacity: 0.85,
+      }),
     [],
   )
 

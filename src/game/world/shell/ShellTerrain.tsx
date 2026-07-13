@@ -1,4 +1,5 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
+import { useFrame, useThree } from '@react-three/fiber'
 import {
   BufferAttribute,
   BufferGeometry,
@@ -10,6 +11,8 @@ import { RigidBody, TrimeshCollider } from '@react-three/rapier'
 import { SHELL_SEMI_X, SHELL_SEMI_Z, shellRadius, splatWeights, terrainHeight } from './shellShape'
 import { getSurfaceDetail, getTexture } from '../textures'
 import { registerWeatherMaterial } from '../../weather/wetMaterials'
+import { ShellTransitionBand } from '../turtle/ShellTransitionBand'
+import { authoredTraversalCollisionViolations } from '../turtle/shellAlignment'
 
 const STEP = 2.2
 const MARGIN = 1.12 // generate slightly past the rim so the skirt hides the underside
@@ -21,12 +24,35 @@ const MARGIN = 1.12 // generate slightly past the rim so the skirt hides the und
 export function ShellTerrain() {
   const { geometry, vertices, indices } = useMemo(() => buildTerrain(), [])
   const material = useMemo(() => buildMaterial(), [])
+  const scene = useThree((state) => state.scene)
+  const assertionClock = useRef(0)
+
+  useFrame((_, dt) => {
+    if (!import.meta.env.DEV) return
+    assertionClock.current += Number.isFinite(dt) && dt > 0 ? dt : 0
+    if (assertionClock.current < 1) return
+    assertionClock.current = 0
+    const violations = authoredTraversalCollisionViolations(scene)
+    if (violations.length > 0) {
+      throw new Error(`Authored traversal collision is forbidden: ${violations.join(', ')}`)
+    }
+  })
 
   return (
-    <RigidBody type="fixed" colliders={false}>
-      <TrimeshCollider args={[vertices, indices]} friction={1} restitution={0} />
-      <mesh geometry={geometry} material={material} receiveShadow castShadow={false} />
-    </RigidBody>
+    <>
+      <RigidBody type="fixed" colliders={false}>
+        <TrimeshCollider args={[vertices, indices]} friction={1} restitution={0} />
+        <mesh
+          name="AnalyticShellTraversal"
+          geometry={geometry}
+          material={material}
+          receiveShadow
+          castShadow={false}
+          userData={{ traversalCollision: true, traversalSource: 'analytic-shell' }}
+        />
+      </RigidBody>
+      <ShellTransitionBand />
+    </>
   )
 }
 
