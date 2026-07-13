@@ -19,12 +19,26 @@ export interface ShellSpec {
   wallMat: MatKey
   trimMat?: MatKey
   floorMat?: MatKey
-  roof?: 'flat' | 'shed' | 'butterfly'
+  roof?: 'flat' | 'shed' | 'butterfly' | 'glassGable'
   door?: { wall: 0 | 1 | 2 | 3; x: number; w?: number }
   windows?: WindowSpec[]
   porch?: boolean
   /** raise interior floor slab this much above terrain pad */
   plinth?: number
+  /** Exterior silhouette and entrance treatment for this destination. */
+  identity?:
+    | 'home'
+    | 'cafe'
+    | 'bookshop'
+    | 'records'
+    | 'plants'
+    | 'gallery'
+    | 'bathhouse'
+    | 'observatory'
+    | 'store'
+    | 'cottage'
+  /** Optional material used for signs, awnings, and other identity accents. */
+  accentMat?: MatKey
 }
 
 export interface DoorSpec {
@@ -123,6 +137,18 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
       size: [wf.w + 0.16, 0.1, T + 0.06],
       rot: [0, f.rotY, 0],
     })
+    // A projecting sill and shallow drip cap give the glazing a readable
+    // recess in both flat daylight and strong night window glow.
+    plan.box(trim, {
+      pos: [px - sin * 0.16, plinthH + wf.sill - 0.1, pz + cos * 0.16],
+      size: [wf.w + 0.3, 0.1, T + 0.36],
+      rot: [0, f.rotY, 0],
+    })
+    plan.box(trim, {
+      pos: [px - sin * 0.09, plinthH + wf.sill + wf.h + 0.09, pz + cos * 0.09],
+      size: [wf.w + 0.24, 0.09, T + 0.22],
+      rot: [0, f.rotY, 0],
+    })
     for (const side of [-1, 1]) {
       const ox = (side * (wf.w / 2 + 0.04)) as number
       plan.box(trim, {
@@ -139,7 +165,7 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     // glow quad slightly inside
     const inset = 0.16
     glow.box('plasterWarm', {
-      pos: [px - sin * inset, cy, pz - cos * inset],
+      pos: [px + sin * inset, cy, pz - cos * inset],
       size: [wf.w - 0.06, wf.h - 0.06, 0.02],
       rot: [0, f.rotY, 0],
     })
@@ -169,7 +195,7 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     // outside step
     const stepOut = 0.55
     plan.solid('concrete', {
-      pos: [px - sin * stepOut * -1 + 0, plinthH / 2 - 0.02, pz + cos * stepOut],
+      pos: [px - sin * stepOut, plinthH / 2 - 0.02, pz + cos * stepOut],
       size: [dw + 0.5, plinthH + 0.04, 1.0],
       rot: [0, f.rotY, 0],
     })
@@ -181,11 +207,11 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     }
   }
 
-  // ceiling
-  plan.box('plasterCool', { pos: [0, h + plinthH + 0.02, 0], size: [w + 0.1, 0.1, d + 0.1] })
-
   // roof
   const roof = spec.roof ?? 'flat'
+  if (roof !== 'glassGable') {
+    plan.box('plasterCool', { pos: [0, h + plinthH + 0.02, 0], size: [w + 0.1, 0.1, d + 0.1] })
+  }
   if (roof === 'flat') {
     plan.box(trim, { pos: [0, h + plinthH + 0.2, 0], size: [w + 0.65, 0.28, d + 0.65] })
     // parapet fascia
@@ -211,7 +237,7 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
       size: [w + 0.9, 0.22, d + 1.1],
       rot: [0.1, 0, 0],
     })
-  } else {
+  } else if (roof === 'butterfly') {
     // butterfly: two slabs dipping toward the middle
     plan.box(trim, {
       pos: [0, h + plinthH + 0.5, -d / 4],
@@ -222,6 +248,36 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
       pos: [0, h + plinthH + 0.5, d / 4],
       size: [w + 0.9, 0.2, d / 2 + 0.6],
       rot: [0.09, 0, 0],
+    })
+  } else {
+    // A true transparent greenhouse roof: glass planes and repeated metal
+    // rafters with no opaque ceiling hidden beneath them.
+    const pitch = 0.24
+    plan.box('glass', {
+      pos: [-w / 4 - 0.1, h + plinthH + 0.75, 0],
+      size: [w / 2 + 0.45, 0.06, d + 0.6],
+      rot: [0, 0, pitch],
+    })
+    plan.box('glass', {
+      pos: [w / 4 + 0.1, h + plinthH + 0.75, 0],
+      size: [w / 2 + 0.45, 0.06, d + 0.6],
+      rot: [0, 0, -pitch],
+    })
+    for (let z = -d / 2; z <= d / 2 + 0.01; z += 1.55) {
+      plan.box('metalDark', {
+        pos: [-w / 4 - 0.1, h + plinthH + 0.79, z],
+        size: [w / 2 + 0.48, 0.08, 0.08],
+        rot: [0, 0, pitch],
+      })
+      plan.box('metalDark', {
+        pos: [w / 4 + 0.1, h + plinthH + 0.79, z],
+        size: [w / 2 + 0.48, 0.08, 0.08],
+        rot: [0, 0, -pitch],
+      })
+    }
+    plan.box('metalDark', {
+      pos: [0, h + plinthH + 1.3, 0],
+      size: [0.14, 0.14, d + 0.65],
     })
   }
 
@@ -256,5 +312,153 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     })
   }
 
+  if (spec.identity && door && spec.door) {
+    buildExteriorIdentity(plan, spec, door, plinthH)
+  }
+
   return door
+}
+
+function buildExteriorIdentity(plan: BuildPlan, spec: ShellSpec, door: DoorSpec, plinthH: number) {
+  const identity = spec.identity
+  if (!identity || !spec.door) return
+
+  const f = wallFrame(spec, spec.door.wall)
+  const cos = Math.cos(f.rotY)
+  const sin = Math.sin(f.rotY)
+  const accent = spec.accentMat ?? spec.trimMat ?? 'woodDark'
+  const entry = (along: number, outward: number, y: number): [number, number, number] => [
+    door.pos[0] + along * cos - sin * outward,
+    y,
+    door.pos[2] - along * sin + cos * outward,
+  ]
+  const addCanopy = (mat: MatKey, width: number, depth: number, y = plinthH + 2.58) => {
+    plan.box(mat, {
+      pos: entry(0, depth * 0.43, y),
+      size: [width, 0.14, depth],
+      rot: [0.05, f.rotY, 0],
+    })
+    for (const side of [-1, 1]) {
+      plan.box(spec.trimMat ?? 'woodDark', {
+        pos: entry(side * (width / 2 - 0.12), depth * 0.78, y - 0.5),
+        size: [0.07, 1.0, 0.07],
+        rot: [0, f.rotY, 0],
+      })
+    }
+  }
+  const addSignBand = (mat: MatKey, width: number, y = plinthH + 2.82) => {
+    plan.box('woodDark', {
+      pos: entry(0, 0.2, y),
+      size: [width + 0.14, 0.5, 0.12],
+      rot: [0, f.rotY, 0],
+    })
+    plan.box(mat, {
+      pos: entry(0, 0.27, y),
+      size: [width, 0.34, 0.05],
+      rot: [0, f.rotY, 0],
+    })
+  }
+  const addFrontFins = (mat: MatKey, count: number, spacing: number, height: number, start = 0) => {
+    for (let i = 0; i < count; i++) {
+      const along = start + (i - (count - 1) / 2) * spacing
+      plan.box(mat, {
+        pos: entry(along, 0.22, plinthH + height / 2),
+        size: [0.1, height, 0.38],
+        rot: [0, f.rotY, 0],
+      })
+    }
+  }
+
+  switch (identity) {
+    case 'home':
+    case 'cottage': {
+      // A warm trellis cadence and a small chimney make residential roofs
+      // legible from the village paths without relying on signage.
+      for (const along of [-1.2, -0.6, 0, 0.6, 1.2]) {
+        plan.box('woodPale', {
+          pos: entry(along, 2.12, plinthH + 2.48),
+          size: [0.08, 0.08, 2.5],
+          rot: [0, f.rotY, 0],
+        })
+      }
+      plan.solid('woodDark', {
+        pos: [spec.w * 0.28, spec.h + plinthH + 0.78, -spec.d * 0.22],
+        size: [0.48, 1.15, 0.48],
+      })
+      plan.box('metalDark', {
+        pos: [spec.w * 0.28, spec.h + plinthH + 1.38, -spec.d * 0.22],
+        size: [0.64, 0.1, 0.64],
+      })
+      break
+    }
+    case 'cafe':
+      addCanopy('fabricRust', door.width + 2.5, 1.65, plinthH + 2.72)
+      addSignBand('woodPale', door.width + 1.0, plinthH + 3.02)
+      addFrontFins('woodPale', 2, 0.25, 0.72, -door.width / 2 - 0.58)
+      break
+    case 'bookshop':
+      addCanopy('woodWarm', door.width + 1.7, 1.25)
+      addSignBand('fabricSand', door.width + 1.3)
+      addFrontFins('woodDark', 5, 0.18, 1.35, -door.width / 2 - 0.72)
+      break
+    case 'records':
+      addCanopy('metalDark', door.width + 1.5, 1.05)
+      addSignBand('paint.coral', door.width + 1.45)
+      plan.box('fabricTeal', {
+        pos: entry(0, 0.31, plinthH + 2.82),
+        size: [0.22, 0.36, 0.06],
+        rot: [0, f.rotY, 0],
+      })
+      addFrontFins('metalBrushed', 3, 0.2, 1.1, door.width / 2 + 0.6)
+      break
+    case 'plants': {
+      addCanopy('metalBrushed', door.width + 1.5, 1.1)
+      addSignBand('plasterSage', door.width + 1.2)
+      for (const along of [-1.35, 1.35]) {
+        plan.solid('ceramicTerracotta', {
+          pos: entry(along, 0.55, plinthH + 0.3),
+          size: [0.82, 0.5, 0.58],
+        })
+        plan.sphere(
+          'leafDeep',
+          { pos: entry(along, 0.55, plinthH + 0.78), size: [0.75, 0.7, 0.75] },
+          10,
+        )
+        plan.sphere(
+          'leafGreen',
+          {
+            pos: entry(along + 0.18, 0.52, plinthH + 1.08),
+            size: [0.52, 0.62, 0.52],
+          },
+          10,
+        )
+      }
+      break
+    }
+    case 'gallery':
+      addCanopy('metalBrushed', door.width + 2.0, 1.4, plinthH + 2.7)
+      addSignBand('ceramicWhite', door.width + 1.2, plinthH + 3.08)
+      addFrontFins('metalDark', 4, 0.26, spec.h + 0.9, -spec.w / 2 + 0.62)
+      break
+    case 'bathhouse':
+      addCanopy('woodPale', door.width + 2.2, 1.75, plinthH + 2.62)
+      addSignBand('stoneCounter', door.width + 1.25, plinthH + 2.94)
+      addFrontFins('woodWarm', 7, 0.23, 2.5, -door.width / 2 - 1.45)
+      break
+    case 'observatory':
+      addCanopy('metalBrushed', door.width + 1.6, 1.3, plinthH + 2.64)
+      addSignBand('paint.night', door.width + 1.0, plinthH + 2.95)
+      addFrontFins('metalBrushed', 2, door.width + 0.75, spec.h + 0.7)
+      plan.box('paint.coral', {
+        pos: entry(0, 0.34, plinthH + 2.95),
+        size: [0.12, 0.38, 0.07],
+        rot: [0, f.rotY, Math.PI / 4],
+      })
+      break
+    case 'store':
+      addCanopy('fabricSand', door.width + 1.9, 1.45)
+      addSignBand(accent, door.width + 1.45)
+      addFrontFins('woodPale', 4, 0.22, 1.2, -door.width / 2 - 0.72)
+      break
+  }
 }

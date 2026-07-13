@@ -31,7 +31,12 @@ export interface InteractionSpec {
   pos: [number, number, number]
   radius?: number
   /** for sit: eye + stand data */
-  seat?: { eye: [number, number, number]; stand: [number, number, number]; yaw: number; listen?: boolean }
+  seat?: {
+    eye: [number, number, number]
+    stand: [number, number, number]
+    yaw: number
+    listen?: boolean
+  }
   label?: string
 }
 
@@ -53,7 +58,11 @@ export interface BuiltInterior {
   extras: BuildingExtras
 }
 
-function fresh(flavor: BuildingExtras['flavor']): { plan: BuildPlan; glow: BuildPlan; extras: BuildingExtras } {
+function fresh(flavor: BuildingExtras['flavor']): {
+  plan: BuildPlan
+  glow: BuildPlan
+  extras: BuildingExtras
+} {
   return {
     plan: new BuildPlan(),
     glow: new BuildPlan(),
@@ -107,6 +116,8 @@ const home: InteriorFn = () => {
     floorMat: 'woodDeck',
     roof: 'flat',
     porch: true,
+    identity: 'home',
+    accentMat: 'woodPale',
     door: { wall: 0, x: -3.2 },
     windows: [
       { wall: 0, x: 0.6, w: 2.6, h: 1.7, sill: 0.75 },
@@ -175,7 +186,10 @@ const home: InteriorFn = () => {
     seatSpec('sofa', 2.6, 1.55, Math.PI, { label: 'Sit on the sofa' }),
     seatSpec('armchair', 4.4, 0.4, -Math.PI / 2 - 0.3, { label: 'Sink into the armchair' }),
   )
-  extras.lights.push({ pos: [1.6, 2.5, -1], intensity: 14 }, { pos: [-3.4, 2.5, 1.6], intensity: 9 })
+  extras.lights.push(
+    { pos: [1.6, 2.5, -1], intensity: 14 },
+    { pos: [-3.4, 2.5, 1.6], intensity: 9 },
+  )
   return { plan, glow, extras }
 }
 
@@ -195,6 +209,8 @@ const cafe: InteriorFn = () => {
     floorMat: 'woodDeck',
     roof: 'butterfly',
     porch: true,
+    identity: 'cafe',
+    accentMat: 'fabricRust',
     door: { wall: 0, x: 0 },
     windows: [
       { wall: 0, x: -3.0, w: 2.4, h: 1.9, sill: 0.6 },
@@ -252,6 +268,8 @@ const bookshop: InteriorFn = () => {
     trimMat: 'woodDark',
     floorMat: 'woodDeck',
     roof: 'shed',
+    identity: 'bookshop',
+    accentMat: 'fabricSand',
     door: { wall: 0, x: 1.8 },
     windows: [
       { wall: 0, x: -1.6, w: 2.6, h: 2.0, sill: 0.55 },
@@ -308,6 +326,8 @@ const records: InteriorFn = () => {
     trimMat: 'metalDark',
     floorMat: 'concrete',
     roof: 'flat',
+    identity: 'records',
+    accentMat: 'paint.coral',
     door: { wall: 0, x: -2.2 },
     windows: [
       { wall: 0, x: 1.4, w: 3.2, h: 1.9, sill: 0.6 },
@@ -321,7 +341,14 @@ const records: InteriorFn = () => {
   p.recordBin(plan, -0.6, 1.4, 0)
   p.shelfUnit(plan, -3.7, -1.2, Math.PI / 2, 3.2, 2.2, false, 51)
   // record wall display
-  const covers = ['paint.coral', 'fabricTeal', 'ceramicTerracotta', 'fabricRust', 'ceramicWhite', 'fabricSand'] as const
+  const covers = [
+    'paint.coral',
+    'fabricTeal',
+    'ceramicTerracotta',
+    'fabricRust',
+    'ceramicWhite',
+    'fabricSand',
+  ] as const
   covers.forEach((c, i) => {
     plan.box(c, { pos: [-2.4 + i * 1.0, 2.1, -3.13], size: [0.62, 0.62, 0.04] })
   })
@@ -333,7 +360,13 @@ const records: InteriorFn = () => {
   p.stool(plan, 2.9, -1.2, 0)
   extras.interactions.push(
     { id: 'listen', kind: 'listen', pos: [2.9, 1.1, -2.35], radius: 2.4 },
-    { id: 'browse', kind: 'goods', pos: [-0.6, 1.0, 0.5], radius: 2.6, label: 'Flip through records' },
+    {
+      id: 'browse',
+      kind: 'goods',
+      pos: [-0.6, 1.0, 0.5],
+      radius: 2.6,
+      label: 'Flip through records',
+    },
     seatSpec('stool', 2.9, -1.2, 0, { label: 'Listen a while', eyeH: 1.3 }),
   )
   extras.lights.push({ pos: [0, 2.3, -0.4], intensity: 10, color: '#ffc9a8' })
@@ -354,7 +387,9 @@ const plants: InteriorFn = () => {
     wallMat: 'plasterSage',
     trimMat: 'metalDark',
     floorMat: 'concrete',
-    roof: 'flat',
+    roof: 'glassGable',
+    identity: 'plants',
+    accentMat: 'plasterSage',
     door: { wall: 0, x: 0 },
     windows: [
       { wall: 0, x: -2.8, w: 2.2, h: 2.2, sill: 0.4 },
@@ -365,10 +400,6 @@ const plants: InteriorFn = () => {
       { wall: 1, x: 0, w: 3.4, h: 2.2, sill: 0.5 },
     ],
   })
-  // glass gable roof
-  plan.box('glass', { pos: [-W / 4 - 0.1, H + 0.75, 0], size: [W / 2 + 0.4, 0.05, D + 0.5], rot: [0, 0, 0.24] })
-  plan.box('glass', { pos: [W / 4 + 0.1, H + 0.75, 0], size: [W / 2 + 0.4, 0.05, D + 0.5], rot: [0, 0, -0.24] })
-  plan.box('metalDark', { pos: [0, H + 1.28, 0], size: [0.14, 0.14, D + 0.5] })
   extras.interior = { halfX: W / 2, halfZ: D / 2, halfY: H / 2 + 0.6, cy: H / 2 }
 
   // plant tables in rows
@@ -381,7 +412,11 @@ const plants: InteriorFn = () => {
     for (let i = 0; i < 7; i++) {
       const px = -2.7 + i * 0.9
       plan.cyl('ceramicTerracotta', { pos: [px, 0.92, rowZ], size: [0.24, 0.2, 0.24] }, 10)
-      plan.sphere(i % 2 ? 'leafGreen' : 'leafDeep', { pos: [px, 1.14, rowZ], size: [0.36, 0.32, 0.36] }, 8)
+      plan.sphere(
+        i % 2 ? 'leafGreen' : 'leafDeep',
+        { pos: [px, 1.14, rowZ], size: [0.36, 0.32, 0.36] },
+        8,
+      )
     }
   }
   // floor specimens
@@ -418,6 +453,8 @@ const gallery: InteriorFn = () => {
     trimMat: 'metalDark',
     floorMat: 'concrete',
     roof: 'flat',
+    identity: 'gallery',
+    accentMat: 'ceramicWhite',
     door: { wall: 0, x: 0, w: 1.8 },
     windows: [
       { wall: 0, x: -3.6, w: 1.4, h: 2.6, sill: 0.4 },
@@ -438,7 +475,11 @@ const gallery: InteriorFn = () => {
   walls.forEach((wSpec, i) => {
     p.paintingFrame(plan, wSpec.x, 1.85, wSpec.z, wSpec.rotY, i % 2 ? 1.2 : 1.7, i % 2 ? 1.5 : 1.15)
     extras.artworks.push({
-      pos: [wSpec.x + (wSpec.rotY === 0 ? 0 : wSpec.rotY > 0 ? 0.04 : -0.04), 1.85, wSpec.z + (wSpec.rotY === 0 ? 0.04 : 0)],
+      pos: [
+        wSpec.x + (wSpec.rotY === 0 ? 0 : wSpec.rotY > 0 ? 0.04 : -0.04),
+        1.85,
+        wSpec.z + (wSpec.rotY === 0 ? 0.04 : 0),
+      ],
       rotY: wSpec.rotY,
       w: i % 2 ? 1.1 : 1.6,
       h: i % 2 ? 1.4 : 1.05,
@@ -474,6 +515,8 @@ const bathhouse: InteriorFn = () => {
     trimMat: 'woodDark',
     floorMat: 'concrete',
     roof: 'flat',
+    identity: 'bathhouse',
+    accentMat: 'stoneCounter',
     door: { wall: 0, x: 3.6 },
     windows: [
       { wall: 0, x: -1.4, w: 3.2, h: 1.2, sill: 1.5 },
@@ -496,7 +539,11 @@ const bathhouse: InteriorFn = () => {
   p.plantPot(plan, -4.6, 3.4, 'l', 81)
   p.plantPot(plan, 4.6, 3.6, 'm', 82)
   // candles along the pool edge (emissive dots via lampShades, always soft)
-  extras.lampShades.push({ pos: [-4.5, 0.55, -1.4], r: 0.06 }, { pos: [0.1, 0.55, -3.0], r: 0.06 }, { pos: [1.2, 0.55, 1.8], r: 0.06 })
+  extras.lampShades.push(
+    { pos: [-4.5, 0.55, -1.4], r: 0.06 },
+    { pos: [0.1, 0.55, -3.0], r: 0.06 },
+    { pos: [1.2, 0.55, 1.8], r: 0.06 },
+  )
 
   extras.interactions.push(
     { id: 'breath', kind: 'breath', pos: [-2.2, 0.6, -1.4], radius: 3.4 },
@@ -522,6 +569,8 @@ const observatory: InteriorFn = () => {
     trimMat: 'metalDark',
     floorMat: 'concrete',
     roof: 'flat',
+    identity: 'observatory',
+    accentMat: 'paint.night',
     door: { wall: 0, x: 0 },
     windows: [
       { wall: 2, x: 0, w: 1.8, h: 1.2, sill: 1.1 },
@@ -529,7 +578,9 @@ const observatory: InteriorFn = () => {
     ],
   })
   // dome (visual only, above roof)
+  plan.cyl('concrete', { pos: [0, H + 0.38, 0], size: [7.7, 0.72, 7.7] }, 32)
   plan.sphere('metalBrushed', { pos: [0, H + 0.7, 0], size: [7.4, 5.2, 7.4] }, 24)
+  plan.cyl('metalDark', { pos: [0, H + 1.04, 0], size: [7.58, 0.14, 7.58] }, 32)
   plan.box('paint.night', { pos: [0, H + 2.4, 0], size: [1.1, 3.0, 7.6], rot: [0, 0, 0] })
   extras.interior = { halfX: W / 2, halfZ: D / 2, halfY: H / 2 + 0.2, cy: H / 2 }
 
@@ -543,7 +594,13 @@ const observatory: InteriorFn = () => {
 
   extras.interactions.push(
     { id: 'scope', kind: 'telescope', pos: [0, 1.5, -0.6], radius: 2.8 },
-    { id: 'journal', kind: 'journal', pos: [-3.1, 0.9, -2.6], radius: 2.2, label: 'Log an observation' },
+    {
+      id: 'journal',
+      kind: 'journal',
+      pos: [-3.1, 0.9, -2.6],
+      radius: 2.2,
+      label: 'Log an observation',
+    },
     seatSpec('chair', 2.4, 2.4, -2.6, { label: 'Watch the dome' }),
   )
   extras.lights.push({ pos: [0, 2.2, 0], intensity: 7, color: '#c9576a' })
@@ -566,6 +623,8 @@ const store: InteriorFn = () => {
     floorMat: 'woodDeck',
     roof: 'shed',
     porch: true,
+    identity: 'store',
+    accentMat: 'fabricSand',
     door: { wall: 0, x: -2.4 },
     windows: [
       { wall: 0, x: 1.6, w: 3.4, h: 1.9, sill: 0.55 },
@@ -607,8 +666,29 @@ const pavilion: InteriorFn = () => {
   ] as Array<[number, number]>) {
     plan.solid('woodDark', { pos: [cx, 1.75, cz], size: [0.24, 3.0, 0.24] })
   }
-  plan.box('woodDark', { pos: [0, 3.35, 0], size: [W + 0.8, 0.16, D + 0.8] })
-  plan.box('woodDeck', { pos: [0, 3.5, 0], size: [W + 0.3, 0.14, D + 0.3] })
+  // Two light overlapping roof wings create an open-sail silhouette instead
+  // of the same heavy flat lid used by enclosed village buildings.
+  plan.box('woodDark', {
+    pos: [-2.45, 3.4, 0],
+    size: [W / 2 + 1.1, 0.16, D + 0.8],
+    rot: [0, 0, 0.1],
+  })
+  plan.box('woodDark', {
+    pos: [2.45, 3.4, 0],
+    size: [W / 2 + 1.1, 0.16, D + 0.8],
+    rot: [0, 0, -0.1],
+  })
+  plan.box('woodDeck', {
+    pos: [-2.35, 3.52, 0],
+    size: [W / 2 + 0.8, 0.12, D + 0.35],
+    rot: [0, 0, 0.1],
+  })
+  plan.box('woodDeck', {
+    pos: [2.35, 3.52, 0],
+    size: [W / 2 + 0.8, 0.12, D + 0.35],
+    rot: [0, 0, -0.1],
+  })
+  plan.box('metalDark', { pos: [0, 3.68, 0], size: [0.16, 0.18, D + 0.7] })
   // long communal table + benches
   plan.solid('woodWarm', { pos: [0, 0.92, 0], size: [3.8, 0.08, 1.1] })
   plan.box('woodDark', { pos: [-1.5, 0.55, 0], size: [0.14, 0.75, 0.9] })
@@ -650,6 +730,8 @@ const cottage: InteriorFn = (spec) => {
     floorMat: 'woodDeck',
     roof: variant === 1 ? 'shed' : 'flat',
     porch: variant !== 2,
+    identity: 'cottage',
+    accentMat: variant === 0 ? 'fabricRust' : variant === 1 ? 'fabricTeal' : 'fabricSand',
     door: { wall: 0, x: 1.4 },
     windows: [
       { wall: 0, x: -1.2, w: 1.8, h: 1.5, sill: 0.75 },

@@ -25,6 +25,7 @@ Turtleback Sanctuary should feel authored everywhere: serene at first glance, re
 - 2026-07-12 — Benchmark QA support: development builds expose deterministic bow, stern, east/west edge, and turtle-portrait camera positions so hero and shoreline art can be reviewed without pointer lock; production behavior is unchanged.
 - 2026-07-12 — District composition foundation: a merged outdoor kit now supplies threshold frames, market canopies, raised garden beds, pale residential fences, and abstract sculpture plinths. Plaza, Market Lane, Greenhouse Gardens, Quiet Path, Arts, Wellness, and Observatory approaches each receive authored clusters and distinct silhouettes without increasing prop-object draw calls.
 - 2026-07-12 — Garden focal repair: the solid cylinder that covered the garden pond was replaced with a low ring of merged rim stones, restoring the animated water surface and its approach sightline.
+- 2026-07-12 — Exterior identity pass: projecting window sills and drip caps add real facade depth; homes, café, shops, greenhouse, gallery, bathhouse, observatory, and cottages now receive distinct entrance, canopy, sign, screen, planting, and skyline treatments. The greenhouse has a true transparent ribbed roof with no hidden opaque ceiling, the observatory dome has a grounded drum and equatorial band, and the pavilion roof now opens into two light sail-like wings.
 
 ## Phase 1 — Art bible and benchmark views
 
