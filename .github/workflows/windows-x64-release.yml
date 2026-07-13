@@ -68,11 +68,27 @@ jobs:
       - name: Verify unsigned Windows x64 artifacts
         if: env.RELEASE_MODE == 'unsigned-proof'
         shell: pwsh
-        run: node scripts/verify-windows-release.mjs --mode=proof | Tee-Object -FilePath release/windows-x64-verification.json
+        run: |
+          node scripts/verify-windows-release.mjs --mode=proof 2>&1 | Tee-Object -FilePath release/windows-x64-verification.json
+          $verifyExitCode = $LASTEXITCODE
+          if ($verifyExitCode -ne 0) {
+            $tail = (Get-Content -LiteralPath release/windows-x64-verification.json -Tail 40) -join "`n"
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows verification failed::$escaped"
+            exit $verifyExitCode
+          }
       - name: Verify signed Windows x64 artifacts
         if: env.RELEASE_MODE == 'signed-release'
         shell: pwsh
-        run: node scripts/verify-windows-release.mjs --mode=release | Tee-Object -FilePath release/windows-x64-verification.json
+        run: |
+          node scripts/verify-windows-release.mjs --mode=release 2>&1 | Tee-Object -FilePath release/windows-x64-verification.json
+          $verifyExitCode = $LASTEXITCODE
+          if ($verifyExitCode -ne 0) {
+            $tail = (Get-Content -LiteralPath release/windows-x64-verification.json -Tail 40) -join "`n"
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows verification failed::$escaped"
+            exit $verifyExitCode
+          }
       - name: Install, smoke, and uninstall
         shell: pwsh
         run: ./scripts/windows-installer-proof.ps1
