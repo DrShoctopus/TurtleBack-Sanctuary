@@ -15,9 +15,35 @@ import {
 import { BUILDINGS } from '../config/layout'
 import { ComfortMotionClock } from '../core/comfortMotion'
 import { runtime } from '../core/runtime'
+import type { QualityLevel } from '../core/quality'
 import { useQualityProfile } from '../core/useQualityProfile'
 import { useSettings } from '../state/settingsStore'
 import { makePuddleAnchors, makeRoofDripAnchors, selectEvenly } from './atmosphereLayout'
+
+const RIM_MIST_BASE_COUNT: Readonly<Record<QualityLevel, number>> = {
+  low: 6,
+  medium: 10,
+  high: 14,
+  ultra: 18,
+}
+const ROOF_DRIPS_PER_BUILDING: Readonly<Record<QualityLevel, number>> = {
+  low: 3,
+  medium: 7,
+  high: 12,
+  ultra: 16,
+}
+const PUDDLE_VISIBLE_CAP: Readonly<Record<QualityLevel, number>> = {
+  low: 5,
+  medium: 9,
+  high: Number.POSITIVE_INFINITY,
+  ultra: Number.POSITIVE_INFINITY,
+}
+const PUDDLE_SEGMENTS: Readonly<Record<QualityLevel, number>> = {
+  low: 28,
+  medium: 28,
+  high: 48,
+  ultra: 64,
+}
 
 /** Low-draw-call weather depth: rim mist, roof runoff and reflective puddles. */
 export function AtmosphereDetails() {
@@ -33,7 +59,7 @@ export function AtmosphereDetails() {
 function RimMist() {
   const quality = useQualityProfile()
   const density = useSettings((state) => state.graphics.particleDensity)
-  const baseCount = quality.level === 'low' ? 6 : quality.level === 'medium' ? 10 : 14
+  const baseCount = RIM_MIST_BASE_COUNT[quality.level]
   const count = Math.max(3, Math.round(baseCount * density))
   const meshRef = useRef<InstancedMesh>(null)
   const materialRef = useRef<ShaderMaterial>(null)
@@ -64,7 +90,12 @@ function RimMist() {
   })
 
   return (
-    <instancedMesh ref={meshRef} args={[geometry, undefined, count]} frustumCulled={false} renderOrder={-4}>
+    <instancedMesh
+      ref={meshRef}
+      args={[geometry, undefined, count]}
+      frustumCulled={false}
+      renderOrder={-4}
+    >
       <shaderMaterial
         ref={materialRef}
         name="RimMistMaterial"
@@ -87,7 +118,7 @@ function RimMist() {
 function RoofDrips() {
   const quality = useQualityProfile()
   const density = useSettings((state) => state.graphics.particleDensity)
-  const basePerBuilding = quality.level === 'low' ? 3 : quality.level === 'medium' ? 7 : 12
+  const basePerBuilding = ROOF_DRIPS_PER_BUILDING[quality.level]
   const perBuilding = Math.max(1, Math.round(basePerBuilding * density))
   const materialRef = useRef<ShaderMaterial>(null)
   const motionClock = useRef(new ComfortMotionClock())
@@ -137,9 +168,12 @@ function PuddleSheen() {
   const materialRef = useRef<MeshPhysicalMaterial>(null)
   const quality = useQualityProfile()
   const anchors = useMemo(() => makePuddleAnchors(BUILDINGS), [])
-  const visibleCount = quality.level === 'low' ? 5 : quality.level === 'medium' ? 9 : anchors.length
+  const visibleCount = Math.min(PUDDLE_VISIBLE_CAP[quality.level], anchors.length)
   const visibleAnchors = useMemo(() => selectEvenly(anchors, visibleCount), [anchors, visibleCount])
-  const geometry = useMemo(() => new CircleGeometry(1, quality.level === 'high' ? 48 : 28), [quality.level])
+  const geometry = useMemo(
+    () => new CircleGeometry(1, PUDDLE_SEGMENTS[quality.level]),
+    [quality.level],
+  )
   const dummy = useMemo(() => new Object3D(), [])
 
   useFrame(() => {

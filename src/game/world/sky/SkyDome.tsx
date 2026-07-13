@@ -14,9 +14,16 @@ import { runtime } from '../../core/runtime'
 import { SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from './palette'
 import { mulberry32 } from '../../core/rng'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import type { QualityLevel } from '../../core/quality'
 import { ComfortMotionClock } from '../../core/comfortMotion'
 
 const DOME_RADIUS = 1500
+const AURORA_SPILL_STRENGTH: Readonly<Record<QualityLevel, number>> = {
+  low: 0.78,
+  medium: 1.35,
+  high: 1.35,
+  ultra: 1.5,
+}
 
 export function SkyDome() {
   const quality = useQualityProfile()
@@ -58,7 +65,7 @@ export function SkyDome() {
       c.nightFactor *
       c.nightFactor *
       Math.max(0, 1 - runtime.weather.rain * 1.45) *
-      (quality.level === 'low' ? 0.78 : 1.35)
+      AURORA_SPILL_STRENGTH[quality.level]
     live.uMotion.value = runtime.reducedMotion ? 0.16 : 1
   })
 

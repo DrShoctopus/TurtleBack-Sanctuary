@@ -2,10 +2,17 @@ import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, BackSide, Color, ShaderMaterial, SphereGeometry } from 'three'
 import { runtime } from '../../core/runtime'
+import type { QualityLevel } from '../../core/quality'
 import { useQualityProfile } from '../../core/useQualityProfile'
 import { ComfortMotionClock } from '../../core/comfortMotion'
 
 const AURORA_RADIUS = 1420
+const AURORA_STRENGTH: Readonly<Record<QualityLevel, number>> = {
+  low: 0.4,
+  medium: 0.58,
+  high: 0.72,
+  ultra: 0.84,
+}
 
 /**
  * A continuous spherical aurora veil. All folds are evaluated in sky direction
@@ -44,13 +51,9 @@ export function Aurora() {
     const night = runtime.time.celest.starIntensity
     material.uniforms.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion, 0.08)
     material.uniforms.uMotion.value = 1
-    material.uniforms.uDetail.value =
-      quality.level === 'low' ? 0 : quality.level === 'medium' ? 1 : 2
+    material.uniforms.uDetail.value = quality.atmosphereDetail
     material.uniforms.uStrength.value =
-      night *
-      night *
-      Math.max(0, 1 - runtime.weather.rain * 1.45) *
-      (quality.level === 'low' ? 0.4 : quality.level === 'medium' ? 0.58 : 0.72)
+      night * night * Math.max(0, 1 - runtime.weather.rain * 1.45) * AURORA_STRENGTH[quality.level]
   })
 
   return <mesh geometry={geometry} material={material} frustumCulled={false} renderOrder={-97} />
@@ -102,6 +105,10 @@ float fbm(vec2 p) {
   if (uDetail > 1.5) {
     p = mat2(1.7, 1.12, -1.12, 1.7) * p;
     value += noise21(p) * 0.13;
+  }
+  if (uDetail > 2.5) {
+    p = mat2(1.76, 1.08, -1.08, 1.76) * p;
+    value += noise21(p) * 0.065;
   }
   return value;
 }

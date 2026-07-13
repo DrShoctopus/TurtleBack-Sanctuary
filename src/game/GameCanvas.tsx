@@ -7,21 +7,24 @@ import { EndFrame, FrameDriver } from './core/FrameDriver'
 import { PlayerController } from './player/PlayerController'
 import { TurtleWorld } from './world/TurtleWorld'
 import { useGame } from './state/gameStore'
-import { QUALITY_PROFILES } from './core/quality'
+import { QUALITY_PROFILES, resolveCanvasDpr } from './core/quality'
 import { useSettings } from './state/settingsStore'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { configureRendererColor } from './rendering/colorContract'
+import { useDevicePixelRatio } from './core/devicePixelRatio'
 
 export function GameCanvas() {
   const autoQuality = useGame((s) => s.autoQuality)
   const choice = useSettings((s) => s.graphics.quality)
   const level = choice === 'auto' ? autoQuality : choice
   const profile = QUALITY_PROFILES[level]
+  const devicePixelRatio = useDevicePixelRatio()
+  const dpr = resolveCanvasDpr(devicePixelRatio, profile)
 
   return (
     <Canvas
       shadows={{ enabled: true, type: PCFSoftShadowMap }}
-      dpr={[0.8, profile.dprMax]}
+      dpr={dpr}
       camera={{
         fov: PLAYER.fovDefault,
         near: 0.12,

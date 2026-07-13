@@ -130,7 +130,7 @@ function assignLandmarkDetailTiers(node: Group): void {
   })
 }
 
-function applyLandmarkDetail(node: Group, level: 0 | 1 | 2): void {
+function applyLandmarkDetail(node: Group, level: 0 | 1 | 2 | 3): void {
   if (node.userData.appliedDetail === level) return
   node.userData.appliedDetail = level
   node.traverse((child) => {

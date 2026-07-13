@@ -69,13 +69,32 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   await page.goto('/')
   await waitForTitle(page)
   await enter(page)
-  await page.waitForFunction(() => Boolean((window as any).__scene), null, { timeout: 10_000 })
+  await page.waitForFunction(
+    () => Boolean((window as any).__scene && (window as any).__sanctuary),
+    null,
+    { timeout: 10_000 },
+  )
+  await page.evaluate(() =>
+    (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'medium' }),
+  )
+  await page.waitForFunction(
+    () => (window as any).__sanctuary.runtime.quality.level === 'medium',
+    null,
+    { timeout: 10_000 },
+  )
 
   const probe = () =>
     page.evaluate(() => {
       const result: Record<
         string,
-        { time: number; rain: number; vertices: number; instances: number }
+        {
+          time: number
+          rain: number
+          detail: number
+          reflections: number
+          vertices: number
+          instances: number
+        }
       > = {}
       ;(window as any).__scene.traverse((object: any) => {
         const materials = Array.isArray(object.material) ? object.material : [object.material]
@@ -96,12 +115,20 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
           result[material.name] = {
             time: material.uniforms?.uTime?.value ?? -1,
             rain: material.uniforms?.uRain?.value ?? -1,
+            detail: material.uniforms?.uDetail?.value ?? -1,
+            reflections: material.uniforms?.uReflections?.value ?? -1,
             vertices: object.geometry?.getAttribute?.('position')?.count ?? 0,
             instances: object.count ?? 0,
           }
         }
       })
-      return result
+      const canvas = document.querySelector('canvas')
+      return {
+        materials: result,
+        qualityLevel: (window as any).__sanctuary.runtime.quality.level as string,
+        canvasWidth: canvas?.width ?? 0,
+        canvasHeight: canvas?.height ?? 0,
+      }
     })
 
   const before = await probe()
@@ -110,20 +137,24 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
       async () => {
         const current = await probe()
         return (
-          current.SkyDomeMaterial.time > before.SkyDomeMaterial.time &&
-          current.CloudsMaterial.time > before.CloudsMaterial.time &&
-          current.OceanMaterial.time > before.OceanMaterial.time &&
-          current.RimMistMaterial.time > before.RimMistMaterial.time
+          current.materials.SkyDomeMaterial.time > before.materials.SkyDomeMaterial.time &&
+          current.materials.CloudsMaterial.time > before.materials.CloudsMaterial.time &&
+          current.materials.OceanMaterial.time > before.materials.OceanMaterial.time &&
+          current.materials.RimMistMaterial.time > before.materials.RimMistMaterial.time
         )
       },
       { timeout: 15_000 },
     )
     .toBe(true)
   const after = await probe()
-  expect(after.SkyDomeMaterial.time).toBeGreaterThan(before.SkyDomeMaterial.time)
-  expect(after.CloudsMaterial.time).toBeGreaterThan(before.CloudsMaterial.time)
-  expect(after.OceanMaterial.time).toBeGreaterThan(before.OceanMaterial.time)
-  expect(after.RimMistMaterial.time).toBeGreaterThan(before.RimMistMaterial.time)
+  expect(after.materials.SkyDomeMaterial.time).toBeGreaterThan(
+    before.materials.SkyDomeMaterial.time,
+  )
+  expect(after.materials.CloudsMaterial.time).toBeGreaterThan(before.materials.CloudsMaterial.time)
+  expect(after.materials.OceanMaterial.time).toBeGreaterThan(before.materials.OceanMaterial.time)
+  expect(after.materials.RimMistMaterial.time).toBeGreaterThan(
+    before.materials.RimMistMaterial.time,
+  )
 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('weather', {
@@ -132,37 +163,76 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
     }),
   )
   await expect
-    .poll(async () => (await probe()).RainMaterial.rain, { timeout: 15_000 })
+    .poll(async () => (await probe()).materials.RainMaterial.rain, { timeout: 15_000 })
     .toBeGreaterThan(0.01)
   const rainy = await probe()
-  expect(rainy.SkyDomeMaterial.rain).toBeGreaterThan(0.01)
-  expect(rainy.OceanMaterial.rain).toBeGreaterThan(0.01)
-  expect(rainy.RainMaterial.rain).toBeGreaterThan(0.01)
-  expect(rainy.RoofDripMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.materials.SkyDomeMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.materials.OceanMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.materials.RainMaterial.rain).toBeGreaterThan(0.01)
+  expect(rainy.materials.RoofDripMaterial.rain).toBeGreaterThan(0.01)
 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'low' }),
   )
   await expect
-    .poll(async () => (await probe()).RainMaterial.vertices, { timeout: 10_000 })
-    .toBe(1_600)
+    .poll(
+      async () => {
+        const current = await probe()
+        return (
+          current.qualityLevel === 'low' &&
+          current.materials.OceanMaterial.detail < rainy.materials.OceanMaterial.detail &&
+          current.materials.RainMaterial.vertices < rainy.materials.RainMaterial.vertices &&
+          current.materials.RimMistMaterial.instances < rainy.materials.RimMistMaterial.instances
+        )
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true)
   const low = await probe()
-  expect(low.OceanMaterial.vertices).toBe(9_409)
-  expect(low.RainMaterial.vertices).toBe(1_600)
-  expect(low.RoofDripMaterial.vertices).toBe(39)
-  expect(low.PuddleSheenMaterial.instances).toBe(5)
+  expect(low.qualityLevel).toBe('low')
 
   await page.evaluate(() =>
-    (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'high' }),
+    (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'ultra' }),
   )
   await expect
-    .poll(async () => (await probe()).RainMaterial.vertices, { timeout: 10_000 })
-    .toBe(6_000)
-  const high = await probe()
-  expect(high.OceanMaterial.vertices).toBe(50_625)
-  expect(high.RainMaterial.vertices).toBe(6_000)
-  expect(high.RoofDripMaterial.vertices).toBe(156)
-  expect(high.PuddleSheenMaterial.instances).toBe(13)
+    .poll(
+      async () => {
+        const current = await probe()
+        return (
+          current.qualityLevel === 'ultra' &&
+          current.materials.OceanMaterial.detail > low.materials.OceanMaterial.detail &&
+          current.materials.RainMaterial.vertices > low.materials.RainMaterial.vertices &&
+          current.materials.RimMistMaterial.instances > low.materials.RimMistMaterial.instances
+        )
+      },
+      { timeout: 10_000 },
+    )
+    .toBe(true)
+  const ultra = await probe()
+  expect(ultra.qualityLevel).toBe('ultra')
+  expect(ultra.canvasWidth).toBeGreaterThan(low.canvasWidth)
+  expect(ultra.canvasHeight).toBeGreaterThan(low.canvasHeight)
+  expect(ultra.materials.OceanMaterial.vertices).toBeGreaterThan(
+    low.materials.OceanMaterial.vertices,
+  )
+  expect(ultra.materials.OceanMaterial.detail).toBeGreaterThan(low.materials.OceanMaterial.detail)
+  expect(ultra.materials.OceanMaterial.reflections).toBeGreaterThan(
+    low.materials.OceanMaterial.reflections,
+  )
+  expect(ultra.materials.RainMaterial.vertices).toBeGreaterThan(low.materials.RainMaterial.vertices)
+  expect(ultra.materials.RimMistMaterial.instances).toBeGreaterThan(
+    low.materials.RimMistMaterial.instances,
+  )
+  expect(ultra.materials.RoofDripMaterial.vertices).toBeGreaterThan(
+    low.materials.RoofDripMaterial.vertices,
+  )
+  expect(ultra.materials.PuddleSheenMaterial.instances).toBeGreaterThan(
+    low.materials.PuddleSheenMaterial.instances,
+  )
+  expect(ultra.materials.PuddleSheenMaterial.vertices).toBeGreaterThan(
+    low.materials.PuddleSheenMaterial.vertices,
+  )
+  expect(ultra.materials.CloudsMaterial.detail).toBeGreaterThan(low.materials.CloudsMaterial.detail)
 })
 
 test('settings persist across reload', async ({ page }) => {

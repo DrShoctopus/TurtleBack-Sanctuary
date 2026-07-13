@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { WORLD } from '../config/constants'
 import { advanceTime, computeCelestials } from '../time/timeMath'
@@ -27,6 +27,7 @@ export function FrameDriver() {
     )
   }, [])
   const governor = useMemo(() => new QualityGovernor('medium'), [])
+  const autoEvaluationEligible = useRef(false)
 
   // hidden tab → treat like pause so the world doesn't lurch on return
   useEffect(() => {
@@ -91,16 +92,20 @@ export function FrameDriver() {
     // --- perf + auto quality ---
     runtime.perf.fps = lerp(runtime.perf.fps, 1 / dt, 0.05)
     const g = useGame.getState()
-    if (
+    const eligible =
       g.phase === 'playing' &&
       g.overlay === null &&
       g.sceneReady &&
       !document.hidden &&
       settings.graphics.quality === 'auto'
-    ) {
+    if (eligible !== autoEvaluationEligible.current) {
+      governor.resetEvaluation()
+      autoEvaluationEligible.current = eligible
+    }
+    if (eligible) {
       const switched = governor.update(dt)
       if (switched) {
-        useGame.getState().setAutoQuality(switched)
+        useGame.getState().setAutoQuality(switched.next)
       }
     }
     const choice = settings.graphics.quality

@@ -5,6 +5,7 @@ import { runtime } from '../../core/runtime'
 import { FOG_COLOR, SUN_COLOR, hemiIntensityAt, sampleColor, sunIntensityAt } from './palette'
 import { lerp } from '../../core/mathUtils'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { resolveShadowMapSize } from '../../core/quality'
 
 /**
  * Sun + moon + hemisphere lighting and scene fog, all driven per-frame from
@@ -12,6 +13,11 @@ import { useQualityProfile } from '../../core/useQualityProfile'
  */
 export function TimeLighting() {
   const quality = useQualityProfile()
+  const maxTextureSize = useThree((state) => state.gl.capabilities.maxTextureSize)
+  const shadowMapSize = useMemo(
+    () => resolveShadowMapSize(quality.shadowMapSize, maxTextureSize),
+    [quality.shadowMapSize, maxTextureSize],
+  )
   const sunRef = useRef<DirectionalLight>(null)
   const moonRef = useRef<DirectionalLight>(null)
   const hemiRef = useRef<HemisphereLight>(null)
@@ -71,8 +77,8 @@ export function TimeLighting() {
         cam.far = 420
         cam.updateProjectionMatrix()
       }
-      if (sun.shadow.mapSize.x !== q.shadowMapSize) {
-        sun.shadow.mapSize.set(q.shadowMapSize, q.shadowMapSize)
+      if (sun.shadow.mapSize.x !== shadowMapSize) {
+        sun.shadow.mapSize.set(shadowMapSize, shadowMapSize)
         sun.shadow.map?.dispose()
         sun.shadow.map = null
       }

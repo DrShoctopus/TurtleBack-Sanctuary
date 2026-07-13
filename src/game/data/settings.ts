@@ -6,7 +6,7 @@ import {
   type KeyboardBindings,
 } from '../input/actions'
 
-export type QualityChoice = 'auto' | 'low' | 'medium' | 'high'
+export type QualityChoice = 'auto' | 'low' | 'medium' | 'high' | 'ultra'
 export type WeatherMode = 'auto' | 'clear' | 'rain'
 export type DecorTheme = 'driftwood' | 'tidepool' | 'dune'
 export type SpeakerMode = 'room' | 'personal'
@@ -142,7 +142,7 @@ const gamepadBindingsSchema = z.object({
 
 export const gameSettingsSchema: z.ZodType<GameSettings> = z.object({
   graphics: z.object({
-    quality: z.enum(['auto', 'low', 'medium', 'high']),
+    quality: z.enum(['auto', 'low', 'medium', 'high', 'ultra']),
     fov: finiteRange(60, 95),
     uiScale: finiteRange(0.8, 1.4),
     bloom: z.boolean(),
@@ -228,7 +228,7 @@ export function mergeWithDefaults<T>(defaults: T, incoming: unknown): T {
   return out as T
 }
 
-export const SETTINGS_VERSION = 2
+export const SETTINGS_VERSION = 3
 
 /** Version 0 was flat; version 1 predates configurable input bindings. */
 export function migrateSettings(persisted: unknown, fromVersion: number): GameSettings {

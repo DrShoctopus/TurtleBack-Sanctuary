@@ -292,6 +292,13 @@ void main() {
       float rz = vnoise((flow + vec2(0.0, e * 0.3)) * 2.3 + uTime * 1.7);
       dn.xz += vec2(r0 - rx, r0 - rz) * 2.2 * uRain;
     }
+    if (uDetail > 2.5) {
+      float fineE = 0.16;
+      float fine0 = vnoise(flow * 1.35 - uTime * 0.11);
+      float fineX = vnoise((flow + vec2(fineE, 0.0)) * 1.35 - uTime * 0.11);
+      float fineZ = vnoise((flow + vec2(0.0, fineE)) * 1.35 - uTime * 0.11);
+      dn.xz += vec2(fine0 - fineX, fine0 - fineZ) * 0.72;
+    }
     N = normalize(N + normalize(dn) - vec3(0.0, 1.0, 0.0));
   }
 

@@ -309,6 +309,7 @@ function GraphicsTab() {
             { value: 'low', label: 'Low' },
             { value: 'medium', label: 'Medium' },
             { value: 'high', label: 'High' },
+            { value: 'ultra', label: 'Ultra' },
           ]}
           onChange={(v) => set('graphics', { quality: v })}
         />
@@ -335,7 +336,7 @@ function GraphicsTab() {
           onChange={(v) => set('graphics', { uiScale: v })}
         />
       </Row>
-      <Row label="Soft glow (bloom)" hint="Subtle light bloom on Medium and High quality">
+      <Row label="Soft glow (bloom)" hint="Subtle light bloom on Medium, High and Ultra quality">
         <Toggle label="Bloom" value={g.bloom} onChange={(v) => set('graphics', { bloom: v })} />
       </Row>
       <Row label="Weather particles">

@@ -53,6 +53,18 @@ describe('migrateSettings', () => {
     expect(migrated.quietMode).toBe(true)
     expect(migrated.graphics).toEqual(DEFAULT_SETTINGS.graphics)
   })
+  it('preserves a version-2 High save when migrating to version 3', () => {
+    const version2 = structuredClone(DEFAULT_SETTINGS)
+    version2.graphics.quality = 'high'
+    const migrated = migrateSettings(version2, 2)
+    expect(SETTINGS_VERSION).toBe(3)
+    expect(migrated).toEqual(version2)
+  })
+  it('accepts an explicit Ultra choice in version 3', () => {
+    const version3 = structuredClone(DEFAULT_SETTINGS)
+    version3.graphics.quality = 'ultra'
+    expect(migrateSettings(version3, 3).graphics.quality).toBe('ultra')
+  })
   it('never throws on garbage', () => {
     expect(() => migrateSettings(undefined, 0)).not.toThrow()
     expect(() => migrateSettings(42, 1)).not.toThrow()

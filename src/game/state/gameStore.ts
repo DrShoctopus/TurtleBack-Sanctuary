@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { QualityLevel } from '../core/quality'
+import type { AutoQualityLevel } from '../core/quality'
 
 export type AppPhase = 'boot' | 'title' | 'playing'
 export type Overlay = null | 'pause' | 'sanctuary' | 'tv' | 'music' | 'journal' | 'reading'
@@ -35,7 +35,7 @@ interface GameState {
   /** dev-only perf overlay */
   perfOverlay: boolean
   /** resolved level while graphics.quality === 'auto' */
-  autoQuality: QualityLevel
+  autoQuality: AutoQualityLevel
   /** full-screen fade (respawns, return home) */
   fade: boolean
   /** tea/coffee activity state */
@@ -57,7 +57,7 @@ interface GameState {
   setWebglLost: (v: boolean) => void
   setSceneReady: (v: boolean) => void
   togglePerfOverlay: () => void
-  setAutoQuality: (q: QualityLevel) => void
+  setAutoQuality: (q: AutoQualityLevel) => void
   setFade: (v: boolean) => void
   setTeaPhase: (p: 'idle' | 'brewing' | 'ready' | 'holding') => void
 }

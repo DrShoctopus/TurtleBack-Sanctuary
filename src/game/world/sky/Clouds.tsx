@@ -96,7 +96,7 @@ float fbm(vec2 p, float oct) {
   float a = 0.5;
   float s = 0.0;
   float n = 0.0;
-  for (int i = 0; i < 5; i++) {
+  for (int i = 0; i < 6; i++) {
     if (float(i) >= oct) break;
     s += vnoise(p) * a;
     n += a;
