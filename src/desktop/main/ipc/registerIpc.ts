@@ -33,6 +33,7 @@ interface RegisterIpcOptions {
   loggerDirectory: string
   appVersion: string
   onShutdownReady: () => void
+  onReloadRequested: () => void
 }
 
 function assertTrustedSender(event: IpcMainInvokeEvent, window: BrowserWindow): void {
@@ -156,6 +157,7 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
     const error = rendererErrorSchema.parse(rawError)
     logger.error('renderer.error', error)
   })
+  handle(IPC_CHANNELS.reloadApplication, window, () => options.onReloadRequested())
 
   const shutdownListener = (event: Electron.IpcMainEvent) => {
     if (event.sender === window.webContents) options.onShutdownReady()

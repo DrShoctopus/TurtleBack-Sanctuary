@@ -156,6 +156,14 @@ class AudioManager {
     else void this.ctx.resume().catch(() => {})
   }
 
+  async suspend(): Promise<void> {
+    await this.ctx?.suspend().catch(() => undefined)
+  }
+
+  async resume(): Promise<void> {
+    await this.ctx?.resume().catch(() => undefined)
+  }
+
   bus(name: BusName): GainNode | null {
     return this.buses.get(name) ?? null
   }

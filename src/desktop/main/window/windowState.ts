@@ -3,6 +3,7 @@ import { BrowserWindow, screen } from 'electron'
 import { z } from 'zod'
 import type { AppLogger } from '../logging/logger'
 import { readAtomicJson, writeAtomicJson } from '../storage/atomicJson'
+import { intersectsVisibleDisplay } from './windowPlacement'
 
 const windowStateSchema = z.object({
   x: z.number().int(),
@@ -15,17 +16,6 @@ const windowStateSchema = z.object({
 type WindowState = z.infer<typeof windowStateSchema>
 
 const DEFAULT_STATE: WindowState = { x: 80, y: 80, width: 1280, height: 720, maximized: false }
-
-function intersectsVisibleDisplay(state: WindowState): boolean {
-  return screen.getAllDisplays().some((display) => {
-    const area = display.workArea
-    const right = Math.min(state.x + state.width, area.x + area.width)
-    const bottom = Math.min(state.y + state.height, area.y + area.height)
-    const left = Math.max(state.x, area.x)
-    const top = Math.max(state.y, area.y)
-    return right - left >= 160 && bottom - top >= 120
-  })
-}
 
 export class WindowStateManager {
   private readonly file: string
@@ -40,7 +30,18 @@ export class WindowStateManager {
 
   async restore(): Promise<WindowState> {
     const result = await readAtomicJson(this.file, windowStateSchema)
-    if (!result.data || !intersectsVisibleDisplay(result.data)) return DEFAULT_STATE
+    if (result.primaryCorrupt) this.logger.warn('window.state_primary_corrupt')
+    if (result.recoveredFromBackup) this.logger.warn('window.state_recovered_backup')
+    if (!result.data) return DEFAULT_STATE
+    if (
+      !intersectsVisibleDisplay(
+        result.data,
+        screen.getAllDisplays().map((display) => display.workArea),
+      )
+    ) {
+      this.logger.warn('window.state_offscreen_reset')
+      return DEFAULT_STATE
+    }
     return result.data
   }
 
@@ -73,4 +74,3 @@ export class WindowStateManager {
     }
   }
 }
-

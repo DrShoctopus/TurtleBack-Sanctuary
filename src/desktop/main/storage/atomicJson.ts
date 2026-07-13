@@ -27,18 +27,37 @@ export interface AtomicReadResult<T> {
   primaryCorrupt: boolean
 }
 
-export async function readAtomicJson<T>(file: string, schema: ZodType<T>): Promise<AtomicReadResult<T>> {
+export async function readAtomicJson<T>(
+  file: string,
+  schema: ZodType<T>,
+): Promise<AtomicReadResult<T>> {
   const primaryExists = await exists(file)
   const primary = primaryExists ? await readAndValidate(file, schema) : null
   if (primary) return { data: primary, recoveredFromBackup: false, primaryCorrupt: false }
 
   const backup = await readAndValidate(`${file}.bak`, schema)
-  if (backup) return { data: backup, recoveredFromBackup: true, primaryCorrupt: primaryExists }
+  if (primaryExists) await quarantineInvalidPrimary(file)
+  if (backup) {
+    // Repair the primary immediately. The invalid bytes remain in .corrupt for
+    // diagnostics instead of being silently replaced by defaults on the next write.
+    await writeAtomicJson(file, backup, schema).catch(() => undefined)
+    return { data: backup, recoveredFromBackup: true, primaryCorrupt: primaryExists }
+  }
   return { data: null, recoveredFromBackup: false, primaryCorrupt: primaryExists }
 }
 
+async function quarantineInvalidPrimary(file: string): Promise<void> {
+  const corruptFile = `${file}.corrupt`
+  await unlink(corruptFile).catch(() => undefined)
+  await rename(file, corruptFile).catch(() => undefined)
+}
+
 /** Write JSON through a synced temporary file and preserve the last valid primary as .bak. */
-export async function writeAtomicJson<T>(file: string, value: T, schema: ZodType<T>): Promise<void> {
+export async function writeAtomicJson<T>(
+  file: string,
+  value: T,
+  schema: ZodType<T>,
+): Promise<void> {
   const validated = schema.parse(value)
   await mkdir(dirname(file), { recursive: true })
   const temp = `${file}.tmp-${process.pid}-${Date.now()}`
@@ -75,6 +94,9 @@ export async function writeAtomicJson<T>(file: string, value: T, schema: ZodType
 }
 
 export async function deleteAtomicJson(file: string): Promise<void> {
-  await Promise.all([unlink(file).catch(() => undefined), unlink(`${file}.bak`).catch(() => undefined)])
+  await Promise.all([
+    unlink(file).catch(() => undefined),
+    unlink(`${file}.bak`).catch(() => undefined),
+    unlink(`${file}.corrupt`).catch(() => undefined),
+  ])
 }
-

@@ -597,6 +597,24 @@ select:focus-visible {
   padding: 2rem;
 }
 
+.recovery-notice {
+  position: absolute;
+  z-index: 90;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(42rem, calc(100vw - 2rem));
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.7rem 0.8rem 0.7rem 1rem;
+  border: 1px solid var(--c-line);
+  border-radius: 10px;
+  background: var(--c-panel);
+  box-shadow: 0 10px 34px rgba(0, 0, 0, 0.35);
+}
+
 .breath-overlay {
   position: absolute;
   inset: 0;

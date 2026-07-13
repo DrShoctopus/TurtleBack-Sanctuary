@@ -2,6 +2,7 @@ import { contextBridge, ipcRenderer } from 'electron'
 import {
   IPC_CHANNELS,
   desktopPreferencesSchema,
+  desktopLifecycleEventSchema,
   displayModeSchema,
   localAudioFolderSchema,
   platformInfoSchema,
@@ -119,12 +120,23 @@ const bridge: DesktopAppBridge = {
   async logRendererError(error) {
     await ipcRenderer.invoke(IPC_CHANNELS.rendererError, rendererErrorSchema.parse(error))
   },
+  async reloadApplication() {
+    await ipcRenderer.invoke(IPC_CHANNELS.reloadApplication)
+  },
   onPrepareShutdown(callback) {
     const listener = () => {
       void Promise.resolve(callback()).catch(() => undefined)
     }
     ipcRenderer.on(IPC_CHANNELS.prepareShutdown, listener)
     return () => ipcRenderer.removeListener(IPC_CHANNELS.prepareShutdown, listener)
+  },
+  onLifecycleEvent(callback) {
+    const listener = (_event: Electron.IpcRendererEvent, rawEvent: unknown) => {
+      const event = desktopLifecycleEventSchema.safeParse(rawEvent)
+      if (event.success) void Promise.resolve(callback(event.data)).catch(() => undefined)
+    }
+    ipcRenderer.on(IPC_CHANNELS.lifecycleEvent, listener)
+    return () => ipcRenderer.removeListener(IPC_CHANNELS.lifecycleEvent, listener)
   },
   signalShutdownReady() {
     ipcRenderer.send(IPC_CHANNELS.shutdownReady)

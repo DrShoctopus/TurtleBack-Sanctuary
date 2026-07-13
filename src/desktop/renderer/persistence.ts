@@ -155,7 +155,7 @@ export async function eraseAllDesktopData(): Promise<boolean> {
   stopDesktopPersistence()
   try {
     await bridge.eraseAllData()
-    window.location.reload()
+    await bridge.reloadApplication()
     return true
   } catch (error) {
     erasing = false

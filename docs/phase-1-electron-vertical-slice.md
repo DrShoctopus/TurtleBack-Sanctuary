@@ -81,7 +81,7 @@ Acceptance gates:
 
 ### 3. Lifecycle, diagnostics, and recovery
 
-Status: **pending**
+Status: **implemented and verified**
 
 - Route uncaught renderer errors, rejected promises, process crashes, and failed
   loads into the structured application log.
@@ -218,3 +218,40 @@ Verified on the same Apple Silicon macOS environment as slice 1:
 - The packaged renderer reported no page, CSP, preload, or Rapier errors during
   those launches. Settings and autosave writes completed before the renderer's
   shutdown-ready acknowledgement.
+
+### 2026-07-13 — Slice 3 lifecycle and recovery established
+
+Implemented:
+
+- Detachable keyboard, mouse, gamepad, rumble, pointer-lock, global-error, and
+  lifecycle listeners, plus coordinated React, Web Audio, media, persistence,
+  and shared-texture teardown under a three-second main-process deadline.
+- Main-to-renderer suspend/resume events that flush an autosave, clear transient
+  input, release pointer lock, pause media, suspend Web Audio, and resume the
+  ambient audio context after wake.
+- Structured diagnostics for renderer crashes, failed main-frame loads,
+  unresponsive/responsive transitions, GPU/child process termination, sleep,
+  wake, second-instance activation, and main/renderer exceptions.
+- Bounded automatic renderer recovery. Two failures within one minute reload the
+  production origin with a visible recovery notice; a third loads a low-activity
+  safe screen with restart and diagnostic-log actions instead of looping.
+- Corrupt atomic JSON primaries are quarantined as `.corrupt`, valid backups are
+  promoted immediately, and missing/default data can be reseeded without
+  silently destroying the invalid bytes.
+- Off-screen saved window bounds are rejected against current display work areas.
+
+Verified:
+
+- Strict TypeScript, ESLint, 157 unit tests across 22 files, browser production
+  build, desktop bundles, and unpacked arm64 packaging passed.
+- CDP deliberately crashed the packaged renderer. The main process logged exit
+  code 5, automatically restored `app://turtleback`, recreated the preload
+  bridge, retained repository access, displayed the recovery notice, and then
+  shut down cleanly after renderer teardown.
+- Three deliberate crashes in one process selected reload, reload, then safe
+  mode as designed. A durable FOV value of 83 remained intact on the safe screen.
+- Backup-recovery tests prove the primary is repaired while the invalid original
+  remains quarantined. Window-placement tests cover reachable and stranded bounds.
+- A real machine sleep cycle was not forced during automation; the packaged
+  suspend/resume path is wired through Electron `powerMonitor` and remains a
+  manual QA check to exercise on target hardware.

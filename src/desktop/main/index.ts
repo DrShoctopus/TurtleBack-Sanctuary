@@ -1,8 +1,9 @@
 import { readFile } from 'node:fs/promises'
 import { extname, join, resolve } from 'node:path'
-import { app, BrowserWindow, Menu, protocol, session, type Session } from 'electron'
-import { IPC_CHANNELS } from '../shared/contracts'
+import { app, BrowserWindow, Menu, powerMonitor, protocol, session, type Session } from 'electron'
+import { IPC_CHANNELS, type DesktopLifecycleEvent } from '../shared/contracts'
 import { registerIpcHandlers } from './ipc/registerIpc'
+import { RendererRecoveryPolicy, rendererRecoveryUrl } from './lifecycle/recoveryPolicy'
 import { AppLogger } from './logging/logger'
 import { RemoteRequestPolicy } from './security/urlPolicy'
 import { resolveRendererFile } from './security/rendererProtocol'
@@ -12,7 +13,8 @@ import { WindowStateManager } from './window/windowState'
 
 const APP_ORIGIN = 'app://turtleback'
 const APP_ENTRY = `${APP_ORIGIN}/index.html`
-const SHUTDOWN_TIMEOUT_MS = 1_500
+const SHUTDOWN_TIMEOUT_MS = 3_000
+const UNRESPONSIVE_RECOVERY_MS = 12_000
 
 protocol.registerSchemesAsPrivileged([
   {
@@ -54,7 +56,9 @@ async function startApplication(): Promise<void> {
   const windowState = new WindowStateManager(userDataDirectory, logger)
   const requestPolicy = new RemoteRequestPolicy()
   const developmentUrl = developmentRendererUrl()
+  const rendererBaseUrl = developmentUrl ?? APP_ENTRY
   const rendererDirectory = resolve(__dirname, '..', '..', 'dist')
+  const recoveryPolicy = new RendererRecoveryPolicy()
 
   await installProtocols(rendererDirectory, localAudio, logger)
   installSessionSecurity(session.defaultSession, requestPolicy, logger, developmentUrl)
@@ -64,11 +68,19 @@ async function startApplication(): Promise<void> {
   let quitStarted = false
   let quitAllowed = false
   let shutdownTimer: ReturnType<typeof setTimeout> | null = null
+  let unresponsiveTimer: ReturnType<typeof setTimeout> | null = null
+  let recoveryInFlight = false
+
+  const clearUnresponsiveTimer = () => {
+    if (unresponsiveTimer) clearTimeout(unresponsiveTimer)
+    unresponsiveTimer = null
+  }
 
   const finishQuit = () => {
     if (quitAllowed) return
     quitAllowed = true
     if (shutdownTimer) clearTimeout(shutdownTimer)
+    clearUnresponsiveTimer()
     shutdownTimer = null
     removeIpcHandlers?.()
     removeIpcHandlers = null
@@ -85,11 +97,59 @@ async function startApplication(): Promise<void> {
       finishQuit()
       return
     }
-    mainWindow.webContents.send(IPC_CHANNELS.prepareShutdown)
+    try {
+      mainWindow.webContents.send(IPC_CHANNELS.prepareShutdown)
+    } catch (error) {
+      logger.warn('lifecycle.shutdown_renderer_unavailable', { error: String(error) })
+      finishQuit()
+      return
+    }
     shutdownTimer = setTimeout(() => {
       logger.warn('lifecycle.shutdown_timeout', { timeoutMs: SHUTDOWN_TIMEOUT_MS })
       finishQuit()
     }, SHUTDOWN_TIMEOUT_MS)
+  }
+
+  const loadRenderer = async (window: BrowserWindow, url = rendererBaseUrl): Promise<void> => {
+    await window.loadURL(url)
+    logger.info('renderer.load_complete', {
+      origin: developmentUrl ? new URL(developmentUrl).origin : APP_ORIGIN,
+      recovery: new URL(url).searchParams.get('recovery') ?? undefined,
+    })
+  }
+
+  const recoverRenderer = async (window: BrowserWindow, reason: string): Promise<void> => {
+    if (
+      quitStarted ||
+      recoveryInFlight ||
+      window.isDestroyed() ||
+      window.webContents.isDestroyed()
+    ) {
+      return
+    }
+    recoveryInFlight = true
+    clearUnresponsiveTimer()
+    const decision = recoveryPolicy.next()
+    logger.warn('lifecycle.renderer_recovery_started', {
+      reason,
+      mode: decision.mode,
+      attempt: decision.attempt,
+    })
+    try {
+      await loadRenderer(
+        window,
+        rendererRecoveryUrl(rendererBaseUrl, reason, decision.mode === 'safe-mode'),
+      )
+      logger.info('lifecycle.renderer_recovery_complete', {
+        reason,
+        mode: decision.mode,
+        attempt: decision.attempt,
+      })
+    } catch (error) {
+      logger.error('lifecycle.renderer_recovery_failed', { reason, error: String(error) })
+    } finally {
+      recoveryInFlight = false
+    }
   }
 
   const createMainWindow = async (): Promise<BrowserWindow> => {
@@ -121,6 +181,20 @@ async function startApplication(): Promise<void> {
     })
 
     hardenWindow(window, developmentUrl, logger)
+    installWindowDiagnostics(window, logger, {
+      isQuitting: () => quitStarted,
+      onRecoveryRequested: (reason) => void recoverRenderer(window, reason),
+      onUnresponsive: () => {
+        clearUnresponsiveTimer()
+        unresponsiveTimer = setTimeout(() => {
+          logger.warn('process.renderer_unresponsive_timeout', {
+            timeoutMs: UNRESPONSIVE_RECOVERY_MS,
+          })
+          void recoverRenderer(window, 'renderer-unresponsive')
+        }, UNRESPONSIVE_RECOVERY_MS)
+      },
+      onResponsive: clearUnresponsiveTimer,
+    })
     windowState.attach(window)
     if (restored.maximized) window.maximize()
 
@@ -136,6 +210,11 @@ async function startApplication(): Promise<void> {
         logger.info('lifecycle.renderer_shutdown_ready')
         finishQuit()
       },
+      onReloadRequested: () => {
+        recoveryPolicy.reset()
+        logger.info('lifecycle.renderer_reload_requested')
+        setTimeout(() => void loadRenderer(window), 0)
+      },
     })
 
     window.once('ready-to-show', () => window.show())
@@ -149,15 +228,24 @@ async function startApplication(): Promise<void> {
     })
 
     try {
-      await window.loadURL(developmentUrl ?? APP_ENTRY)
-      logger.info('renderer.load_complete', {
-        origin: developmentUrl ? new URL(developmentUrl).origin : APP_ORIGIN,
-      })
+      await loadRenderer(window)
     } catch (error) {
       logger.error('renderer.load_failed', { error: String(error) })
       throw error
     }
     return window
+  }
+
+  const sendLifecycleEvent = (event: DesktopLifecycleEvent) => {
+    if (!mainWindow || mainWindow.isDestroyed() || mainWindow.webContents.isDestroyed()) return
+    try {
+      mainWindow.webContents.send(IPC_CHANNELS.lifecycleEvent, event)
+    } catch (error) {
+      logger.warn('lifecycle.renderer_event_unavailable', {
+        type: event.type,
+        error: String(error),
+      })
+    }
   }
 
   app.on('before-quit', (event) => {
@@ -167,6 +255,7 @@ async function startApplication(): Promise<void> {
   })
 
   app.on('second-instance', () => {
+    logger.info('lifecycle.second_instance')
     if (!mainWindow || mainWindow.isDestroyed()) return
     if (mainWindow.isMinimized()) mainWindow.restore()
     mainWindow.show()
@@ -174,6 +263,7 @@ async function startApplication(): Promise<void> {
   })
 
   app.on('activate', () => {
+    logger.info('lifecycle.activate')
     if (mainWindow || quitStarted) return
     void createMainWindow()
       .then((window) => {
@@ -192,6 +282,19 @@ async function startApplication(): Promise<void> {
       exitCode: details.exitCode,
       serviceName: details.serviceName,
     })
+    if (details.type.toLowerCase() === 'gpu' && mainWindow && !mainWindow.isDestroyed()) {
+      const window = mainWindow
+      setTimeout(() => void recoverRenderer(window, `gpu-${details.reason}`), 250)
+    }
+  })
+
+  powerMonitor.on('suspend', () => {
+    logger.info('lifecycle.system_suspend')
+    sendLifecycleEvent({ type: 'suspend' })
+  })
+  powerMonitor.on('resume', () => {
+    logger.info('lifecycle.system_resume')
+    sendLifecycleEvent({ type: 'resume' })
   })
 
   process.on('uncaughtException', (error) => {
@@ -356,14 +459,49 @@ function hardenWindow(
     event.preventDefault()
     logger.warn('navigation.webview_blocked')
   })
+}
+
+interface WindowDiagnosticsOptions {
+  isQuitting: () => boolean
+  onRecoveryRequested: (reason: string) => void
+  onUnresponsive: () => void
+  onResponsive: () => void
+}
+
+function installWindowDiagnostics(
+  window: BrowserWindow,
+  logger: AppLogger,
+  options: WindowDiagnosticsOptions,
+): void {
   window.webContents.on('render-process-gone', (_event, details) => {
     logger.error('process.renderer_gone', {
       reason: details.reason,
       exitCode: details.exitCode,
     })
+    if (options.isQuitting() || details.reason === 'clean-exit') return
+    setTimeout(() => options.onRecoveryRequested(`renderer-${details.reason}`), 250)
   })
-  window.webContents.on('unresponsive', () => logger.warn('process.renderer_unresponsive'))
-  window.webContents.on('responsive', () => logger.info('process.renderer_responsive'))
+  window.webContents.on(
+    'did-fail-load',
+    (_event, errorCode, errorDescription, validatedURL, isMainFrame) => {
+      logger.error('renderer.load_failed', {
+        errorCode,
+        errorDescription,
+        url: redactUrl(validatedURL),
+        isMainFrame,
+      })
+      if (!isMainFrame || errorCode === -3 || options.isQuitting()) return
+      setTimeout(() => options.onRecoveryRequested(`load-failed-${errorCode}`), 250)
+    },
+  )
+  window.webContents.on('unresponsive', () => {
+    logger.warn('process.renderer_unresponsive')
+    options.onUnresponsive()
+  })
+  window.webContents.on('responsive', () => {
+    logger.info('process.renderer_responsive')
+    options.onResponsive()
+  })
 }
 
 function developmentRendererUrl(): string | null {

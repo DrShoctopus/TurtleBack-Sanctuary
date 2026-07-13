@@ -6,31 +6,43 @@ let lastRequestAt = -Infinity
 let lastLockAt = -Infinity
 let installed = false
 
+const onPointerLockChange = () => {
+  const locked = document.pointerLockElement !== null
+  const now = performance.now()
+  if (locked) lastLockAt = now
+  if (!locked) lastExitAt = performance.now()
+  useGame.getState().setPointerLocked(locked)
+  // Browser-initiated unlock (Esc) while playing with no overlay → open pause
+  const g = useGame.getState()
+  if (
+    !locked &&
+    now > suppressPauseUntil &&
+    !(now - lastRequestAt < 800 && now - lastLockAt < 200) &&
+    g.phase === 'playing' &&
+    g.overlay === null &&
+    !document.hidden
+  ) {
+    g.setOverlay('pause')
+  }
+}
+
+const onPointerLockError = () => {
+  useGame.getState().setPointerLocked(false)
+}
+
 export function installPointerLockWatcher(): void {
   if (installed || typeof document === 'undefined') return
   installed = true
-  document.addEventListener('pointerlockchange', () => {
-    const locked = document.pointerLockElement !== null
-    const now = performance.now()
-    if (locked) lastLockAt = now
-    if (!locked) lastExitAt = performance.now()
-    useGame.getState().setPointerLocked(locked)
-    // Browser-initiated unlock (Esc) while playing with no overlay → open pause
-    const g = useGame.getState()
-    if (
-      !locked &&
-      now > suppressPauseUntil &&
-      !(now - lastRequestAt < 800 && now - lastLockAt < 200) &&
-      g.phase === 'playing' &&
-      g.overlay === null &&
-      !document.hidden
-    ) {
-      g.setOverlay('pause')
-    }
-  })
-  document.addEventListener('pointerlockerror', () => {
-    useGame.getState().setPointerLocked(false)
-  })
+  document.addEventListener('pointerlockchange', onPointerLockChange)
+  document.addEventListener('pointerlockerror', onPointerLockError)
+}
+
+export function uninstallPointerLockWatcher(): void {
+  if (!installed || typeof document === 'undefined') return
+  document.removeEventListener('pointerlockchange', onPointerLockChange)
+  document.removeEventListener('pointerlockerror', onPointerLockError)
+  installed = false
+  useGame.getState().setPointerLocked(false)
 }
 
 /**

@@ -35,6 +35,8 @@ export const IPC_CHANNELS = {
   rendererError: 'logging:renderer-error',
   prepareShutdown: 'lifecycle:prepare-shutdown',
   shutdownReady: 'lifecycle:shutdown-ready',
+  lifecycleEvent: 'lifecycle:event',
+  reloadApplication: 'lifecycle:reload-application',
 } as const
 
 export type DisplayMode = 'windowed' | 'fullscreen' | 'borderless'
@@ -120,6 +122,11 @@ export const rendererErrorSchema = z.object({
   stack: z.string().max(16000).optional(),
   source: z.enum(['error', 'unhandledrejection', 'react-boundary']),
 })
+export const desktopLifecycleEventSchema = z.discriminatedUnion('type', [
+  z.object({ type: z.literal('suspend') }),
+  z.object({ type: z.literal('resume') }),
+])
+export type DesktopLifecycleEvent = z.infer<typeof desktopLifecycleEventSchema>
 
 export interface DesktopAppBridge {
   saveGame(slot: string, data: PortableSaveData): Promise<void>
@@ -146,7 +153,9 @@ export interface DesktopAppBridge {
   windowCommand(command: 'minimize' | 'maximize' | 'restore' | 'close'): Promise<void>
   openLogFolder(): Promise<void>
   logRendererError(error: z.infer<typeof rendererErrorSchema>): Promise<void>
+  reloadApplication(): Promise<void>
   onPrepareShutdown(callback: () => void | Promise<void>): () => void
+  onLifecycleEvent(callback: (event: DesktopLifecycleEvent) => void | Promise<void>): () => void
   signalShutdownReady(): void
 }
 

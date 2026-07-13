@@ -36,6 +36,7 @@ class InputManager {
   private padIndex: number | null = null
   private navHold: { kind: MenuNavEvent['kind']; t: number; repeats: number } | null = null
   private attached = false
+  private unsubscribeRumble: (() => void) | null = null
   jogToggled = false
 
   attach(): void {
@@ -45,24 +46,56 @@ class InputManager {
     window.addEventListener('keyup', this.onKeyUp)
     window.addEventListener('mousemove', this.onMouseMove)
     window.addEventListener('blur', this.clearAll)
-    document.addEventListener('visibilitychange', () => {
-      if (document.hidden) this.clearAll()
-    })
-    window.addEventListener('gamepadconnected', (e: GamepadEvent) => {
-      this.padIndex = e.gamepad.index
-      useGame.getState().setPadConnected(true)
-      useGame.getState().notify('Controller connected')
-    })
-    window.addEventListener('gamepaddisconnected', (e: GamepadEvent) => {
-      if (this.padIndex === e.gamepad.index) {
-        this.padIndex = null
-        this.padPrev = this.padCur = null
-        useGame.getState().setPadConnected(false)
-        useGame.getState().setDevice('kb')
-        useGame.getState().notify('Controller disconnected')
-      }
-    })
-    events.on('padRumble', ({ strength, ms }) => this.rumble(strength, ms))
+    document.addEventListener('visibilitychange', this.onVisibilityChange)
+    window.addEventListener('gamepadconnected', this.onGamepadConnected)
+    window.addEventListener('gamepaddisconnected', this.onGamepadDisconnected)
+    this.unsubscribeRumble = events.on('padRumble', this.onPadRumble)
+  }
+
+  detach(): void {
+    if (!this.attached || typeof window === 'undefined') return
+    window.removeEventListener('keydown', this.onKeyDown)
+    window.removeEventListener('keyup', this.onKeyUp)
+    window.removeEventListener('mousemove', this.onMouseMove)
+    window.removeEventListener('blur', this.clearAll)
+    document.removeEventListener('visibilitychange', this.onVisibilityChange)
+    window.removeEventListener('gamepadconnected', this.onGamepadConnected)
+    window.removeEventListener('gamepaddisconnected', this.onGamepadDisconnected)
+    this.unsubscribeRumble?.()
+    this.unsubscribeRumble = null
+    this.attached = false
+    this.suspend()
+  }
+
+  suspend(): void {
+    this.clearAll()
+    this.padPrev = null
+    this.padCur = null
+    this.navHold = null
+    this.jogToggled = false
+  }
+
+  private onVisibilityChange = () => {
+    if (document.hidden) this.suspend()
+  }
+
+  private onGamepadConnected = (event: GamepadEvent) => {
+    this.padIndex = event.gamepad.index
+    useGame.getState().setPadConnected(true)
+    useGame.getState().notify('Controller connected')
+  }
+
+  private onGamepadDisconnected = (event: GamepadEvent) => {
+    if (this.padIndex !== event.gamepad.index) return
+    this.padIndex = null
+    this.padPrev = this.padCur = null
+    useGame.getState().setPadConnected(false)
+    useGame.getState().setDevice('kb')
+    useGame.getState().notify('Controller disconnected')
+  }
+
+  private onPadRumble = ({ strength, ms }: { strength: number; ms: number }) => {
+    this.rumble(strength, ms)
   }
 
   private isTypingTarget(e: KeyboardEvent): boolean {

@@ -113,6 +113,8 @@ export class DesktopRepositories {
 
   async getPreferences(): Promise<DesktopPreferences> {
     const result = await readAtomicJson(this.preferencesFile, desktopPreferencesSchema)
+    if (result.primaryCorrupt) this.logger.warn('desktop_preferences.primary_corrupt')
+    if (result.recoveredFromBackup) this.logger.warn('desktop_preferences.recovered_backup')
     return result.data ?? structuredClone(DEFAULT_DESKTOP_PREFERENCES)
   }
 

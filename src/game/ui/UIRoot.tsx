@@ -15,6 +15,7 @@ import { JournalOverlay } from './media/JournalOverlay'
 import { ReadingOverlay } from './media/ReadingOverlay'
 import { PerfOverlay } from './hud/PerfOverlay'
 import { keyboardActionForCode } from '../input/actions'
+import { reloadApplication } from '../../desktop/renderer/reload'
 
 function isTyping(e: KeyboardEvent): boolean {
   const t = e.target as HTMLElement | null
@@ -136,7 +137,7 @@ export function UIRoot() {
               The browser released the graphics context. It usually recovers on its own — if not,
               reload the page.
             </p>
-            <button className="btn primary" onClick={() => window.location.reload()}>
+            <button className="btn primary" onClick={reloadApplication}>
               Reload
             </button>
           </div>

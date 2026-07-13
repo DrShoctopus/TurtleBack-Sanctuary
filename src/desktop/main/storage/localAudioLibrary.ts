@@ -54,6 +54,8 @@ export class LocalAudioLibrary {
 
   private async readLibrary(): Promise<LibraryFile> {
     const loaded = await readAtomicJson(this.file, librarySchema)
+    if (loaded.primaryCorrupt) this.logger.warn('local_audio.primary_corrupt')
+    if (loaded.recoveredFromBackup) this.logger.warn('local_audio.recovered_backup')
     return loaded.data ?? { folders: [] }
   }
 

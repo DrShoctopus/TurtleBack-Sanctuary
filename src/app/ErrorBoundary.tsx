@@ -1,4 +1,5 @@
 import { Component, type ErrorInfo, type ReactNode } from 'react'
+import { reloadApplication } from '../desktop/renderer/reload'
 
 interface Props {
   children: ReactNode
@@ -39,7 +40,7 @@ export class ErrorBoundary extends Component<Props, State> {
                 {String(this.state.error.stack ?? this.state.error.message)}
               </pre>
             )}
-            <button className="btn primary" onClick={() => window.location.reload()}>
+            <button className="btn primary" onClick={reloadApplication}>
               Reload
             </button>
           </div>

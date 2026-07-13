@@ -85,7 +85,21 @@ describe('DesktopRepositories', () => {
     await writeFile(join(directory, 'settings.json'), '{not-json', 'utf8')
 
     expect(await repositories.getSettings()).toEqual(first)
+    expect(JSON.parse(await readFile(join(directory, 'settings.json'), 'utf8'))).toEqual(first)
     expect(JSON.parse(await readFile(join(directory, 'settings.json.bak'), 'utf8'))).toEqual(first)
+    expect(await readFile(join(directory, 'settings.json.corrupt'), 'utf8')).toBe('{not-json')
+  })
+
+  it('quarantines an invalid document without a backup before defaults are seeded', async () => {
+    const { directory, repositories } = await createRepositories()
+    await writeFile(join(directory, 'media.json'), '{broken-media', 'utf8')
+
+    expect(await repositories.getMedia()).toBeNull()
+    expect(await readFile(join(directory, 'media.json.corrupt'), 'utf8')).toBe('{broken-media')
+
+    await repositories.setMedia(EMPTY_MEDIA)
+    expect(JSON.parse(await readFile(join(directory, 'media.json'), 'utf8'))).toEqual(EMPTY_MEDIA)
+    expect(await readFile(join(directory, 'media.json.corrupt'), 'utf8')).toBe('{broken-media')
   })
 
   it('erases durable application data and returns clean defaults', async () => {
