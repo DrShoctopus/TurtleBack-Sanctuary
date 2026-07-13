@@ -62,7 +62,7 @@ export interface Runtime {
   reducedMotion: boolean
   /** true while menus/tv pause gameplay simulation of input (world keeps breathing) */
   uiCaptured: boolean
-  perf: { fps: number }
+  perf: { fps: number; p95FrameMs: number }
 }
 
 export const runtime: Runtime = {
@@ -83,5 +83,5 @@ export const runtime: Runtime = {
   spatial: INITIAL_SPATIAL,
   reducedMotion: false,
   uiCaptured: true,
-  perf: { fps: 60 },
+  perf: { fps: 60, p95FrameMs: 0 },
 }

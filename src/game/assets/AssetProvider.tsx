@@ -17,13 +17,34 @@ import { proceduralFallbacks, PROCEDURAL_FALLBACK_KEYS } from './proceduralFallb
 import { canonicalAssetManifest, createAssetRegistry } from './registry'
 import { resolveStaticAssetUrl } from './urls'
 
-const PIPELINE_SMOKE_IDS = ['model.pipeline-smoke', 'texture.pipeline-smoke'] as const
+export const PIPELINE_SMOKE_IDS = ['model.pipeline-smoke', 'texture.pipeline-smoke'] as const
 export const ASSET_PIPELINE_AUTHORED_MARK = 'turtleback:asset-pipeline-authored'
 export const ASSET_PIPELINE_FALLBACK_MARK = 'turtleback:asset-pipeline-fallback'
 const AssetManagerContext = createContext<AssetManager | null>(null)
 const canonicalAssetRegistry = createAssetRegistry(canonicalAssetManifest.assets, {
   proceduralFallbackKeys: PROCEDURAL_FALLBACK_KEYS,
 })
+
+let activePipelineInvalidator:
+  | { readonly token: symbol; readonly invalidate: () => boolean }
+  | null = null
+
+/**
+ * Diagnostic-only cache seam used after a deliberate smoke-asset failure is
+ * armed. Releasing the current preload makes the next quality request perform
+ * real model/texture work instead of reusing the already-pinned cache entry.
+ */
+export function invalidateActivePipelineSmokePreload(): boolean {
+  return activePipelineInvalidator?.invalidate() ?? false
+}
+
+function registerPipelineInvalidator(invalidate: () => boolean): () => void {
+  const token = Symbol('active pipeline preload invalidator')
+  activePipelineInvalidator = { token, invalidate }
+  return () => {
+    if (activePipelineInvalidator?.token === token) activePipelineInvalidator = null
+  }
+}
 
 function asError(error: unknown): Error {
   return error instanceof Error ? error : new Error(String(error))
@@ -87,6 +108,15 @@ export class AssetPreloadCoordinator {
     }
   }
 
+  invalidate(): boolean {
+    if (this.disposed) return false
+    this.generation += 1
+    const current = this.current
+    this.current = null
+    releasePreloadSafely(current)
+    return current !== null
+  }
+
   dispose(): void {
     if (this.disposed) return
     this.disposed = true
@@ -140,7 +170,9 @@ export function AssetProvider(props: {
 
   useEffect(() => {
     const unregisterDiagnostics = registerActiveAssetDiagnostics(manager)
+    const unregisterInvalidator = registerPipelineInvalidator(() => coordinator.invalidate())
     return () => {
+      unregisterInvalidator()
       coordinator.dispose()
       unregisterDiagnostics()
       manager.dispose()

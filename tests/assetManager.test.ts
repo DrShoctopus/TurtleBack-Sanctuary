@@ -1313,4 +1313,22 @@ describe('AssetPreloadCoordinator', () => {
     coordinator.dispose()
     expect(current.release).toHaveBeenCalledOnce()
   })
+
+  it('invalidates the current pin so a diagnostic quality refresh must reacquire it', async () => {
+    const onReady = vi.fn()
+    const coordinator = new AssetPreloadCoordinator({ onReady, onError: vi.fn() })
+    const current = fakeLease('high')
+    await coordinator.request(async () => current)
+
+    expect(coordinator.invalidate()).toBe(true)
+    expect(current.release).toHaveBeenCalledOnce()
+    expect(coordinator.invalidate()).toBe(false)
+
+    const refreshed = fakeLease('low')
+    await coordinator.request(async () => refreshed)
+    expect(onReady).toHaveBeenCalledOnce()
+    coordinator.dispose()
+    expect(refreshed.release).toHaveBeenCalledOnce()
+    expect(coordinator.invalidate()).toBe(false)
+  })
 })

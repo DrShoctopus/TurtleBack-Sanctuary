@@ -3,7 +3,7 @@ import { defineConfig, devices } from '@playwright/test'
 export default defineConfig({
   testDir: './visual',
   testMatch: 'graphics.capture.ts',
-  timeout: 180_000,
+  timeout: 15 * 60_000,
   fullyParallel: false,
   workers: 1,
   reporter: [['list']],

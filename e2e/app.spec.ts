@@ -235,6 +235,85 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   expect(ultra.materials.CloudsMaterial.detail).toBeGreaterThan(low.materials.CloudsMaterial.detail)
 })
 
+test('scene probes report live quality residency, resources, and vegetation LODs', async ({
+  page,
+}) => {
+  await page.goto('/')
+  await waitForTitle(page)
+  await enter(page)
+  await page.waitForFunction(
+    () =>
+      Boolean((window as any).__turtlebackDebug?.probe) &&
+      (window as any).__sanctuary?.game.getState().sceneReady,
+    null,
+    { timeout: 15_000 },
+  )
+
+  const selectQuality = async (quality: 'low' | 'high', active: number, retained: number) => {
+    await page.evaluate((level) => {
+      ;(window as any).__sanctuary.settings.getState().set('graphics', { quality: level })
+    }, quality)
+    await page.waitForFunction(
+      ({ level, activeCount, retainedCount }) => {
+        const probe = (window as any).__turtlebackDebug.probe()
+        return (
+          (window as any).__sanctuary.runtime.quality.level === level &&
+          probe.activeCells.length === activeCount &&
+          probe.retainedCells.length === retainedCount
+        )
+      },
+      { level: quality, activeCount: active, retainedCount: retained },
+      { timeout: 15_000 },
+    )
+    return page.evaluate(() => (window as any).__turtlebackDebug.probe())
+  }
+
+  const low = await selectQuality('low', 9, 25)
+  const high = await selectQuality('high', 49, 81)
+
+  expect(low.loadedAssetIds).toEqual(
+    expect.arrayContaining(['model.pipeline-smoke', 'texture.pipeline-smoke']),
+  )
+  expect(low.decodedAssetBytesById['model.pipeline-smoke']).toBeGreaterThan(0)
+  expect(low.renderer.calls).toBeGreaterThan(0)
+  expect(low.lodsByFamily.vegetation.near).toBeGreaterThan(0)
+  expect(high.activeCells).toHaveLength(49)
+  expect(high.retainedCells).toHaveLength(81)
+  expect(high.instancesByFamily.vegetation).toBeGreaterThan(low.instancesByFamily.vegetation)
+  expect(high.lodsByFamily.vegetation.near).toBeGreaterThan(low.lodsByFamily.vegetation.near)
+  expect(high.renderer.calls).toBeGreaterThan(low.renderer.calls)
+  expect(high.renderer.triangles).toBeGreaterThan(low.renderer.triangles)
+  expect(high.sections.world).toMatchObject({
+    activeCellCount: 49,
+    retainedCellCount: 81,
+  })
+})
+
+test('spatial residency crosses two centred cell boundaries without page errors', async ({ page }) => {
+  const pageErrors: string[] = []
+  page.on('pageerror', (error) => pageErrors.push(error.message))
+  await page.goto('/')
+  await waitForTitle(page)
+  await enter(page)
+  await page.waitForFunction(() => Boolean((window as any).__turtlebackDebug?.probe), null, {
+    timeout: 15_000,
+  })
+
+  const teleportAndAwaitCell = async (x: number, expected: string) => {
+    await page.evaluate((targetX) => (window as any).__turtlebackDebug.teleport(targetX, 0), x)
+    await page.waitForFunction(
+      (cell) => (window as any).__turtlebackDebug.probe().sections.world?.centerCell === cell,
+      expected,
+      { timeout: 10_000 },
+    )
+  }
+
+  await teleportAndAwaitCell(0, '0:0')
+  await teleportAndAwaitCell(32, '1:0')
+  await teleportAndAwaitCell(82, '2:0')
+  expect(pageErrors).toEqual([])
+})
+
 test('settings persist across reload', async ({ page }) => {
   await page.goto('/')
   await waitForTitle(page)

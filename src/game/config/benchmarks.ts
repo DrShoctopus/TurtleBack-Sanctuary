@@ -43,6 +43,12 @@ export const BENCHMARKS = {
   plaza: { mode: 'teleport', x: 0, z: -60, yaw: Math.PI, pitch: -0.04 },
   landmarks: { mode: 'teleport', x: 70, z: 43, yaw: -2.18, pitch: -0.04 },
   cottages: { mode: 'teleport', x: -110, z: -38, yaw: -2.77, pitch: -0.04 },
+  'forest-interior': { mode: 'teleport', x: -110, z: -38, yaw: -0.42, pitch: -0.1 },
+  'biome-threshold': { mode: 'teleport', x: 70, z: 43, yaw: -2.18, pitch: -0.08 },
+  'wildlife-grouping': { mode: 'teleport', x: -52, z: 91, yaw: 0.25, pitch: -0.12 },
+  'waterfall-rim': { mode: 'teleport', x: -34.2, z: 110.8, yaw: 2.75, pitch: -0.22 },
+  'flipper-scale': { mode: 'teleport', x: 150, z: -80, yaw: -Math.PI / 2, pitch: -0.46 },
+  'turtle-material-close': { mode: 'teleport', x: 0, z: -232, yaw: 0, pitch: -0.42 },
   'turtle-portrait': {
     mode: 'fixed',
     position: [0, 7.5, -336],
