@@ -11,6 +11,7 @@ import {
 } from 'three'
 import { runtime } from '../../core/runtime'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 import { FOG_COLOR, SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from '../sky/palette'
 
 const OCEAN_SIZE = 2600
@@ -24,6 +25,7 @@ export function Ocean() {
   const quality = useQualityProfile()
   const meshRef = useRef<Mesh>(null)
   const matRef = useRef<ShaderMaterial>(null)
+  const motionClock = useRef(new ComfortMotionClock())
   const segments = quality.oceanSegments
   const geometry = useMemo(() => {
     const g = new PlaneGeometry(OCEAN_SIZE, OCEAN_SIZE, segments, segments)
@@ -53,7 +55,7 @@ export function Ocean() {
     [],
   )
 
-  useFrame((state) => {
+  useFrame((state, dt) => {
     const mesh = meshRef.current
     const material = matRef.current
     if (!mesh || !material) return
@@ -62,7 +64,7 @@ export function Ocean() {
     const grid = OCEAN_SIZE / segments
     mesh.position.set(Math.round(p.x / grid) * grid, 0, Math.round(p.z / grid) * grid)
     live.uOffset.value.copy(mesh.position)
-    live.uTime.value = state.clock.elapsedTime
+    live.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion, 0.18)
     live.uTravel.value = runtime.travel.distance
     live.uCamPos.value.copy(state.camera.position)
     const c = runtime.time.celest
@@ -76,7 +78,7 @@ export function Ocean() {
     live.uRain.value = runtime.weather.rain
     live.uFogDensity.value = 0.0015 + c.nightFactor * 0.001 + runtime.weather.rain * 0.0022
     live.uDetail.value = quality.oceanDetail
-    live.uMotion.value = runtime.reducedMotion ? 0.18 : 1
+    live.uMotion.value = 1
     live.uReflections.value = quality.reflections
   })
 
@@ -99,6 +101,7 @@ export function Ocean() {
 
 /** One translucent elliptical veil for readable, calm foam at every shell edge. */
 function EdgeLappingWaves() {
+  const motionClock = useRef(new ComfortMotionClock())
   const geometry = useMemo(() => {
     const ring = new RingGeometry(1.095, 1.29, 256, 12)
     ring.rotateX(-Math.PI / 2)
@@ -124,11 +127,11 @@ function EdgeLappingWaves() {
     [],
   )
 
-  useFrame((state) => {
-    material.uniforms.uTime.value = state.clock.elapsedTime
+  useFrame((_, dt) => {
+    material.uniforms.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion, 0.1)
     material.uniforms.uNight.value = runtime.time.celest.nightFactor
     material.uniforms.uRain.value = runtime.weather.rain
-    material.uniforms.uMotion.value = runtime.reducedMotion ? 0.1 : 1
+    material.uniforms.uMotion.value = 1
   })
 
   return (

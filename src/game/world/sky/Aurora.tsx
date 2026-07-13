@@ -1,8 +1,9 @@
-import { useMemo } from 'react'
+import { useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import { AdditiveBlending, BackSide, Color, ShaderMaterial, SphereGeometry } from 'three'
 import { runtime } from '../../core/runtime'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 
 const AURORA_RADIUS = 1420
 
@@ -13,6 +14,7 @@ const AURORA_RADIUS = 1420
  */
 export function Aurora() {
   const quality = useQualityProfile()
+  const motionClock = useRef(new ComfortMotionClock())
   const geometry = useMemo(() => new SphereGeometry(AURORA_RADIUS, 48, 32), [])
   const material = useMemo(
     () =>
@@ -39,10 +41,10 @@ export function Aurora() {
     [],
   )
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const night = runtime.time.celest.starIntensity
-    material.uniforms.uTime.value = state.clock.elapsedTime
-    material.uniforms.uMotion.value = runtime.reducedMotion ? 0.08 : 1
+    material.uniforms.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion, 0.08)
+    material.uniforms.uMotion.value = 1
     material.uniforms.uDetail.value =
       quality.level === 'low' ? 0 : quality.level === 'medium' ? 1 : 2
     material.uniforms.uStrength.value =

@@ -209,11 +209,18 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
 
   // roof
   const roof = spec.roof ?? 'flat'
+  const ceilingTop = h + plinthH + 0.07
+  const roofClearance = 0.18
   if (roof !== 'glassGable') {
-    plan.box('plasterCool', { pos: [0, h + plinthH + 0.02, 0], size: [w + 0.1, 0.1, d + 0.1] })
+    plan.box('plasterCeiling', { pos: [0, h + plinthH + 0.02, 0], size: [w + 0.1, 0.1, d + 0.1] })
   }
   if (roof === 'flat') {
-    plan.box(trim, { pos: [0, h + plinthH + 0.2, 0], size: [w + 0.65, 0.28, d + 0.65] })
+    // Keep the roof underside clear of the ceiling slab. The old 0.20 offset
+    // overlapped it by 1 cm, producing striping and self-shadowing.
+    plan.box(trim, {
+      pos: [0, ceilingTop + roofClearance + 0.14, 0],
+      size: [w + 0.65, 0.28, d + 0.65],
+    })
     // parapet fascia
     plan.box(spec.wallMat, {
       pos: [0, h + plinthH + 0.42, d / 2 + 0.28],
@@ -232,22 +239,27 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
       size: [0.1, 0.3, d + 0.65],
     })
   } else if (roof === 'shed') {
+    const pitch = 0.1
+    const thickness = 0.22
+    // At the edge of the ceiling footprint, account for both the pitched
+    // depth and slab thickness so the roof cannot cut through the ceiling.
+    const halfVerticalSpan = Math.sin(pitch) * ((d + 0.1) / 2) + Math.cos(pitch) * (thickness / 2)
     plan.box(trim, {
-      pos: [0, h + plinthH + 0.45, 0],
-      size: [w + 0.9, 0.22, d + 1.1],
-      rot: [0.1, 0, 0],
+      pos: [0, ceilingTop + roofClearance + halfVerticalSpan, 0],
+      size: [w + 0.9, thickness, d + 1.1],
+      rot: [pitch, 0, 0],
     })
   } else if (roof === 'butterfly') {
     // butterfly: two slabs dipping toward the middle
     plan.box(trim, {
       pos: [0, h + plinthH + 0.5, -d / 4],
       size: [w + 0.9, 0.2, d / 2 + 0.6],
-      rot: [-0.09, 0, 0],
+      rot: [0.09, 0, 0],
     })
     plan.box(trim, {
       pos: [0, h + plinthH + 0.5, d / 4],
       size: [w + 0.9, 0.2, d / 2 + 0.6],
-      rot: [0.09, 0, 0],
+      rot: [-0.09, 0, 0],
     })
   } else {
     // A true transparent greenhouse roof: glass planes and repeated metal

@@ -144,19 +144,32 @@ export function wardrobe(p: P, x: number, z: number, r: number): void {
 /** kitchen run along a wall: counters, sink, stove, upper cabinets, fridge */
 export function kitchenette(p: P, x: number, z: number, r: number, length = 3.2): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
-  const [cx, cz] = at(0, 0)
-  p.solid('woodPale', { pos: [cx, 0.45, cz], size: [length, 0.9, 0.65], rot: [0, r, 0] })
-  p.box('stoneCounter', { pos: [cx, 0.93, cz], size: [length + 0.06, 0.06, 0.7], rot: [0, r, 0] })
-  const [ux, uz] = at(0, -0.12)
-  p.box('woodPale', { pos: [ux, 2.0, uz], size: [length * 0.9, 0.7, 0.38], rot: [0, r, 0] })
-  const [sx, sz] = at(-length / 4, 0.05)
+  const fridgeW = 0.75
+  const bayGap = 0.06
+  const counterLength = Math.max(0.9, length - fridgeW - bayGap)
+  const counterX = -(fridgeW + bayGap) / 2
+  const [cx, cz] = at(counterX, 0)
+  p.solid('woodPale', { pos: [cx, 0.45, cz], size: [counterLength, 0.9, 0.65], rot: [0, r, 0] })
+  p.box('stoneCounter', {
+    pos: [cx, 0.93, cz],
+    size: [counterLength + 0.06, 0.06, 0.7],
+    rot: [0, r, 0],
+  })
+  const upperDepth = 0.38
+  const [ux, uz] = at(counterX, 0.65 / 2 - upperDepth / 2)
+  p.box('woodPale', {
+    pos: [ux, 2.0, uz],
+    size: [counterLength * 0.9, 0.7, upperDepth],
+    rot: [0, r, 0],
+  })
+  const [sx, sz] = at(counterX - counterLength / 4, 0.05)
   p.box('metalBrushed', { pos: [sx, 0.97, sz], size: [0.6, 0.04, 0.45], rot: [0, r, 0] })
-  const [fx, fz] = at(length / 2 + 0.5, -0.05)
+  const [fx, fz] = at(length / 2 - fridgeW / 2, -0.05)
   p.solid('metalBrushed', { pos: [fx, 0.95, fz], size: [0.75, 1.9, 0.7], rot: [0, r, 0] })
-  const [hx, hz] = at(length / 4, 0.02)
+  const [hx, hz] = at(counterX + counterLength / 4, 0.02)
   p.box('metalDark', { pos: [hx, 0.965, hz], size: [0.65, 0.03, 0.5], rot: [0, r, 0] })
   for (const b of [-0.18, 0.18]) {
-    const [bx2, bz2] = at(length / 4 + b, 0.02)
+    const [bx2, bz2] = at(counterX + counterLength / 4 + b, 0.02)
     p.add(cylGeo(10), 'metalDark', { pos: [bx2, 0.99, bz2], size: [0.13, 0.03, 0.13] })
   }
 }
@@ -172,14 +185,33 @@ export function shelfUnit(
   seed = 5,
 ): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
-  const [bx, bz] = at(0, 0)
-  p.solid('woodWarm', { pos: [bx, h / 2, bz], size: [w, h, 0.34], rot: [0, r, 0] })
+  const depth = 0.34
+  const frame = 0.08
+  const [backX, backZ] = at(0, -depth / 2 + 0.02)
+  p.box('woodWarm', { pos: [backX, h / 2, backZ], size: [w, h, 0.04], rot: [0, r, 0] })
+  for (const side of [-1, 1]) {
+    const [sideX, sideZ] = at(side * (w / 2 - frame / 2), 0)
+    p.box('woodWarm', { pos: [sideX, h / 2, sideZ], size: [frame, h, depth], rot: [0, r, 0] })
+  }
+  for (const y of [frame / 2, h - frame / 2]) {
+    const [railX, railZ] = at(0, 0)
+    p.box('woodWarm', {
+      pos: [railX, y, railZ],
+      size: [w - frame * 2, frame, depth],
+      rot: [0, r, 0],
+    })
+  }
+  p.collider({ pos: [x, h / 2, z], size: [w, h, depth], rotY: r })
   const shelves = Math.floor(h / 0.42)
   const rng = mulberry32(seed)
   for (let s = 0; s < shelves; s++) {
     const y = 0.28 + s * 0.42
     const [ix, iz] = at(0, 0.02)
-    p.box('woodDark', { pos: [ix, y, iz], size: [w - 0.12, 0.32, 0.28], rot: [0, r, 0] })
+    p.box('woodDark', {
+      pos: [ix, y - 0.16, iz],
+      size: [w - 0.12, 0.05, 0.28],
+      rot: [0, r, 0],
+    })
     if (withBooks) {
       let cx2 = -w / 2 + 0.12
       while (cx2 < w / 2 - 0.15) {
@@ -422,7 +454,25 @@ export function telescopeProp(p: P, x: number, z: number, r: number): void {
 
 export function storeShelf(p: P, x: number, z: number, r: number, seed = 8): void {
   const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
-  p.solid('woodWarm', { pos: [x, 0.9, z], size: [2.0, 1.8, 0.5], rot: [0, r, 0] })
+  const w = 2
+  const h = 1.8
+  const depth = 0.5
+  const frame = 0.08
+  const [backX, backZ] = at(0, -depth / 2 + 0.02)
+  p.box('woodWarm', { pos: [backX, h / 2, backZ], size: [w, h, 0.04], rot: [0, r, 0] })
+  for (const side of [-1, 1]) {
+    const [sideX, sideZ] = at(side * (w / 2 - frame / 2), 0)
+    p.box('woodWarm', { pos: [sideX, h / 2, sideZ], size: [frame, h, depth], rot: [0, r, 0] })
+  }
+  for (const y of [frame / 2, 0.34, 0.89, 1.44, h - frame / 2]) {
+    const [shelfX, shelfZ] = at(0, 0)
+    p.box('woodWarm', {
+      pos: [shelfX, y, shelfZ],
+      size: [w - frame * 2, frame, depth],
+      rot: [0, r, 0],
+    })
+  }
+  p.collider({ pos: [x, h / 2, z], size: [w, h, depth], rotY: r })
   const rng = mulberry32(seed)
   for (let s = 0; s < 3; s++) {
     for (let i = 0; i < 6; i++) {
@@ -437,15 +487,17 @@ export function storeShelf(p: P, x: number, z: number, r: number, seed = 8): voi
       ] as const
       const kind = rng()
       if (kind < 0.5) {
+        const itemH = 0.2 + rng() * 0.14
         p.add(cylGeo(8), mats[Math.floor(rng() * mats.length)], {
-          pos: [gx, 0.55 + s * 0.55, gz],
-          size: [0.14, 0.2 + rng() * 0.14, 0.14],
+          pos: [gx, 0.38 + s * 0.55 + itemH / 2, gz],
+          size: [0.14, itemH, 0.14],
           rot: [0, r, 0],
         })
       } else {
+        const itemH = 0.14 + rng() * 0.14
         p.box(mats[Math.floor(rng() * mats.length)], {
-          pos: [gx, 0.52 + s * 0.55, gz],
-          size: [0.16, 0.14 + rng() * 0.14, 0.16],
+          pos: [gx, 0.38 + s * 0.55 + itemH / 2, gz],
+          size: [0.16, itemH, 0.16],
           rot: [0, r + rng() * 0.4, 0],
         })
       }

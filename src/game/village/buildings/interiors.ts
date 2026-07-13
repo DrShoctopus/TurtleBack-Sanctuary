@@ -539,7 +539,7 @@ const bathhouse: InteriorFn = () => {
   // benches + towels + lockers
   p.benchOutdoor(plan, -3.4, 2.9, 0)
   p.benchOutdoor(plan, 0.8, -3.6, Math.PI)
-  p.towelStack(plan, 4.6, 1.0, -3.3)
+  p.towelStack(plan, 4.02, 1.0, -3.3)
   plan.solid('woodWarm', { pos: [4.75, 0.9, -3.3], size: [0.9, 1.8, 0.5] })
   p.plantPot(plan, -4.6, 3.4, 'l', 81)
   p.plantPot(plan, 4.6, 3.6, 'm', 82)
@@ -584,11 +584,11 @@ const observatory: InteriorFn = () => {
   })
   // dome (visual only, above roof)
   exterior.cyl('concrete', { pos: [0, H + 0.38, 0], size: [7.7, 0.72, 7.7] }, 32)
-  exterior.sphere('metalBrushed', { pos: [0, H + 0.7, 0], size: [7.4, 5.2, 7.4] }, 24)
-  exterior.cyl('metalDark', { pos: [0, H + 1.04, 0], size: [7.58, 0.14, 7.58] }, 32)
+  exterior.sphere('metalBrushed', { pos: [0, H + 1.75, 0], size: [7.4, 2.8, 7.4] }, 24)
+  exterior.cyl('metalDark', { pos: [0, H + 1.75, 0], size: [7.58, 0.14, 7.58] }, 32)
   exterior.box('paint.night', {
-    pos: [0, H + 2.4, 0],
-    size: [1.1, 3.0, 7.6],
+    pos: [0, H + 2.1, 0],
+    size: [0.32, 2.2, 7.55],
     rot: [0, 0, 0],
   })
   extras.interior = { halfX: W / 2, halfZ: D / 2, halfY: H / 2 + 0.2, cy: H / 2 }
@@ -710,6 +710,7 @@ const pavilion: InteriorFn = () => {
   p.plantPot(plan, -4.2, 2.8, 'm', 112)
   p.windChime(plan, 3.2, 3.2, -3.0)
   p.windChime(plan, -3.4, 3.2, 3.1)
+  p.pendantCord(plan, 0, 3.35, 0, 0.34)
 
   extras.interior = { halfX: 0.1, halfZ: 0.1, halfY: 0.1, cy: -99 } // open air — never counts as indoors
   extras.interactions.push(

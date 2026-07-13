@@ -14,12 +14,14 @@ import { runtime } from '../../core/runtime'
 import { SKY_HORIZON, SKY_TOP, SUN_COLOR, sampleColor } from './palette'
 import { mulberry32 } from '../../core/rng'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 
 const DOME_RADIUS = 1500
 
 export function SkyDome() {
   const quality = useQualityProfile()
   const matRef = useRef<ShaderMaterial>(null)
+  const motionClock = useRef(new ComfortMotionClock())
   const geometry = useMemo(() => new SphereGeometry(DOME_RADIUS, 40, 24), [])
   const uniforms = useMemo(
     () => ({
@@ -38,7 +40,7 @@ export function SkyDome() {
     [],
   )
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const material = matRef.current
     if (!material) return
     const live = material.uniforms
@@ -51,7 +53,7 @@ export function SkyDome() {
     live.uNight.value = c.nightFactor
     live.uMoonPhase.value = c.moonPhaseVisible
     live.uRain.value = runtime.weather.rain
-    live.uTime.value = state.clock.elapsedTime
+    live.uTime.value = motionClock.current.advance(dt, runtime.reducedMotion)
     live.uAurora.value =
       c.nightFactor *
       c.nightFactor *

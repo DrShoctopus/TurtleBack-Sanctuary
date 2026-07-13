@@ -10,6 +10,7 @@ import { registerWetMaterial } from '../../weather/simpleWet'
 export type MatKey =
   | 'plasterWarm'
   | 'plasterCool'
+  | 'plasterCeiling'
   | 'plasterSage'
   | 'woodWarm'
   | 'woodDeck'
@@ -64,6 +65,13 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
       color: '#dde4e2',
       roughness: 0.94,
       ...detail('plaster', 0.2),
+    }),
+  )
+  mk(
+    'plasterCeiling',
+    new MeshStandardMaterial({
+      color: '#e8e8e0',
+      roughness: 0.96,
     }),
   )
   mk(

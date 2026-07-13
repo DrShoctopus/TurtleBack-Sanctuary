@@ -108,6 +108,10 @@ export function Building({ spec }: { spec: BuildingSpec }) {
   const speakerMode = useSettings((s) => s.home.speakerMode)
   const homeBlinds = useSettings((s) => s.home.blinds)
   const homeTheme = useSettings((s) => s.home.theme)
+  const teaPhase = useGame((s) => s.teaPhase)
+  const brewInteraction = built.extras.interactions.find((interaction) =>
+    ['tea', 'coffee'].includes(interaction.kind),
+  )
   useEffect(() => {
     if (spec.id === 'home') mediaPlayer.setSpeakerMode(speakerMode)
   }, [speakerMode, spec.id])
@@ -195,6 +199,22 @@ export function Building({ spec }: { spec: BuildingSpec }) {
         <Artwork key={i} pos={a.pos} rotY={a.rotY} w={a.w} h={a.h} index={i} buildingId={spec.id} />
       ))}
       {built.extras.tvScreen && <TvScreen screen={built.extras.tvScreen} />}
+      {brewInteraction && (
+        <BrewSteam
+          pos={[brewInteraction.pos[0], brewInteraction.pos[1] + 0.22, brewInteraction.pos[2]]}
+          active={teaPhase === 'brewing' || teaPhase === 'ready'}
+        />
+      )}
+      {built.extras.interactions
+        .filter((interaction) => interaction.kind === 'water' || interaction.kind === 'chime')
+        .map((interaction) => (
+          <InteractionBurst
+            key={`effect-${interaction.id}`}
+            source={`${spec.id}:${interaction.id}`}
+            kind={interaction.kind as 'water' | 'chime'}
+            pos={interaction.pos}
+          />
+        ))}
       {spec.id === 'home' && <HomeDecor blinds={homeBlinds} theme={homeTheme} />}
       {built.extras.poolWaters.map((w, i) => (
         <mesh key={`pool${i}`} position={w.pos} rotation={[-Math.PI / 2, 0, 0]}>
@@ -225,24 +245,43 @@ const HOME_WINDOWS = [
   { pos: [3.6, 4.09] as const, axis: 'z' as const, w: 1.8, h: 1.7, sill: 0.75 },
   { pos: [2.8, -4.09] as const, axis: 'z' as const, w: 2.8, h: 1.7, sill: 0.75 },
   { pos: [-2.4, -4.09] as const, axis: 'z' as const, w: 1.6, h: 1.3, sill: 1.0 },
-  { pos: [5.59, -2.8] as const, axis: 'x' as const, w: 2.8, h: 1.7, sill: 0.7 },
-  { pos: [5.59, 2.4] as const, axis: 'x' as const, w: 1.6, h: 1.3, sill: 1.0 },
+  { pos: [5.59, 0.5] as const, axis: 'x' as const, w: 2.6, h: 1.8, sill: 0.7 },
   { pos: [-5.59, 1.5] as const, axis: 'x' as const, w: 1.6, h: 1.3, sill: 0.95 },
 ]
 
 function HomeDecor({ blinds, theme }: { blinds: number; theme: DecorTheme }) {
+  const blindRefs = useRef<Array<Mesh | null>>([])
+  const animatedBlinds = useRef(blinds)
   const accent = theme === 'tidepool' ? '#4f8f91' : theme === 'dune' ? '#c39b69' : '#8a7462'
+  useFrame((_, dt) => {
+    animatedBlinds.current +=
+      (blinds - animatedBlinds.current) * Math.min(1, dt * (runtime.reducedMotion ? 12 : 4.5))
+    HOME_WINDOWS.forEach((window, index) => {
+      const mesh = blindRefs.current[index]
+      if (!mesh) return
+      const coverage = Math.max(0.07, window.h * animatedBlinds.current)
+      mesh.scale.y = coverage / window.h
+      mesh.position.y = 0.14 + window.sill + window.h - coverage / 2
+    })
+  })
   return (
     <group>
       {HOME_WINDOWS.map((window, index) => {
-        const coverage = Math.max(0.07, window.h * blinds)
+        const coverage = Math.max(0.07, window.h * animatedBlinds.current)
         const y = 0.14 + window.sill + window.h - coverage / 2
         const size: [number, number, number] =
           window.axis === 'z'
-            ? [window.w - 0.08, coverage, 0.025]
-            : [0.025, coverage, window.w - 0.08]
+            ? [window.w - 0.08, window.h, 0.025]
+            : [0.025, window.h, window.w - 0.08]
         return (
-          <mesh key={index} position={[window.pos[0], y, window.pos[1]]}>
+          <mesh
+            key={index}
+            ref={(mesh) => {
+              blindRefs.current[index] = mesh
+            }}
+            position={[window.pos[0], y, window.pos[1]]}
+            scale={[1, coverage / window.h, 1]}
+          >
             <boxGeometry args={size} />
             <meshStandardMaterial color={accent} roughness={0.96} />
           </mesh>
@@ -257,11 +296,24 @@ function HomeDecor({ blinds, theme }: { blinds: number; theme: DecorTheme }) {
 }
 
 function TvScreen({ screen }: { screen: NonNullable<BuiltInterior['extras']['tvScreen']> }) {
+  const active = useGame((state) => state.overlay === 'tv')
+  const screenMat = useRef<MeshStandardMaterial>(null)
+  useFrame((_, dt) => {
+    const material = screenMat.current
+    if (!material) return
+    const target = active ? 0.9 : 0.22
+    material.emissiveIntensity += (target - material.emissiveIntensity) * Math.min(1, dt * 5)
+  })
   return (
     <group position={screen.pos} rotation={[0, screen.rotY, 0]}>
+      <mesh position={[0, 0, -0.012]}>
+        <boxGeometry args={[screen.w + 0.09, screen.h + 0.09, 0.06]} />
+        <meshStandardMaterial color="#202930" metalness={0.48} roughness={0.42} />
+      </mesh>
       <mesh position={[0, 0, 0.018]}>
         <planeGeometry args={[screen.w, screen.h]} />
         <meshStandardMaterial
+          ref={screenMat}
           color="#071019"
           emissive="#0a2530"
           emissiveIntensity={0.22}
@@ -272,6 +324,117 @@ function TvScreen({ screen }: { screen: NonNullable<BuiltInterior['extras']['tvS
         <ringGeometry args={[0.055, 0.075, 32]} />
         <meshBasicMaterial color="#7dc7c3" transparent opacity={0.32} />
       </mesh>
+      <mesh position={[0, -0.71, -0.015]}>
+        <boxGeometry args={[0.12, 0.48, 0.08]} />
+        <meshStandardMaterial color="#313940" metalness={0.55} roughness={0.4} />
+      </mesh>
+      <mesh position={[0, -0.93, -0.015]}>
+        <boxGeometry args={[0.72, 0.05, 0.3]} />
+        <meshStandardMaterial color="#313940" metalness={0.55} roughness={0.4} />
+      </mesh>
+    </group>
+  )
+}
+
+function BrewSteam({ pos, active }: { pos: [number, number, number]; active: boolean }) {
+  const groupRef = useRef<Group>(null)
+  const material = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        color: '#eef6f2',
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      }),
+    [],
+  )
+  const phase = useRef(0)
+  useEffect(() => () => material.dispose(), [material])
+  useFrame((_, dt) => {
+    const group = groupRef.current
+    phase.current += dt * (runtime.reducedMotion ? 0.25 : 1)
+    material.opacity += ((active ? 0.24 : 0) - material.opacity) * Math.min(1, dt * 5)
+    if (!group) return
+    group.visible = material.opacity > 0.005
+    group.children.forEach((child, index) => {
+      const t = (phase.current * 0.22 + index / group.children.length) % 1
+      child.position.set(Math.sin(t * 7 + index) * 0.08, t * 0.72, Math.cos(t * 5 + index) * 0.05)
+      child.scale.setScalar(0.45 + t * 0.9)
+    })
+  })
+  return (
+    <group ref={groupRef} position={pos}>
+      {Array.from({ length: 6 }, (_, index) => (
+        <mesh key={index} material={material}>
+          <sphereGeometry args={[0.06, 8, 6]} />
+        </mesh>
+      ))}
+    </group>
+  )
+}
+
+function InteractionBurst({
+  source,
+  kind,
+  pos,
+}: {
+  source: string
+  kind: 'water' | 'chime'
+  pos: [number, number, number]
+}) {
+  const groupRef = useRef<Group>(null)
+  const life = useRef(0)
+  const material = useMemo(
+    () =>
+      new MeshBasicMaterial({
+        color: kind === 'water' ? '#a8ddea' : '#f6d89b',
+        transparent: true,
+        opacity: 0,
+        depthWrite: false,
+      }),
+    [kind],
+  )
+  useEffect(() => {
+    const unsubscribe = events.on('worldEffect', (effect) => {
+      if (effect.kind === kind && effect.source === source) life.current = 1
+    })
+    return () => {
+      unsubscribe()
+      material.dispose()
+    }
+  }, [kind, material, source])
+  useFrame((_, dt) => {
+    const group = groupRef.current
+    life.current = Math.max(0, life.current - dt * (runtime.reducedMotion ? 1.8 : 0.85))
+    material.opacity = life.current * 0.42
+    if (!group) return
+    group.visible = life.current > 0.005
+    const progress = 1 - life.current
+    group.rotation.y = progress * 0.8
+    group.scale.setScalar(0.75 + progress * 1.35)
+    group.position.y = pos[1] + (kind === 'water' ? progress * 0.35 : 0)
+  })
+  return (
+    <group ref={groupRef} position={pos}>
+      {kind === 'water' ? (
+        Array.from({ length: 8 }, (_, index) => (
+          <mesh
+            key={index}
+            material={material}
+            position={[
+              Math.cos((index / 8) * Math.PI * 2) * 0.42,
+              0.22 + (index % 3) * 0.12,
+              Math.sin((index / 8) * Math.PI * 2) * 0.42,
+            ]}
+          >
+            <sphereGeometry args={[0.045, 7, 5]} />
+          </mesh>
+        ))
+      ) : (
+        <mesh material={material} rotation={[Math.PI / 2, 0, 0]}>
+          <torusGeometry args={[0.38, 0.025, 8, 28]} />
+        </mesh>
+      )}
     </group>
   )
 }
@@ -355,7 +518,7 @@ function interactionToDef(
         label: i.label ?? 'Water the plants',
         position: pos,
         radius: i.radius,
-        onUse: waterPlants,
+        onUse: () => waterPlants(id),
       }
     case 'artLight':
       return {
@@ -387,7 +550,7 @@ function interactionToDef(
         label: 'Brush the wind chimes',
         position: pos,
         radius: i.radius,
-        onUse: ringChime,
+        onUse: () => ringChime(id),
       }
     case 'blinds':
       return {

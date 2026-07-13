@@ -84,10 +84,14 @@ function collectLampSpots(): Array<[number, number]> {
         const side = rng() < 0.5 ? 1 : -1
         const nx = -(b.z - a.z) / len
         const nz = (b.x - a.x) / len
-        lampSpots.push([
-          a.x + (b.x - a.x) * f + nx * side * 2.4,
-          a.z + (b.z - a.z) * f + nz * side * 2.4,
-        ])
+        const x = a.x + (b.x - a.x) * f + nx * side * 2.4
+        const z = a.z + (b.z - a.z) * f + nz * side * 2.4
+        const insideBuildingPad = BUILDINGS.some((building) => {
+          const dx = x - building.x
+          const dz = z - building.z
+          return dx * dx + dz * dz < (building.padR - 1.2) ** 2
+        })
+        if (!insideBuildingPad) lampSpots.push([x, z])
         t += 26 + rng() * 10
       }
       acc = t - len

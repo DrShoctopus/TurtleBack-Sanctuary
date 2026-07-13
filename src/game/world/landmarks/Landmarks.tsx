@@ -20,6 +20,7 @@ import { useSettings } from '../../state/settingsStore'
 import { buildSchedule, type LandmarkEvent, type LandmarkType } from './schedule'
 import { mulberry32 } from '../../core/rng'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 
 const SCHEDULE_LENGTH = 400 // ~46 hours of voyage; effectively endless
 
@@ -29,6 +30,7 @@ const SCHEDULE_LENGTH = 400 // ~46 hours of voyage; effectively endless
  */
 export function Landmarks() {
   const quality = useQualityProfile()
+  const motionClock = useRef(new ComfortMotionClock())
   const seed = useSettings((s) => s.worldSeed)
   const schedule = useMemo(() => buildSchedule(seed, SCHEDULE_LENGTH), [seed])
   const rootRef = useRef<Group>(null)
@@ -36,11 +38,11 @@ export function Landmarks() {
   const active = useRef<Array<{ event: LandmarkEvent; node: Group }>>([])
   const cursor = useRef(0)
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const root = rootRef.current
     if (!root) return
     const travel = runtime.travel.distance
-    const t = state.clock.elapsedTime
+    const t = motionClock.current.advance(dt, runtime.reducedMotion)
 
     // spawn upcoming events
     while (
@@ -52,6 +54,7 @@ export function Landmarks() {
       let node = pool.get(event.type)
       if (!node) {
         node = BUILDERS[event.type]()
+        assignLandmarkDetailTiers(node)
         pool.set(event.type, node)
         root.add(node)
       }
@@ -74,6 +77,7 @@ export function Landmarks() {
       }
       node.position.set(event.side * event.offset, 0, -rel)
       node.scale.setScalar(event.scale)
+      applyLandmarkDetail(node, quality.landmarkDetail)
       node.userData.update?.(t, night, node)
     }
   })
@@ -114,6 +118,25 @@ function tagged(g: Group, update?: UpdateFn): Group {
   g.userData.update = update
   g.visible = false
   return g
+}
+
+/** Keep landmark silhouettes on Low while retiring later decorative meshes. */
+function assignLandmarkDetailTiers(node: Group): void {
+  let meshIndex = 0
+  node.traverse((child) => {
+    if (!(child instanceof Mesh)) return
+    child.userData.detailTier = meshIndex < 6 ? 0 : meshIndex < 18 ? 1 : 2
+    meshIndex++
+  })
+}
+
+function applyLandmarkDetail(node: Group, level: 0 | 1 | 2): void {
+  if (node.userData.appliedDetail === level) return
+  node.userData.appliedDetail = level
+  node.traverse((child) => {
+    if (!(child instanceof Mesh)) return
+    child.visible = (child.userData.detailTier as number) <= level
+  })
 }
 
 // ---------------------------------------------------------------------------
@@ -299,24 +322,26 @@ const BUILDERS: Record<LandmarkType, Builder> = {
     const rng = mulberry32(55)
     for (let i = 0; i < 6; i++) {
       const h = 60 + rng() * 90
-      const mono = new Mesh(new BoxGeometry(10 + rng() * 8, h, 6 + rng() * 6), glassMat.clone())
+      const width = 10 + rng() * 8
+      const mono = new Mesh(new BoxGeometry(width, h, 6 + rng() * 6), glassMat.clone())
       mono.position.set((rng() - 0.5) * 150, h / 2 - 6, (rng() - 0.5) * 200)
       mono.rotation.y = rng() * Math.PI
       g.add(mono)
       const edge = new Mesh(new BoxGeometry(0.8, h, 0.8), glowCool.clone())
-      edge.position.copy(mono.position)
-      edge.position.x += 5
-      g.add(edge)
+      edge.position.set(width / 2 - 0.4, 0, 0)
+      edge.userData.monolithEdge = true
+      mono.add(edge)
     }
     return tagged(g, (t, night, node) => {
-      node.children.forEach((c, i) => {
+      let edgeIndex = 0
+      node.traverse((c) => {
         const mesh = c as Mesh
         const m = mesh.material as MeshBasicMaterial
         if (m === undefined || !('color' in m)) return
-        if ((mesh.geometry as BoxGeometry).parameters?.width === 0.8) {
+        if (mesh.userData.monolithEdge) {
           ;(m as MeshBasicMaterial).color
             .setRGB(0.5, 0.85, 1)
-            .multiplyScalar(0.25 + night * 1.2 + Math.sin(t + i) * 0.08)
+            .multiplyScalar(0.25 + night * 1.2 + Math.sin(t + edgeIndex++) * 0.08)
         }
       })
     })
@@ -432,6 +457,7 @@ const BUILDERS: Record<LandmarkType, Builder> = {
 export function AmbientLife() {
   const quiet = useSettings((s) => s.quietMode)
   const gullsRef = useRef<Group>(null)
+  const motionClock = useRef(new ComfortMotionClock())
   const gulls = useMemo(() => {
     const rng = mulberry32(404)
     return Array.from({ length: 9 }, () => ({
@@ -445,10 +471,10 @@ export function AmbientLife() {
   const wingGeo = useMemo(() => new BoxGeometry(3.2, 0.12, 0.9), [])
   const bodyMat = useMemo(() => new MeshStandardMaterial({ color: '#e8ecef', roughness: 0.8 }), [])
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const g = gullsRef.current
     if (!g) return
-    const t = state.clock.elapsedTime
+    const t = motionClock.current.advance(dt, runtime.reducedMotion)
     const day = 1 - runtime.time.celest.nightFactor
     g.visible = !quiet && day > 0.25 && runtime.weather.rain < 0.5
     if (!g.visible) return

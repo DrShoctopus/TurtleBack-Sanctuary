@@ -6,6 +6,7 @@ export type GameEvents = {
   notify: { text: string; long?: boolean }
   uiSound: { kind: 'move' | 'confirm' | 'back' | 'open' | 'close' | 'soft' }
   interactSound: { kind: 'generic' | 'lamp' | 'door' | 'chime' | 'water' | 'sit' | 'tea' | 'page' }
+  worldEffect: { kind: 'water' | 'chime'; source: string }
   respawnSplash: undefined
   padRumble: { strength: number; ms: number }
 }

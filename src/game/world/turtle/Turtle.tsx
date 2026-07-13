@@ -11,6 +11,7 @@ import {
 } from 'three'
 import { getSurfaceDetail, getTexture } from '../textures'
 import { runtime } from '../../core/runtime'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 
 /**
  * The colossal turtle herself. The walkable shell remains a stable physics
@@ -28,9 +29,10 @@ export function Turtle() {
   const flipperBL = useRef<Group>(null)
   const flipperBR = useRef<Group>(null)
   const blinkState = useRef({ next: 4.4, phase: 0, count: 0 })
+  const motionClock = useRef(new ComfortMotionClock())
 
-  useFrame((state, dt) => {
-    const t = state.clock.elapsedTime
+  useFrame((_, dt) => {
+    const t = motionClock.current.advance(dt, runtime.reducedMotion)
     const motion = runtime.reducedMotion ? 0.12 : 1
     const stroke = Math.sin(t * 0.33)
     const breath = 0.5 + Math.sin(t * 0.38) * 0.5

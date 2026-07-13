@@ -4,6 +4,7 @@ import { BackSide, Color, ShaderMaterial, SphereGeometry, Vector3 } from 'three'
 import { runtime } from '../../core/runtime'
 import { lerp } from '../../core/mathUtils'
 import { useQualityProfile } from '../../core/useQualityProfile'
+import { ComfortMotionClock } from '../../core/comfortMotion'
 
 /**
  * A noise-shader cloud shell just inside the sky dome. Coverage follows
@@ -12,6 +13,7 @@ import { useQualityProfile } from '../../core/useQualityProfile'
 export function Clouds() {
   const quality = useQualityProfile()
   const matRef = useRef<ShaderMaterial>(null)
+  const motionClock = useRef(new ComfortMotionClock())
   const geometry = useMemo(() => new SphereGeometry(1350, 36, 20), [])
   const uniforms = useMemo(
     () => ({
@@ -26,12 +28,13 @@ export function Clouds() {
     [],
   )
 
-  useFrame((state) => {
+  useFrame((_, dt) => {
     const material = matRef.current
     if (!material) return
     const live = material.uniforms
-    live.uTime.value = state.clock.elapsedTime
-    live.uTravel.value = runtime.travel.distance
+    const motionTime = motionClock.current.advance(dt, runtime.reducedMotion)
+    live.uTime.value = motionTime
+    live.uTravel.value = motionTime * runtime.travel.speed
     const rain = runtime.weather.rain
     const night = runtime.time.celest.nightFactor
     live.uCoverage.value = lerp(0.32, 0.78, rain)

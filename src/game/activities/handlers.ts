@@ -64,8 +64,9 @@ const plantLines = [
 ]
 let plantIdx = 0
 
-export function waterPlants(): void {
+export function waterPlants(source = 'plants'): void {
   events.emit('interactSound', { kind: 'water' })
+  events.emit('worldEffect', { kind: 'water', source })
   useGame.getState().notify(plantLines[plantIdx++ % plantLines.length])
 }
 
@@ -133,6 +134,7 @@ export function previewMusic(): void {
 
 // --- wind chimes -------------------------------------------------------------
 
-export function ringChime(): void {
+export function ringChime(source = 'chime'): void {
   events.emit('interactSound', { kind: 'chime' })
+  events.emit('worldEffect', { kind: 'chime', source })
 }
