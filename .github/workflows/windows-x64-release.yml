@@ -82,4 +82,5 @@ jobs:
           path: |
             release/*-win-x64.exe
             release/windows-*.json
+            release/windows-build.log
           if-no-files-found: error
