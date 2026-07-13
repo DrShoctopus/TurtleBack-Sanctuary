@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { gameSettingsSchema, type GameSettings } from '../../game/data/settings'
+import { portableMediaSchema, type PortableMediaData } from '../../game/data/media'
 import {
   portableSaveSchema,
   saveSlotSchema,
@@ -14,9 +15,13 @@ export const IPC_CHANNELS = {
   deleteSave: 'save:delete',
   getSettings: 'settings:get',
   setSettings: 'settings:set',
+  getMedia: 'media:get',
+  setMedia: 'media:set',
+  eraseAllData: 'data:erase-all',
   getDesktopPreferences: 'desktop-preferences:get',
   setDesktopPreferences: 'desktop-preferences:set',
   selectLocalAudioFolder: 'local-audio:select-folder',
+  listLocalAudioFolders: 'local-audio:list-folders',
   listLocalAudioFiles: 'local-audio:list-files',
   openExternalLink: 'platform:open-external',
   authorizeRemoteMediaUrl: 'platform:authorize-media-url',
@@ -103,6 +108,7 @@ export const localAudioFolderSchema: z.ZodType<LocalAudioFolder> = z.object({
 
 export const saveWriteRequestSchema = z.object({ slot: saveSlotSchema, data: portableSaveSchema })
 export const settingsWriteRequestSchema = gameSettingsSchema
+export const mediaWriteRequestSchema = portableMediaSchema
 export const windowSizeSchema = z.object({
   width: z.number().int().min(960).max(7680),
   height: z.number().int().min(540).max(4320),
@@ -122,9 +128,13 @@ export interface DesktopAppBridge {
   deleteSave(slot: string): Promise<void>
   getSettings(): Promise<GameSettings | null>
   setSettings(settings: GameSettings): Promise<GameSettings>
+  getMedia(): Promise<PortableMediaData | null>
+  setMedia(media: PortableMediaData): Promise<PortableMediaData>
+  eraseAllData(): Promise<void>
   getDesktopPreferences(): Promise<DesktopPreferences>
   setDesktopPreferences(patch: Partial<DesktopPreferences>): Promise<DesktopPreferences>
   selectLocalAudioFolder(): Promise<LocalAudioFolder | null>
+  listLocalAudioFolders(): Promise<LocalAudioFolder[]>
   listLocalAudioFiles(folderId: string): Promise<PortableAudioTrack[]>
   openExternalLink(url: string): Promise<boolean>
   authorizeRemoteMediaUrl(url: string): Promise<boolean>

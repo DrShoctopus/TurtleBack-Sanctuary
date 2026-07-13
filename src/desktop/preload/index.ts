@@ -14,6 +14,7 @@ import {
   type DesktopPreferences,
 } from '../shared/contracts'
 import { gameSettingsSchema } from '../../game/data/settings'
+import { portableMediaSchema } from '../../game/data/media'
 import { portableSaveSchema, saveSlotSchema, type SaveSlotInfo } from '../../game/save/schema'
 
 const bridge: DesktopAppBridge = {
@@ -38,18 +39,38 @@ const bridge: DesktopAppBridge = {
     return value === null ? null : gameSettingsSchema.parse(value)
   },
   async setSettings(settings) {
-    const value = await ipcRenderer.invoke(IPC_CHANNELS.setSettings, gameSettingsSchema.parse(settings))
+    const value = await ipcRenderer.invoke(
+      IPC_CHANNELS.setSettings,
+      gameSettingsSchema.parse(settings),
+    )
     return gameSettingsSchema.parse(value)
   },
+  async getMedia() {
+    const value = await ipcRenderer.invoke(IPC_CHANNELS.getMedia)
+    return value === null ? null : portableMediaSchema.parse(value)
+  },
+  async setMedia(media) {
+    const value = await ipcRenderer.invoke(IPC_CHANNELS.setMedia, portableMediaSchema.parse(media))
+    return portableMediaSchema.parse(value)
+  },
+  async eraseAllData() {
+    await ipcRenderer.invoke(IPC_CHANNELS.eraseAllData)
+  },
   async getDesktopPreferences() {
-    return desktopPreferencesSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getDesktopPreferences))
+    return desktopPreferencesSchema.parse(
+      await ipcRenderer.invoke(IPC_CHANNELS.getDesktopPreferences),
+    )
   },
   async setDesktopPreferences(patch) {
     const safePatch: Partial<DesktopPreferences> = {}
-    if (patch.displayMode !== undefined) safePatch.displayMode = displayModeSchema.parse(patch.displayMode)
-    if (patch.windowSize !== undefined) safePatch.windowSize = windowSizeIdSchema.parse(patch.windowSize)
-    if (patch.lastSaveSlot !== undefined) safePatch.lastSaveSlot = saveSlotSchema.parse(patch.lastSaveSlot)
-    if (patch.autoLoadLastSave !== undefined) safePatch.autoLoadLastSave = Boolean(patch.autoLoadLastSave)
+    if (patch.displayMode !== undefined)
+      safePatch.displayMode = displayModeSchema.parse(patch.displayMode)
+    if (patch.windowSize !== undefined)
+      safePatch.windowSize = windowSizeIdSchema.parse(patch.windowSize)
+    if (patch.lastSaveSlot !== undefined)
+      safePatch.lastSaveSlot = saveSlotSchema.parse(patch.lastSaveSlot)
+    if (patch.autoLoadLastSave !== undefined)
+      safePatch.autoLoadLastSave = Boolean(patch.autoLoadLastSave)
     return desktopPreferencesSchema.parse(
       await ipcRenderer.invoke(IPC_CHANNELS.setDesktopPreferences, safePatch),
     )
@@ -57,6 +78,10 @@ const bridge: DesktopAppBridge = {
   async selectLocalAudioFolder() {
     const value = await ipcRenderer.invoke(IPC_CHANNELS.selectLocalAudioFolder)
     return value === null ? null : localAudioFolderSchema.parse(value)
+  },
+  async listLocalAudioFolders() {
+    const value = await ipcRenderer.invoke(IPC_CHANNELS.listLocalAudioFolders)
+    return localAudioFolderSchema.array().parse(value)
   },
   async listLocalAudioFiles(folderId) {
     const value = await ipcRenderer.invoke(IPC_CHANNELS.listLocalAudioFiles, folderId)

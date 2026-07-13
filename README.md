@@ -32,9 +32,10 @@ Then open **http://localhost:5173** and click **Enter Sanctuary**. (The click is
 
 ### Electron desktop development
 
-Phase 1 of the desktop conversion is in progress. The secure Electron shell and
-unpacked macOS build are runnable; durable desktop media/save adapters and
-automated packaged-app coverage remain open in the
+Phase 1 of the desktop conversion is in progress. The secure Electron shell,
+durable application-profile persistence, native local-audio folder access, and
+unpacked macOS build are runnable; lifecycle recovery and automated packaged-app
+coverage remain open in the
 [Phase 1 plan](docs/phase-1-electron-vertical-slice.md).
 
 ```bash
@@ -50,7 +51,7 @@ pnpm desktop:package  # unpacked platform application → release/
 | `pnpm dev`             | Vite dev server with HMR                           |
 | `pnpm build`           | `tsc --noEmit` then `vite build` → `dist/`         |
 | `pnpm preview`         | Serve the production build locally                 |
-| `pnpm test`            | Vitest unit tests (146 tests)                      |
+| `pnpm test`            | Vitest unit tests                                  |
 | `pnpm test:watch`      | Vitest in watch mode                               |
 | `pnpm test:e2e`        | Playwright browser tests (see [Testing](#testing)) |
 | `pnpm typecheck`       | Strict TypeScript check only                       |
@@ -128,7 +129,7 @@ The living-room TV plays videos through YouTube's **official IFrame embed** on t
 - Paste any normal watch URL, `youtu.be` link, embed URL, or Shorts URL — or a bare 11-character video ID. Timestamps (`?t=90`, `?t=1h2m3s`) are honored.
 - The parsed ID is validated before it's ever handed to the embed.
 - No YouTube Data API key is required, and there is no search (adding one would require a key you supply yourself).
-- Only recent **video IDs and stub titles** are stored, locally in your browser. No viewing analytics are collected.
+- Only recent **video IDs and stub titles** are stored, locally on your device. No viewing analytics are collected.
 - If a video's uploader has disabled embedding, the player shows a gentle message; the rest of the game is unaffected.
 
 ## How to add local music
@@ -136,6 +137,7 @@ The living-room TV plays videos through YouTube's **official IFrame embed** on t
 Open the home stereo → **Your files**. Click **Add audio files…** to pick common browser-playable formats (mp3, m4a, aac, ogg, opus, wav, flac).
 
 - Files play locally through a native `<audio>` element and are **never uploaded**.
+- In the Electron app, you choose a folder once. The main process retains only the folder registration, scans supported files, and gives the renderer opaque playback URLs; absolute filesystem paths are never exposed to game code.
 - On browsers with the **File System Access API**, chosen file handles can be persisted in IndexedDB so the game can re-request access on a later visit (you re-grant permission each session — that's a browser security rule, not a limitation of the game).
 - On other browsers, a standard file picker is used; those files are available only for the current session.
 

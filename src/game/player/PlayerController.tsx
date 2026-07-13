@@ -67,7 +67,7 @@ export function PlayerController() {
 
   // Teleports (Return Home, respawn, debug)
   useEffect(() => {
-    return events.on('teleport', ({ x, y, z, yaw }) => {
+    return events.on('teleport', ({ x, y, z, yaw, pitch }) => {
       const body = bodyRef.current
       if (!body) return
       const groundY = y + CAPSULE_CENTER_Y + 0.05
@@ -75,7 +75,7 @@ export function PlayerController() {
       vel.set(0, 0, 0)
       vy.current = 0
       if (yaw !== undefined) runtime.player.yaw = yaw
-      runtime.player.pitch = 0
+      runtime.player.pitch = pitch ?? 0
     })
   }, [vel])
 

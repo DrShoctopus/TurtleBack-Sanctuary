@@ -10,6 +10,7 @@ export type QualityChoice = 'auto' | 'low' | 'medium' | 'high'
 export type WeatherMode = 'auto' | 'clear' | 'rain'
 export type DecorTheme = 'driftwood' | 'tidepool' | 'dune'
 export type SpeakerMode = 'room' | 'personal'
+export type TimeSpeed = 0.5 | 1 | 2 | 5
 
 export interface GameSettings {
   graphics: {
@@ -52,7 +53,7 @@ export interface GameSettings {
   }
   time: {
     auto: boolean
-    speed: number
+    speed: TimeSpeed
     manual: number
   }
   weather: {
@@ -245,4 +246,3 @@ export function migrateSettings(persisted: unknown, fromVersion: number): GameSe
   const parsed = gameSettingsSchema.safeParse(merged)
   return parsed.success ? parsed.data : structuredClone(DEFAULT_SETTINGS)
 }
-

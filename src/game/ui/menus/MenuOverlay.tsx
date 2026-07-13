@@ -11,6 +11,8 @@ import { useMenuNav } from './useMenuNav'
 import { Row, Seg, Slider, Toggle } from './controls'
 import { MapPanel } from './MapPanel'
 import { safeStorage } from '../../core/save/storage'
+import { eraseAllDesktopData } from '../../../desktop/renderer/persistence'
+import type { TimeSpeed } from '../../data/settings'
 
 const SANCTUARY_TABS = [
   { id: 'time', label: 'Time & Weather' },
@@ -202,7 +204,7 @@ function TimeWeatherTab() {
             { value: '2', label: '2×' },
             { value: '5', label: '5×' },
           ]}
-          onChange={(v) => set('time', { speed: Number(v) })}
+          onChange={(v) => set('time', { speed: Number(v) as TimeSpeed })}
         />
       </Row>
 
@@ -504,7 +506,7 @@ function DataTab() {
       <h3>Stored on this device only</h3>
       <p style={{ color: 'var(--c-text-dim)', fontSize: '0.9em' }}>
         The sanctuary keeps everything local: settings, journal notes, radio stations and recent
-        videos never leave your browser.
+        videos never leave this device.
       </p>
       <Row label="Reset settings" hint="Graphics, audio, comfort and controls">
         <button className="btn small" data-nav onClick={() => { resetAll(); notify('Settings reset') }}>
@@ -521,11 +523,17 @@ function DataTab() {
           Clear
         </button>
       </Row>
-      <Row label="Erase all local data" hint="Everything above, plus stations and home decor. Reloads.">
+      <Row label="Erase all local data" hint="Settings, media, saves, local-audio access and home decor. Reloads.">
         <button
           className="btn small danger"
           data-nav
           onClick={() => {
+            if (window.desktopApp) {
+              void eraseAllDesktopData().then((erased) => {
+                if (!erased) notify('Could not erase desktop data')
+              })
+              return
+            }
             for (const key of Object.values(SAVE_KEYS)) safeStorage.removeItem(key)
             window.location.reload()
           }}

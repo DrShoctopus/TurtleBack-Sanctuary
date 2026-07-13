@@ -4,7 +4,7 @@ import { useMedia } from '../../state/mediaStore'
 import { closeOverlay } from '../UIRoot'
 import { useMenuNav } from '../menus/useMenuNav'
 import { mediaPlayer, BUILTIN_ITEMS, type PlaylistItem } from '../../media/MediaPlayer'
-import { pickLocalAudio } from '../../media/localFiles'
+import { loadDesktopAudioLibrary, pickLocalAudio } from '../../media/localFiles'
 import { validateStreamUrl } from '../../media/safeUrl'
 
 function usePlayer() {
@@ -53,6 +53,14 @@ export function MusicOverlay() {
     ]
     mediaPlayer.setPlaylist(items)
   }, [stations])
+
+  useEffect(() => {
+    void loadDesktopAudioLibrary()
+      .then((tracks) => {
+        if (tracks.length) mediaPlayer.addLocalTracks(tracks)
+      })
+      .catch(() => notify('Some local audio folders are unavailable'))
+  }, [notify])
 
   const item = mediaPlayer.playlist[mediaPlayer.index]
   const playing = mediaPlayer.status === 'playing' || mediaPlayer.status === 'live'
@@ -206,8 +214,9 @@ export function MusicOverlay() {
           {tab === 'local' && (
             <>
               <p className="muted">
-                Choose audio files from your device. They play locally and are never uploaded.
-                Browsers can’t keep files after you leave unless you re-grant access.
+                {window.desktopApp
+                  ? 'Choose an audio folder from your device. It stays registered with this app and its files are never uploaded.'
+                  : 'Choose audio files from your device. They play locally and are never uploaded. Browsers can’t keep files after you leave unless you re-grant access.'}
               </p>
               <button className="btn primary" data-nav onClick={openFiles}>
                 Add audio files…
@@ -257,7 +266,7 @@ export function MusicOverlay() {
           )}
         </div>
         <div className="menu-foot">
-          <span>Local files and stations are stored on this device only.</span>
+          <span>Local files and stations stay on this device only.</span>
         </div>
       </div>
     </div>

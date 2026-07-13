@@ -3,8 +3,15 @@ import { App } from './app/App'
 import { input } from './game/input/InputManager'
 import { installPointerLockWatcher } from './game/input/pointerLock'
 import { useSettings } from './game/state/settingsStore'
+import {
+  flushDesktopPersistence,
+  initializeDesktopPersistence,
+  startDesktopPersistence,
+  stopDesktopPersistence,
+} from './desktop/renderer/persistence'
 import './styles/global.css'
 
+await initializeDesktopPersistence()
 installDesktopLifecycle()
 
 // Deterministic world seed override for testing: ?seed=123
@@ -41,6 +48,7 @@ if (import.meta.env.DEV) {
 // NOTE: StrictMode is intentionally omitted — its double-invoked effects fight
 // with imperative singletons (physics world, AudioContext). See ARCHITECTURE.md.
 createRoot(document.getElementById('root')!).render(<App />)
+startDesktopPersistence()
 
 function installDesktopLifecycle(): void {
   const bridge = window.desktopApp
@@ -63,6 +71,8 @@ function installDesktopLifecycle(): void {
   })
 
   bridge.onPrepareShutdown(async () => {
+    await flushDesktopPersistence(true)
+    stopDesktopPersistence()
     const [{ audio }, { mediaPlayer }, { disposeAllTextures }] = await Promise.all([
       import('./game/audio/AudioManager'),
       import('./game/media/MediaPlayer'),

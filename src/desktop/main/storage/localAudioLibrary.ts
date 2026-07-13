@@ -11,7 +11,7 @@ import {
   type PortableAudioTrack,
 } from '../../shared/contracts'
 import type { AppLogger } from '../logging/logger'
-import { readAtomicJson, writeAtomicJson } from './atomicJson'
+import { deleteAtomicJson, readAtomicJson, writeAtomicJson } from './atomicJson'
 
 const AUDIO_EXTENSIONS = new Set(['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.wav', '.flac'])
 const MAX_TRACKS = 5000
@@ -87,6 +87,24 @@ export class LocalAudioLibrary {
     const folder = library.folders.find((entry) => entry.id === safeId)
     if (!folder) return []
     return this.scan(folder.path)
+  }
+
+  async listFolders(): Promise<LocalAudioFolder[]> {
+    const library = await this.readLibrary()
+    const folders = await Promise.all(
+      library.folders.map(async (folder) => ({
+        folderId: folder.id,
+        displayName: folder.displayName,
+        tracks: await this.scan(folder.path),
+      })),
+    )
+    return folders.filter((folder) => folder.tracks.length > 0)
+  }
+
+  async eraseAll(): Promise<void> {
+    this.tracks.clear()
+    await deleteAtomicJson(this.file)
+    this.logger.info('local_audio.erase_all')
   }
 
   private async scan(rootPath: string): Promise<PortableAudioTrack[]> {

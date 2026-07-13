@@ -4,6 +4,13 @@ let memoryFallback: Map<string, string> | null = null
 
 function backing(): Storage | Map<string, string> {
   if (memoryFallback) return memoryFallback
+  if (typeof window !== 'undefined' && window.desktopApp) {
+    // Electron persistence is owned by validated main-process repositories.
+    // Zustand still needs a synchronous storage facade during module startup,
+    // so desktop renderer state uses memory until the async adapter hydrates it.
+    memoryFallback = new Map()
+    return memoryFallback
+  }
   try {
     const probe = '__turtleback_probe__'
     window.localStorage.setItem(probe, '1')

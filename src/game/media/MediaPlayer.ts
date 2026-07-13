@@ -160,6 +160,11 @@ class MediaPlayer {
         this.set('status', 'error')
         return
       }
+      if (window.desktopApp && !(await window.desktopApp.authorizeRemoteMediaUrl(check.url!))) {
+        this.errorMessage = 'This station address was refused by the desktop network policy.'
+        this.set('status', 'error')
+        return
+      }
       src = check.url!
     } else if (item.kind === 'local' && item.track) {
       try {
@@ -253,7 +258,8 @@ class MediaPlayer {
       title: t.name,
       track: t,
     }))
-    this.playlist = [...this.playlist, ...items]
+    const ids = new Set(items.map((item) => item.id))
+    this.playlist = [...this.playlist.filter((item) => !ids.has(item.id)), ...items]
     this.emit()
   }
 

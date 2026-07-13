@@ -16,10 +16,11 @@ export class WeatherSim {
   private rng: Rng
   private autoTarget = 0
 
-  constructor(seed = 1, initialRain = 0) {
+  constructor(seed = 1, initialRain = 0, initialWetness = initialRain) {
     this.rng = mulberry32(seed)
-    this.rain = initialRain
-    this.target = initialRain
+    this.rain = clamp01(initialRain)
+    this.wetness = clamp01(initialWetness)
+    this.target = this.rain
     this.autoTimer = rngRange(this.rng, 120, 300)
   }
 
@@ -35,7 +36,8 @@ export class WeatherSim {
       if (this.autoTimer <= 0) {
         // alternate dry and rainy spells; rain ~35% of the time, gentle by default
         this.autoTarget = this.autoTarget > 0 ? 0 : rngRange(this.rng, 0.45, 1)
-        const dur = this.autoTarget > 0 ? rngRange(this.rng, 100, 240) : rngRange(this.rng, 200, 460)
+        const dur =
+          this.autoTarget > 0 ? rngRange(this.rng, 100, 240) : rngRange(this.rng, 200, 460)
         this.autoTimer = dur
         this.target = this.autoTarget
       }

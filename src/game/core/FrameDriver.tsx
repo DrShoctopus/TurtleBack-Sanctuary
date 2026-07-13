@@ -17,7 +17,15 @@ import { audio } from '../audio/AudioManager'
  * and runs the auto-quality governor. Runs before the physics step each frame.
  */
 export function FrameDriver() {
-  const weatherSim = useMemo(() => new WeatherSim(useSettings.getState().worldSeed, 0), [])
+  const weatherSim = useMemo(() => {
+    const settings = useSettings.getState()
+    const intensity = Math.max(0.001, settings.weather.rainIntensity)
+    return new WeatherSim(
+      settings.worldSeed,
+      runtime.weather.rain / intensity,
+      runtime.weather.wetness / intensity,
+    )
+  }, [])
   const governor = useMemo(() => new QualityGovernor('medium'), [])
 
   // hidden tab → treat like pause so the world doesn't lurch on return

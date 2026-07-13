@@ -2,7 +2,14 @@
 
 export type GameEvents = {
   footstep: { surface: 'grass' | 'stone' | 'wood' | 'shell' | 'interior'; jog: boolean }
-  teleport: { x: number; y: number; z: number; yaw?: number; reason: 'home' | 'respawn' | 'debug' }
+  teleport: {
+    x: number
+    y: number
+    z: number
+    yaw?: number
+    pitch?: number
+    reason: 'home' | 'respawn' | 'debug' | 'load'
+  }
   notify: { text: string; long?: boolean }
   uiSound: { kind: 'move' | 'confirm' | 'back' | 'open' | 'close' | 'soft' }
   interactSound: { kind: 'generic' | 'lamp' | 'door' | 'chime' | 'water' | 'sit' | 'tea' | 'page' }

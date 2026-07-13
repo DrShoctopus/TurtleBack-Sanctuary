@@ -13,6 +13,12 @@ export interface LocalTrack {
   handle?: FileSystemFileHandle
 }
 
+interface DesktopTrackReference {
+  id: string
+  displayName: string
+  playbackUrl: string
+}
+
 const AUDIO_EXT = ['.mp3', '.m4a', '.aac', '.ogg', '.oga', '.opus', '.wav', '.flac']
 
 function isAudioName(name: string): boolean {
@@ -49,7 +55,17 @@ export function supportsFsAccess(): boolean {
 }
 
 /** Open the file picker (FS Access API when available). Returns chosen tracks. */
-export async function pickLocalAudio(): Promise<{ tracks: LocalTrack[]; handles: FileSystemFileHandle[] }> {
+export async function pickLocalAudio(): Promise<{
+  tracks: LocalTrack[]
+  handles: FileSystemFileHandle[]
+}> {
+  if (window.desktopApp) {
+    const folder = await window.desktopApp.selectLocalAudioFolder()
+    return {
+      tracks: folder ? folder.tracks.map(trackFromDesktopReference) : [],
+      handles: [],
+    }
+  }
   const w = window as unknown as FSWindow
   if (w.showOpenFilePicker) {
     try {
@@ -76,6 +92,22 @@ export async function pickLocalAudio(): Promise<{ tracks: LocalTrack[]; handles:
     }
   }
   return { tracks: await pickViaInput(), handles: [] }
+}
+
+/** Rebuild app-controlled local track references from the desktop folder registry. */
+export async function loadDesktopAudioLibrary(): Promise<LocalTrack[]> {
+  if (!window.desktopApp) return []
+  const folders = await window.desktopApp.listLocalAudioFolders()
+  return folders.flatMap((folder) => folder.tracks.map(trackFromDesktopReference))
+}
+
+function trackFromDesktopReference(track: DesktopTrackReference): LocalTrack {
+  return {
+    id: `desktop-${track.id}`,
+    name: track.displayName,
+    getUrl: async () => track.playbackUrl,
+    revoke: () => undefined,
+  }
 }
 
 /** Fallback: hidden <input type=file multiple>. */
@@ -156,7 +188,8 @@ export async function ensureHandlePermission(handle: FileSystemFileHandle): Prom
   }
   try {
     if (h.queryPermission && (await h.queryPermission({ mode: 'read' })) === 'granted') return true
-    if (h.requestPermission && (await h.requestPermission({ mode: 'read' })) === 'granted') return true
+    if (h.requestPermission && (await h.requestPermission({ mode: 'read' })) === 'granted')
+      return true
   } catch {
     /* ignore */
   }

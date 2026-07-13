@@ -12,7 +12,7 @@ import {
 
 export type { JournalEntry, RadioStation, RecentVideo } from '../data/media'
 
-interface MediaState {
+export interface MediaState {
   recentVideos: RecentVideo[]
   stations: RadioStation[]
   journal: JournalEntry[]
@@ -23,6 +23,7 @@ interface MediaState {
   addJournal: (text: string) => void
   removeJournal: (id: string) => void
   clearJournal: () => void
+  replaceAll: (media: Pick<MediaState, 'recentVideos' | 'stations' | 'journal'>) => void
 }
 
 export const useMedia = create<MediaState>()(
@@ -50,6 +51,12 @@ export const useMedia = create<MediaState>()(
         })),
       removeJournal: (id) => set((s) => ({ journal: s.journal.filter((e) => e.id !== id) })),
       clearJournal: () => set({ journal: [] }),
+      replaceAll: (media) =>
+        set({
+          recentVideos: media.recentVideos,
+          stations: media.stations,
+          journal: media.journal,
+        }),
     }),
     {
       name: SAVE_KEYS.media,
@@ -57,11 +64,12 @@ export const useMedia = create<MediaState>()(
       storage: createJSONStorage(() => safeStorage),
       migrate: (persisted) => migrateMedia(persisted) as MediaState,
       merge: (persisted, current) => ({ ...current, ...migrateMedia(persisted) }),
-      partialize: (state) => ({
-        recentVideos: state.recentVideos,
-        stations: state.stations,
-        journal: state.journal,
-      }) as MediaState,
+      partialize: (state) =>
+        ({
+          recentVideos: state.recentVideos,
+          stations: state.stations,
+          journal: state.journal,
+        }) as MediaState,
     },
   ),
 )

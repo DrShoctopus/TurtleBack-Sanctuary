@@ -1,4 +1,4 @@
-import { readdir } from 'node:fs/promises'
+import { readdir, rm } from 'node:fs/promises'
 import { join } from 'node:path'
 import {
   DEFAULT_DESKTOP_PREFERENCES,
@@ -13,12 +13,14 @@ import {
   type SaveSlotInfo,
 } from '../../../game/save/schema'
 import type { AppLogger } from '../logging/logger'
+import { portableMediaSchema, type PortableMediaData } from '../../../game/data/media'
 import { deleteAtomicJson, readAtomicJson, writeAtomicJson } from './atomicJson'
 
 export class DesktopRepositories {
   private readonly savesDirectory: string
   private readonly settingsFile: string
   private readonly preferencesFile: string
+  private readonly mediaFile: string
 
   constructor(
     userDataDirectory: string,
@@ -27,6 +29,7 @@ export class DesktopRepositories {
     this.savesDirectory = join(userDataDirectory, 'saves')
     this.settingsFile = join(userDataDirectory, 'settings.json')
     this.preferencesFile = join(userDataDirectory, 'desktop-preferences.json')
+    this.mediaFile = join(userDataDirectory, 'media.json')
   }
 
   private saveFile(slot: string): string {
@@ -95,6 +98,19 @@ export class DesktopRepositories {
     return parsed
   }
 
+  async getMedia(): Promise<PortableMediaData | null> {
+    const result = await readAtomicJson(this.mediaFile, portableMediaSchema)
+    if (result.primaryCorrupt) this.logger.warn('media.primary_corrupt')
+    if (result.recoveredFromBackup) this.logger.warn('media.recovered_backup')
+    return result.data
+  }
+
+  async setMedia(media: PortableMediaData): Promise<PortableMediaData> {
+    const parsed = portableMediaSchema.parse(media)
+    await writeAtomicJson(this.mediaFile, parsed, portableMediaSchema)
+    return parsed
+  }
+
   async getPreferences(): Promise<DesktopPreferences> {
     const result = await readAtomicJson(this.preferencesFile, desktopPreferencesSchema)
     return result.data ?? structuredClone(DEFAULT_DESKTOP_PREFERENCES)
@@ -106,5 +122,14 @@ export class DesktopRepositories {
     await writeAtomicJson(this.preferencesFile, next, desktopPreferencesSchema)
     return next
   }
-}
 
+  async eraseAll(): Promise<void> {
+    await Promise.all([
+      deleteAtomicJson(this.settingsFile),
+      deleteAtomicJson(this.mediaFile),
+      deleteAtomicJson(this.preferencesFile),
+      rm(this.savesDirectory, { recursive: true, force: true }),
+    ])
+    this.logger.info('data.erase_all')
+  }
+}

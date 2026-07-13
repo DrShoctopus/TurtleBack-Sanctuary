@@ -55,7 +55,7 @@ Acceptance gates:
 
 ### 2. Durable desktop platform adapters
 
-Status: **pending**
+Status: **implemented and verified**
 
 - Hydrate settings from the desktop repository before the game mounts.
 - Persist validated setting changes through the preload bridge with debouncing
@@ -187,3 +187,34 @@ Still open before slice 1 is closed:
   repeatable without a temporary debugging port.
 - Replace Electron's default application icon when final original icon artwork
   is available. Signing/notarization remains outside Phase 1.
+
+### 2026-07-13 — Slice 2 durable adapters established
+
+Implemented:
+
+- Pre-mount desktop hydration for settings, media metadata, preferences, platform
+  information, and the validated autosave envelope.
+- Debounced settings/media writes and a 60-second autosave through the preload
+  bridge, with an explicit flush on visibility changes and coordinated quit.
+- Portable, schema-validated player/world/settings/media save data. Player
+  transform restore is deferred until the Rapier scene is ready.
+- Main-process repositories for settings, media, preferences, saves, and native
+  local-audio folder registrations, including atomic writes, backups, corruption
+  reporting, and erase-all support.
+- Native folder selection and opaque `turtleback-media://` playback references in
+  Electron while retaining browser file-picker and IndexedDB fallbacks.
+- Desktop media state no longer treats renderer `localStorage` as authoritative.
+  Browser-profile import is deferred to a future explicit export/import tool;
+  Phase 1 does not inspect unrelated browser profiles.
+
+Verified on the same Apple Silicon macOS environment as slice 1:
+
+- Strict TypeScript, ESLint, 152 unit tests across 21 files, the browser
+  production build, desktop bundles, and all 12 browser Playwright flows passed.
+- An unpacked arm64 app persisted an FOV change and journal entry across a full
+  process quit and relaunch using the same application profile.
+- A seeded autosave player transform was applied only after scene readiness and
+  written back from the live runtime on the following clean shutdown.
+- The packaged renderer reported no page, CSP, preload, or Rapier errors during
+  those launches. Settings and autosave writes completed before the renderer's
+  shutdown-ready acknowledgement.

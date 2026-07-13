@@ -5,6 +5,7 @@ import {
   desktopPreferencesSchema,
   displayModeSchema,
   folderIdSchema,
+  mediaWriteRequestSchema,
   rendererErrorSchema,
   saveWriteRequestSchema,
   settingsWriteRequestSchema,
@@ -17,7 +18,11 @@ import { saveSlotSchema } from '../../../game/save/schema'
 import type { AppLogger } from '../logging/logger'
 import type { LocalAudioLibrary } from '../storage/localAudioLibrary'
 import type { DesktopRepositories } from '../storage/repositories'
-import { validateExternalUrl, validateRemoteMediaUrl, type RemoteRequestPolicy } from '../security/urlPolicy'
+import {
+  validateExternalUrl,
+  validateRemoteMediaUrl,
+  type RemoteRequestPolicy,
+} from '../security/urlPolicy'
 
 interface RegisterIpcOptions {
   window: BrowserWindow
@@ -35,7 +40,10 @@ function assertTrustedSender(event: IpcMainInvokeEvent, window: BrowserWindow): 
     throw new Error('IPC request rejected: untrusted sender')
   }
   const url = event.senderFrame.url
-  if (!url.startsWith('app://turtleback/') && !/^http:\/\/(127\.0\.0\.1|localhost):\d+\//.test(url)) {
+  if (
+    !url.startsWith('app://turtleback/') &&
+    !/^http:\/\/(127\.0\.0\.1|localhost):\d+\//.test(url)
+  ) {
     throw new Error('IPC request rejected: invalid renderer origin')
   }
 }
@@ -70,6 +78,13 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
   handle(IPC_CHANNELS.setSettings, window, (_event, settings) =>
     repositories.setSettings(settingsWriteRequestSchema.parse(settings)),
   )
+  handle(IPC_CHANNELS.getMedia, window, () => repositories.getMedia())
+  handle(IPC_CHANNELS.setMedia, window, (_event, media) =>
+    repositories.setMedia(mediaWriteRequestSchema.parse(media)),
+  )
+  handle(IPC_CHANNELS.eraseAllData, window, async () => {
+    await Promise.all([repositories.eraseAll(), localAudio.eraseAll()])
+  })
   handle(IPC_CHANNELS.getDesktopPreferences, window, () => repositories.getPreferences())
   handle(IPC_CHANNELS.setDesktopPreferences, window, async (_event, patch) => {
     const current = await repositories.getPreferences()
@@ -77,6 +92,7 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
     return repositories.setPreferences(next)
   })
   handle(IPC_CHANNELS.selectLocalAudioFolder, window, () => localAudio.selectFolder(window))
+  handle(IPC_CHANNELS.listLocalAudioFolders, window, () => localAudio.listFolders())
   handle(IPC_CHANNELS.listLocalAudioFiles, window, (_event, folderId) =>
     localAudio.list(folderIdSchema.parse(folderId)),
   )

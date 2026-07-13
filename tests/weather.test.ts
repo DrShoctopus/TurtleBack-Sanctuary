@@ -57,4 +57,10 @@ describe('WeatherSim', () => {
     }
     expect(maxRain).toBeGreaterThan(0.3)
   })
+
+  it('restores validated rain and wetness without an initial clear-frame pop', () => {
+    const sim = new WeatherSim(7, 0.4, 0.8)
+    expect(sim.rain).toBe(0.4)
+    expect(sim.wetness).toBe(0.8)
+  })
 })

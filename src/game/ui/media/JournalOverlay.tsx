@@ -59,7 +59,7 @@ export function JournalOverlay() {
             </>
           )}
         </div>
-        <div className="menu-foot"><span>Stored only in this browser. Clear anytime in Sanctuary → Data.</span></div>
+        <div className="menu-foot"><span>Stored only on this device. Clear anytime in Sanctuary → Data.</span></div>
       </div>
     </div>
   )
