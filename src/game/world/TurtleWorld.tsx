@@ -13,11 +13,12 @@ import { Rain } from '../weather/Rain'
 import { AtmosphereDetails } from '../weather/AtmosphereDetails'
 import { InteractionSystem } from '../interaction/InteractionSystem'
 import { WorldSystems } from './WorldSystems'
+import { SpatialCellProvider } from './spatial/SpatialCellProvider'
 
 /** Root of everything outside the player: sky, sea, shell, turtle, village. */
 export function TurtleWorld() {
   return (
-    <>
+    <SpatialCellProvider>
       <TimeLighting />
       <SkyDome />
       <Stars />
@@ -35,6 +36,6 @@ export function TurtleWorld() {
       <AtmosphereDetails />
       <InteractionSystem />
       <WorldSystems />
-    </>
+    </SpatialCellProvider>
   )
 }

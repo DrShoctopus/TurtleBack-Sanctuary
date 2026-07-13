@@ -1,7 +1,30 @@
 import { Vector3 } from 'three'
 import { HOME_SPAWN, WORLD } from '../config/constants'
 import { computeCelestials, type CelestialState } from '../time/timeMath'
+import { cellNeighborhood, worldToCell } from '../world/spatial/cells'
+import {
+  DEFAULT_SPATIAL_GRID,
+  type SpatialRuntimeState,
+} from '../world/spatial/types'
 import { QUALITY_PROFILES, type QualityProfile } from './quality'
+
+const INITIAL_QUALITY = QUALITY_PROFILES.medium
+const INITIAL_SPATIAL_CENTER = Object.freeze(
+  worldToCell(HOME_SPAWN.x, HOME_SPAWN.z, {
+    ...DEFAULT_SPATIAL_GRID,
+    loadRadius: INITIAL_QUALITY.cellLoadRadius,
+    retainRadius: INITIAL_QUALITY.cellRetainRadius,
+  }),
+)
+const INITIAL_SPATIAL: SpatialRuntimeState = Object.freeze({
+  center: INITIAL_SPATIAL_CENTER,
+  active: Object.freeze(
+    cellNeighborhood(INITIAL_SPATIAL_CENTER, INITIAL_QUALITY.cellLoadRadius),
+  ),
+  retained: Object.freeze(
+    cellNeighborhood(INITIAL_SPATIAL_CENTER, INITIAL_QUALITY.cellRetainRadius),
+  ),
+})
 
 /**
  * Mutable per-frame world state, deliberately outside React.
@@ -34,6 +57,8 @@ export interface Runtime {
     surface: 'grass' | 'stone' | 'wood' | 'shell' | 'interior'
   }
   quality: QualityProfile
+  /** Discrete 10 Hz cell residency for imperative systems and diagnostics. */
+  spatial: SpatialRuntimeState
   reducedMotion: boolean
   /** true while menus/tv pause gameplay simulation of input (world keeps breathing) */
   uiCaptured: boolean
@@ -54,7 +79,8 @@ export const runtime: Runtime = {
     indoors: false,
     surface: 'shell',
   },
-  quality: QUALITY_PROFILES.medium,
+  quality: INITIAL_QUALITY,
+  spatial: INITIAL_SPATIAL,
   reducedMotion: false,
   uiCaptured: true,
   perf: { fps: 60 },
