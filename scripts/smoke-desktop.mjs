@@ -12,7 +12,7 @@ const measurementSeconds = parseMeasurementSeconds(process.argv)
 const profile = await mkdtemp(join(tmpdir(), 'turtleback-desktop-smoke-'))
 const executablePath = await findPackagedExecutable()
 const report = {
-  schemaVersion: 1,
+  schemaVersion: 2,
   measuredAt: new Date().toISOString(),
   sourceCommit: await currentCommit(),
   artifact: executablePath.slice(root.length + 1),
@@ -95,6 +95,8 @@ try {
 
     await second.page.getByRole('button', { name: 'Enter Sanctuary' }).click()
     await second.page.locator('.hud').waitFor({ state: 'visible', timeout: 20_000 })
+    report.relaunch.secondInstance = await verifySecondInstance(second)
+    report.relaunch.powerCycle = await verifyPowerCycle(second)
     await second.page.waitForTimeout(measurementSeconds > 0 ? 5_000 : 750)
     report.processMetrics.gameplayStart = await collectProcessMetrics(second.application)
     if (measurementSeconds > 0) {
@@ -103,6 +105,11 @@ try {
     }
     assertNoRendererErrors(second)
     await closeCleanly(second)
+    report.relaunch.lifecycleLogEvents = await waitForLifecycleLogEvents([
+      'lifecycle.second_instance',
+      'lifecycle.system_suspend',
+      'lifecycle.system_resume',
+    ])
   } finally {
     await ensureClosed(second)
   }
@@ -195,6 +202,57 @@ async function collectProcessMetrics(application) {
       privateBytesKb: metric.memory.privateBytes,
     })),
   )
+}
+
+async function verifySecondInstance(run) {
+  const startedAt = performance.now()
+  await execFileAsync(
+    executablePath,
+    [
+      `--user-data-dir=${profile}`,
+      '--host-resolver-rules=MAP * ~NOTFOUND',
+      '--disable-background-networking',
+    ],
+    { env: { ...process.env, NODE_ENV: 'production' }, timeout: 10_000 },
+  )
+  await run.page.locator('.hud').waitFor({ state: 'visible' })
+  return { duplicateExitedMs: round(performance.now() - startedAt), primaryRemainedResponsive: true }
+}
+
+async function verifyPowerCycle(run) {
+  const startedAt = performance.now()
+  await run.application.evaluate(({ powerMonitor }) => powerMonitor.emit('suspend'))
+  await run.page.waitForTimeout(250)
+  await run.application.evaluate(({ powerMonitor }) => powerMonitor.emit('resume'))
+  await run.page.waitForTimeout(250)
+  await run.page.evaluate(() => {
+    window.dispatchEvent(new KeyboardEvent('keydown', { code: 'KeyM', key: 'm' }))
+    window.dispatchEvent(new KeyboardEvent('keyup', { code: 'KeyM', key: 'm' }))
+  })
+  await run.page.getByRole('dialog', { name: 'Sanctuary' }).waitFor({ state: 'visible' })
+  await run.page.getByRole('button', { name: 'Close menu' }).click()
+  await run.page.locator('.hud').waitFor({ state: 'visible' })
+  return { elapsedMs: round(performance.now() - startedAt), rendererRemainedResponsive: true }
+}
+
+async function waitForLifecycleLogEvents(expectedEvents) {
+  const logFile = join(profile, 'logs', 'turtleback.log')
+  const deadline = performance.now() + 5_000
+  while (performance.now() < deadline) {
+    try {
+      const entries = (await readFile(logFile, 'utf8'))
+        .trim()
+        .split('\n')
+        .filter(Boolean)
+        .map((line) => JSON.parse(line))
+      const seen = new Set(entries.map((entry) => entry.event))
+      if (expectedEvents.every((event) => seen.has(event))) return expectedEvents
+    } catch {
+      // The logger writes asynchronously; retry until the deadline.
+    }
+    await new Promise((resolveWait) => setTimeout(resolveWait, 100))
+  }
+  throw new Error(`missing lifecycle log events: ${expectedEvents.join(', ')}`)
 }
 
 async function sampleFrames(page, seconds) {

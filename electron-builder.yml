@@ -6,14 +6,19 @@ beforeBuild: scripts/skip-desktop-dependencies.cjs
 removePackageScripts: true
 directories:
   output: release
+  buildResources: build
 files:
   - dist/**/*
   - dist-desktop/**/*
   - package.json
 mac:
   category: public.app-category.games
-  target:
-    - dir
+  icon: build/icon.svg
+  minimumSystemVersion: '12.0'
+  hardenedRuntime: true
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.inherit.plist
+  notarize: false
 win:
   target:
     - nsis

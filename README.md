@@ -42,6 +42,9 @@ documented in the
 pnpm desktop:dev      # Vite renderer + sandboxed Electron window
 pnpm desktop:build    # renderer + bundled main/preload production outputs
 pnpm desktop:package  # unpacked platform application → release/
+pnpm desktop:package:mac # unpacked macOS arm64 application → release/mac-arm64/
+pnpm desktop:release:mac # signed/notarized arm64 DMG + ZIP (credentials required)
+pnpm desktop:verify:mac  # verify local bundle identity, icon, OS floor, architecture
 pnpm desktop:smoke    # verify the existing unpacked app offline
 pnpm desktop:measure  # smoke + fixed 60-second frame/process sample
 ```
@@ -62,6 +65,9 @@ pnpm desktop:measure  # smoke + fixed 60-second frame/process sample
 | `pnpm desktop:dev`     | Vite renderer in the sandboxed Electron shell      |
 | `pnpm desktop:build`   | Renderer plus main/preload production bundles      |
 | `pnpm desktop:package` | Unpacked desktop app in `release/`                 |
+| `pnpm desktop:package:mac` | Unpacked macOS arm64 app in `release/mac-arm64/` |
+| `pnpm desktop:release:mac` | Strict signed/notarized macOS arm64 DMG + ZIP  |
+| `pnpm desktop:verify:mac` | Verify local macOS bundle metadata and arm64 binary |
 | `pnpm desktop:smoke`   | Offline packaged-app quit/relaunch smoke           |
 | `pnpm desktop:measure` | Smoke plus 60-second frame/process sample          |
 

@@ -1,0 +1,14 @@
+extends: electron-builder.yml
+artifactName: ${productName}-${version}-${os}-${arch}.${ext}
+mac:
+  forceCodeSigning: true
+  notarize: true
+  target:
+    - target: dmg
+      arch:
+        - arm64
+    - target: zip
+      arch:
+        - arm64
+dmg:
+  title: ${productName} ${version}
