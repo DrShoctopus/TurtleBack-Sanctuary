@@ -1,0 +1,51 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-13T22:31:50.991Z",
+  "sourceArtifact": "test-results/graphics-benchmarks/arrival-bridge-high-noon-rain--default.json",
+  "scenarioId": "arrival-bridge-high-noon-rain",
+  "variant": "default",
+  "quality": "high",
+  "camera": "arrival-bridge",
+  "condition": {
+    "time": 0.5,
+    "weather": "rain",
+    "wetnessSettled": true
+  },
+  "runtime": {
+    "browser": "Playwright Chromium 149.0.7827.55",
+    "renderer": "SwiftShader software renderer",
+    "viewportCss": [1920, 1080],
+    "warmupSeconds": 1.5,
+    "sampleSeconds": 60
+  },
+  "frameTime": {
+    "sampleCount": 149,
+    "p50Ms": 418.3,
+    "p95Ms": 500,
+    "p99Ms": 525,
+    "minMs": 8.3,
+    "maxMs": 925.2
+  },
+  "probeSummary": {
+    "sampleCount": 62,
+    "centerCell": "0:-4",
+    "activeCellCount": 49,
+    "retainedCellCount": 81,
+    "vegetationInstances": 4187,
+    "nearVegetationInstances": 4168,
+    "horizonVegetationInstances": 19,
+    "loadedAssetIds": ["model.pipeline-smoke", "texture.pipeline-smoke"],
+    "fallbackAssetIds": [],
+    "rendererCalls": [179, 182],
+    "triangles": [628770, 632658],
+    "points": 7656,
+    "geometries": [253, 256],
+    "textures": 44,
+    "consoleErrorCount": 0
+  },
+  "acceptance": {
+    "structuralEvidence": true,
+    "referenceHardwareEvidence": false,
+    "reason": "SwiftShader proves deterministic structure and decoder/resource behavior only; it is not the named integrated- or dedicated-GPU acceptance path."
+  }
+}

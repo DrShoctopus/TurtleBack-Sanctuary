@@ -7,14 +7,41 @@ secret keys. It deploys to any static host.
 
 ```bash
 pnpm install
+pnpm validate:assets
 pnpm build      # → dist/
 ```
 
-`pnpm build` runs `tsc --noEmit` (strict type check) and then `vite build`.
-Preview the result locally with `pnpm preview`.
+`pnpm validate:assets` verifies every registered authored file's manifest
+metadata, hash, encoded size, format signature, any declared generation record,
+and synchronized license-ledger row. Use `pnpm validate:assets:final` when every
+asset must also have final provenance. `pnpm build` runs the standard asset gate
+again, then `tsc --noEmit` (strict type check) and `vite build`. Preview the
+result locally with `pnpm preview`.
 
 `vite.config.ts` sets `base: './'`, so the bundle uses **relative asset paths**
 and works from a domain root or any sub-path without reconfiguration.
+
+## Authored asset URLs
+
+The canonical manifest stores only validated relative paths under `assets/`.
+At runtime, GLB/KTX2 and Basis-decoder URLs are resolved against
+`document.baseURI`, never against `/`. A deployment at
+`https://example.test/games/turtleback/` therefore requests
+`https://example.test/games/turtleback/assets/...`; it does not escape to the
+domain root.
+
+The packaged Electron renderer uses the same relative records under the secure
+`app://turtleback/` origin. Its restricted protocol handler serves
+`.glb` as `model/gltf-binary`, `.ktx2` as `image/ktx2`, and the Basis JavaScript,
+worker relay, and WASM with explicit MIME types. `pnpm desktop:smoke` verifies
+those responses offline and requires the authored GLB/KTX2 pipeline to decode
+without falling back.
+
+The diagnostics API is build-gated. Ordinary production builds do not install
+`window.__scene` or `window.__turtlebackDebug`. A controlled QA build may set
+`VITE_TURTLEBACK_DIAGNOSTICS=1` before `pnpm build` to enable fixed cameras,
+probes, and deliberate asset-failure injection; do not publish that diagnostic
+variant as the normal production artifact.
 
 ## Netlify
 
@@ -89,8 +116,10 @@ YouTube embed.
 
 ## What is and isn't shipped
 
-- **Shipped:** the app bundle, procedural everything, an example radio config
-  (`public/config/radio-stations.example.json`, no real endpoints), and an empty
-  `public/audio/music/` drop-in folder.
-- **Not shipped:** any binary media, analytics, trackers, service worker, or
-  environment secrets. There are none to configure.
+- **Shipped:** the app bundle and procedural world/audio systems; original
+  project-generated GLB/KTX2 pipeline fixtures registered in
+  `src/game/assets/manifest.json`; the licensed Three.js Basis decoder runtime;
+  an example radio config (`public/config/radio-stations.example.json`, no real
+  endpoints); and an empty `public/audio/music/` drop-in folder.
+- **Not shipped:** third-party art or audio content, analytics, trackers, a
+  service worker, or environment secrets. There are none to configure.

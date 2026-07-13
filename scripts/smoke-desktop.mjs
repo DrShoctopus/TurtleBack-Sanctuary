@@ -11,12 +11,31 @@ const root = resolve(import.meta.dirname, '..')
 const measurementSeconds = parseMeasurementSeconds(process.argv)
 const profile = await mkdtemp(join(tmpdir(), 'turtleback-desktop-smoke-'))
 const executablePath = await findPackagedExecutable()
+const authoredPipelineMark = 'turtleback:asset-pipeline-authored'
+const fallbackPipelineMark = 'turtleback:asset-pipeline-fallback'
 const requiredPipelineResources = [
-  { path: 'assets/system/pipeline-smoke.glb', contentType: 'model/gltf-binary' },
-  { path: 'assets/system/pipeline-smoke.ktx2', contentType: 'image/ktx2' },
-  { path: 'assets/decoders/basis/basis_transcoder.js', contentType: 'text/javascript' },
-  { path: 'assets/decoders/basis/basis_transcoder.wasm', contentType: 'application/wasm' },
   {
+    id: 'model.pipeline-smoke',
+    path: 'assets/system/pipeline-smoke.glb',
+    contentType: 'model/gltf-binary',
+  },
+  {
+    id: 'texture.pipeline-smoke',
+    path: 'assets/system/pipeline-smoke.ktx2',
+    contentType: 'image/ktx2',
+  },
+  {
+    id: 'basis.transcoder-source',
+    path: 'assets/decoders/basis/basis_transcoder.js',
+    contentType: 'text/javascript',
+  },
+  {
+    id: 'basis.transcoder-wasm',
+    path: 'assets/decoders/basis/basis_transcoder.wasm',
+    contentType: 'application/wasm',
+  },
+  {
+    id: 'basis.transcoder-worker',
     path: 'assets/decoders/basis/turtleback-basis-worker.js',
     contentType: 'text/javascript',
     isolatedWorkerPolicy: true,
@@ -67,8 +86,7 @@ try {
       'FOV control did not accept the smoke value',
     )
     await first.page.waitForTimeout(400)
-    assertNoRendererErrors(first)
-    await closeCleanly(first)
+    report.firstLaunch.shutdown = await closeCleanly(first)
     const diskSettings = JSON.parse(await readFile(join(profile, 'settings.json'), 'utf8'))
     assert(
       diskSettings.graphics.fov === 83,
@@ -114,13 +132,12 @@ try {
       report.frameSample = await sampleFrames(second.page, measurementSeconds)
       report.processMetrics.gameplayEnd = await collectProcessMetrics(second.application)
     }
-    assertNoRendererErrors(second)
-    await closeCleanly(second)
-    report.relaunch.lifecycleLogEvents = await waitForLifecycleLogEvents([
+    report.relaunch.shutdown = await closeCleanly(second, [
       'lifecycle.second_instance',
       'lifecycle.system_suspend',
       'lifecycle.system_resume',
     ])
+    report.relaunch.lifecycleLogEvents = report.relaunch.shutdown.lifecycleLogEvents
   } finally {
     await ensureClosed(second)
   }
@@ -133,6 +150,8 @@ try {
 async function launchPackagedApp(label) {
   const startedAt = performance.now()
   const errors = []
+  const pipelineResponses = []
+  const logStartIndex = (await readLifecycleLogEntries()).length
   const application = await electron.launch({
     executablePath,
     args: [
@@ -145,11 +164,45 @@ async function launchPackagedApp(label) {
   const attachedMs = round(performance.now() - startedAt)
   const page = await application.firstWindow({ timeout: 20_000 })
   const windowCreatedMs = round(performance.now() - startedAt)
+  page.on('response', (response) => {
+    const required = requiredPipelineResources.find(({ path }) =>
+      response.url().endsWith(`/${path}`),
+    )
+    if (!required) return
+    pipelineResponses.push({
+      id: required.id,
+      path: required.path,
+      url: response.url(),
+      status: response.status(),
+      contentType: response.headers()['content-type'] ?? '',
+      observedAtMs: round(performance.now() - startedAt),
+    })
+  })
+  page.on('requestfailed', (request) => {
+    const required = requiredPipelineResources.find(({ path }) =>
+      request.url().endsWith(`/${path}`),
+    )
+    if (!required) return
+    errors.push(
+      `${label} runtime request failed for ${required.id}: ` +
+        `${request.failure()?.errorText ?? 'unknown network failure'}`,
+    )
+  })
   page.on('pageerror', (error) => errors.push(`${label} pageerror: ${error.message}`))
   page.on('console', (message) => {
     if (message.type() === 'error') errors.push(`${label} console: ${message.text()}`)
   })
-  return { application, page, errors, startedAt, attachedMs, windowCreatedMs, closed: false }
+  return {
+    application,
+    page,
+    errors,
+    startedAt,
+    attachedMs,
+    windowCreatedMs,
+    logStartIndex,
+    pipelineResponses,
+    closed: false,
+  }
 }
 
 async function verifyProductionWindow(run, cleanProfile) {
@@ -171,64 +224,113 @@ async function verifyProductionWindow(run, cleanProfile) {
     throw new Error(details.join('\n'), { cause: error })
   }
   const titleReadyMs = round(performance.now() - run.startedAt)
-  const state = await run.page.evaluate(async (requiredResources) => {
-    const paint = performance.getEntriesByType('paint')
-    const navigation = performance.getEntriesByType('navigation')[0]
-    const canvas = document.querySelector('canvas')
-    const assetResources = await Promise.all(
-      requiredResources.map(async ({ path }) => {
-        const response = await fetch(new URL(path, document.baseURI))
-        await response.arrayBuffer()
-        return {
-          path,
-          status: response.status,
-          contentType: response.headers.get('content-type') ?? '',
-          contentSecurityPolicy: response.headers.get('content-security-policy') ?? '',
-        }
-      }),
-    )
-    return {
-      url: window.location.href,
-      protocol: window.location.protocol,
-      bridgeAvailable: typeof window.desktopApp === 'object',
-      requireType: typeof window.require,
-      processType: typeof window.process,
-      canvasVisible: Boolean(canvas && canvas.getBoundingClientRect().width > 0),
-      firstContentfulPaintMs:
-        paint.find((entry) => entry.name === 'first-contentful-paint')?.startTime ?? null,
-      domContentLoadedMs: navigation?.domContentLoadedEventEnd ?? null,
-      viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio },
-      javascriptEvalBlocked: (() => {
-        try {
-          new Function('return 1')()
-          return false
-        } catch (error) {
-          return error instanceof EvalError
-        }
-      })(),
-      assetPipeline: {
-        authoredReady:
-          performance.getEntriesByName('turtleback:asset-pipeline-authored').length === 1,
-        fallbackUsed: performance.getEntriesByName('turtleback:asset-pipeline-fallback').length > 0,
-        resources: assetResources,
-      },
-    }
-  }, requiredPipelineResources)
+  const state = await run.page.evaluate(
+    async (pipelineContract) => {
+      const paint = performance.getEntriesByType('paint')
+      const navigation = performance.getEntriesByType('navigation')[0]
+      const canvas = document.querySelector('canvas')
+      const assetResources = await Promise.all(
+        pipelineContract.resources.map(async ({ id, path }) => {
+          const expectedUrl = new URL(path, document.baseURI).href
+          const response = await fetch(expectedUrl)
+          const body = await response.arrayBuffer()
+          return {
+            id,
+            path,
+            expectedUrl,
+            responseUrl: response.url,
+            status: response.status,
+            ok: response.ok,
+            encodedBytes: body.byteLength,
+            contentType: response.headers.get('content-type') ?? '',
+            contentSecurityPolicy: response.headers.get('content-security-policy') ?? '',
+          }
+        }),
+      )
+      const authoredMarks = performance.getEntriesByName(pipelineContract.authoredMark)
+      const fallbackMarks = performance.getEntriesByName(pipelineContract.fallbackMark)
+      return {
+        url: window.location.href,
+        protocol: window.location.protocol,
+        bridgeAvailable: typeof window.desktopApp === 'object',
+        requireType: typeof window.require,
+        processType: typeof window.process,
+        canvasVisible: Boolean(canvas && canvas.getBoundingClientRect().width > 0),
+        firstContentfulPaintMs:
+          paint.find((entry) => entry.name === 'first-contentful-paint')?.startTime ?? null,
+        domContentLoadedMs: navigation?.domContentLoadedEventEnd ?? null,
+        viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio },
+        javascriptEvalBlocked: (() => {
+          try {
+            new Function('return 1')()
+            return false
+          } catch (error) {
+            return error instanceof EvalError
+          }
+        })(),
+        assetPipeline: {
+          authoredReady: authoredMarks.length === 1,
+          authoredReadyMark: {
+            name: pipelineContract.authoredMark,
+            count: authoredMarks.length,
+            startTimeMs: authoredMarks[0]?.startTime ?? null,
+          },
+          fallbackUsed: fallbackMarks.length > 0,
+          fallbackMarkCount: fallbackMarks.length,
+          runtimeResponses: pipelineContract.runtimeResponses,
+          resources: assetResources,
+        },
+      }
+    },
+    {
+      resources: requiredPipelineResources,
+      authoredMark: authoredPipelineMark,
+      fallbackMark: fallbackPipelineMark,
+      // Snapshot before the direct fetch probes below can trigger response
+      // events, so only requests made by the application pipeline count.
+      runtimeResponses: [...run.pipelineResponses],
+    },
+  )
   assert(state.protocol === 'app:', `expected app: production origin, received ${state.url}`)
   assert(state.bridgeAvailable, 'preload bridge is unavailable')
   assert(state.requireType === 'undefined', 'renderer unexpectedly exposes require')
   assert(state.processType === 'undefined', 'renderer unexpectedly exposes process')
   assert(state.javascriptEvalBlocked, 'renderer document unexpectedly permits JavaScript eval')
   assert(state.canvasVisible, 'Rapier/Three canvas is not visible at title readiness')
-  assert(state.assetPipeline.authoredReady, 'authored GLB/KTX2 pipeline did not decode')
-  assert(!state.assetPipeline.fallbackUsed, 'pipeline smoke unexpectedly used a fallback')
+  assert(
+    state.assetPipeline.authoredReady,
+    `${authoredPipelineMark} must be emitted exactly once after both authored assets decode; ` +
+      `observed ${state.assetPipeline.authoredReadyMark.count}`,
+  )
+  assert(
+    !state.assetPipeline.fallbackUsed,
+    `authored pipeline used a fallback (${fallbackPipelineMark} count ` +
+      `${state.assetPipeline.fallbackMarkCount})`,
+  )
   for (const required of requiredPipelineResources) {
     const resource = state.assetPipeline.resources.find(({ path }) => path === required.path)
-    assert(resource, `missing pipeline resource response for ${required.path}`)
-    assert(resource.status === 200, `${required.path} returned HTTP ${resource.status}`)
+    assert(resource, `missing direct app: protocol response evidence for ${required.id}`)
+    assert(
+      resource.expectedUrl.startsWith('app://turtleback/'),
+      `${required.id} resolved outside the packaged app origin: ${resource.expectedUrl}`,
+    )
+    assert(
+      resource.responseUrl === resource.expectedUrl,
+      `${required.id} response URL mismatch: expected ${resource.expectedUrl}, received ` +
+        `${resource.responseUrl || '<empty>'}`,
+    )
+    assert(
+      resource.ok && resource.status === 200,
+      `${required.id} (${resource.expectedUrl}) returned HTTP ${resource.status}`,
+    )
+    assert(
+      resource.encodedBytes > 0,
+      `${required.id} (${resource.expectedUrl}) returned an empty response body`,
+    )
     assert(
       resource.contentType.includes(required.contentType),
-      `${required.path} returned unexpected content type ${resource.contentType}`,
+      `${required.id} (${resource.expectedUrl}) returned MIME ` +
+        `${resource.contentType || '<missing>'}; expected ${required.contentType}`,
     )
     if (required.isolatedWorkerPolicy) {
       assert(
@@ -241,6 +343,25 @@ async function verifyProductionWindow(run, cleanProfile) {
         `${required.path} unexpectedly received a JavaScript eval allowance`,
       )
     }
+    const runtimeResource = state.assetPipeline.runtimeResponses.find(
+      ({ url }) => url === resource.expectedUrl,
+    )
+    assert(
+      runtimeResource,
+      `${required.id} has a valid direct app: response but no pre-probe application request. ` +
+        `Observed pipeline resources: ${
+          state.assetPipeline.runtimeResponses.map(({ url }) => url).join(', ') || '<none>'
+        }`,
+    )
+    assert(
+      runtimeResource.status === 200,
+      `${required.id} application request returned HTTP ${runtimeResource.status}`,
+    )
+    assert(
+      runtimeResource.contentType.includes(required.contentType),
+      `${required.id} application request returned MIME ` +
+        `${runtimeResource.contentType || '<missing>'}; expected ${required.contentType}`,
+    )
   }
   if (cleanProfile) assert(!state.url.includes('recovery='), 'clean launch entered recovery mode')
   assertNoRendererErrors(run)
@@ -252,11 +373,64 @@ async function verifyProductionWindow(run, cleanProfile) {
   }
 }
 
-async function closeCleanly(run) {
+async function closeCleanly(run, expectedLifecycleEvents = []) {
+  const startedAt = performance.now()
   const closed = run.application.waitForEvent('close', { timeout: 10_000 })
-  await run.page.evaluate(() => window.desktopApp.windowCommand('close'))
-  await closed
-  run.closed = true
+  try {
+    await run.page.evaluate(() => window.desktopApp.windowCommand('close'))
+    await closed
+    run.closed = true
+  } catch (error) {
+    const entries = (await readLifecycleLogEntries()).slice(run.logStartIndex)
+    throw new Error(
+      [
+        `coordinated desktop shutdown did not close within its gate: ${error instanceof Error ? error.message : String(error)}`,
+        ...run.errors,
+        `Lifecycle events observed for this launch: ${entries.map(({ event }) => event).join(', ') || '<none>'}`,
+      ].join('\n'),
+      { cause: error },
+    )
+  }
+
+  assertNoRendererErrors(run)
+  const lifecycle = await waitForLifecycleLogEvents(
+    [
+      ...expectedLifecycleEvents,
+      'lifecycle.shutdown_requested',
+      'lifecycle.renderer_shutdown_ready',
+    ],
+    run.logStartIndex,
+  )
+  const forbidden = lifecycle.entries.filter(({ event }) =>
+    [
+      'renderer.error',
+      'lifecycle.shutdown_timeout',
+      'lifecycle.shutdown_renderer_unavailable',
+    ].includes(event),
+  )
+  assert(
+    forbidden.length === 0,
+    `coordinated shutdown reported renderer/teardown failures: ${forbidden
+      .map(({ event, message, error }) => `${event}: ${message ?? error ?? '<no detail>'}`)
+      .join('; ')}`,
+  )
+
+  const requested = lifecycle.entries.find(({ event }) => event === 'lifecycle.shutdown_requested')
+  const ready = lifecycle.entries.find(({ event }) => event === 'lifecycle.renderer_shutdown_ready')
+  assert(
+    requested && ready && Date.parse(requested.at) <= Date.parse(ready.at),
+    'renderer shutdown acknowledgement was logged before the shutdown request',
+  )
+  return {
+    elapsedMs: round(performance.now() - startedAt),
+    coordinated: true,
+    assetManagerDisposedBeforeShutdownReady: true,
+    disposalEvidence: 'renderer acknowledged teardown after synchronous React root unmount',
+    rendererErrorCount: 0,
+    shutdownRequestedAt: requested.at,
+    rendererShutdownReadyAt: ready.at,
+    lifecycleLogEvents: lifecycle.expectedEvents,
+  }
 }
 
 async function ensureClosed(run) {
@@ -311,24 +485,49 @@ async function verifyPowerCycle(run) {
   return { elapsedMs: round(performance.now() - startedAt), rendererRemainedResponsive: true }
 }
 
-async function waitForLifecycleLogEvents(expectedEvents) {
+async function readLifecycleLogEntries() {
   const logFile = join(profile, 'logs', 'turtleback.log')
+  try {
+    const text = await readFile(logFile, 'utf8')
+    return text
+      .trim()
+      .split('\n')
+      .filter(Boolean)
+      .map((line, index) => {
+        try {
+          return JSON.parse(line)
+        } catch (error) {
+          throw new Error(
+            `invalid JSON in desktop lifecycle log line ${index + 1}: ` +
+              `${error instanceof Error ? error.message : String(error)}`,
+            { cause: error },
+          )
+        }
+      })
+  } catch (error) {
+    if (error && typeof error === 'object' && 'code' in error && error.code === 'ENOENT') return []
+    throw error
+  }
+}
+
+async function waitForLifecycleLogEvents(expectedEvents, startIndex = 0) {
   const deadline = performance.now() + 5_000
+  let lastEntries = []
   while (performance.now() < deadline) {
-    try {
-      const entries = (await readFile(logFile, 'utf8'))
-        .trim()
-        .split('\n')
-        .filter(Boolean)
-        .map((line) => JSON.parse(line))
-      const seen = new Set(entries.map((entry) => entry.event))
-      if (expectedEvents.every((event) => seen.has(event))) return expectedEvents
-    } catch {
-      // The logger writes asynchronously; retry until the deadline.
+    lastEntries = (await readLifecycleLogEntries()).slice(startIndex)
+    const seen = new Set(lastEntries.map((entry) => entry.event))
+    if (expectedEvents.every((event) => seen.has(event))) {
+      return { entries: lastEntries, expectedEvents }
     }
+    // The logger writes asynchronously; retry until the deadline.
     await new Promise((resolveWait) => setTimeout(resolveWait, 100))
   }
-  throw new Error(`missing lifecycle log events: ${expectedEvents.join(', ')}`)
+  const seen = new Set(lastEntries.map((entry) => entry.event))
+  const missing = expectedEvents.filter((event) => !seen.has(event))
+  throw new Error(
+    `missing lifecycle log events for this launch: ${missing.join(', ')}; observed ` +
+      `${[...seen].join(', ') || '<none>'}`,
+  )
 }
 
 async function sampleFrames(page, seconds) {

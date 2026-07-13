@@ -144,10 +144,63 @@ Run URLs and machine-readable results are in
 
 ## Graphics quality
 
-- [ ] Low / Medium / High visibly change fidelity and framerate
-- [ ] Auto steps quality when framerate drops/rises
+Run the same daylight, rain, and night route at each explicit tier. Capture the
+OS/browser, viewport, device pixel ratio, GPU/driver, and the F3/probe values in
+your release notes; a SwiftShader capture does not count as a hardware pass.
+
+| Complete | Preset | Visual and residency check                                                                                                                             |
+| -------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [ ]      | Low    | 512 texture tier, lowest internal scale/density and bounded effects remain coherent; paths, buildings, turtle, and horizon forest keep their identity. |
+| [ ]      | Medium | The 1k tier, shadows, denser vegetation/wildlife, weather, ocean, and landmarks add detail without a traversal hitch.                                  |
+| [ ]      | High   | The 2k tier, wider active/retained rings, fuller rain/atmosphere/reflections, and High shadows remain stable on named target hardware.                 |
+| [ ]      | Ultra  | The explicit 4k/max-density tier is visibly richer, survives the complete route, and is not silently selected by Auto.                                 |
+
+- [ ] Auto responds to p95 frame-time pressure and sustained headroom without
+      thrashing; it can resolve Low, Medium, or High but never Ultra
 - [ ] Bloom toggle and particle-density slider take effect
-- [ ] F3 performance overlay appears in dev builds
+- [ ] F3 performance overlay appears in a development build. An explicit
+      diagnostics build exposes the probe globals; an ordinary production build
+      has no `window.__turtlebackDebug` or `window.__scene`
+
+### Phase A streaming and asset boundary
+
+- [ ] Traverse continuously across two consecutive 50 m cell boundaries and
+      return across both. Full-detail vegetation changes only after the
+      hysteresis boundary, retained horizon trees preserve the same distant
+      forest silhouette, tree collisions do not disappear before they are
+      reachable, and there is no one-frame empty ring or React hitch.
+- [ ] In a development build, record
+      `window.__turtlebackDebug.probe().sections.world` before and after both
+      crossings. `centerCell` changes in order, active/retained counts match the
+      selected tier, and only discrete transitions are published.
+- [ ] In a development or `VITE_TURTLEBACK_DIAGNOSTICS=1` build, call
+      `window.__turtlebackDebug.failAsset('model.pipeline-smoke')`, then change
+      quality to force a new preload. The call returns `true`, startup/play
+      remains usable, and `probe().fallbackAssetIds` contains
+      `procedural.debug-box` with no page error. Repeat for
+      `texture.pipeline-smoke` and expect `procedural.debug-checker`.
+- [ ] For every authored asset that is mounted visibly, perform the same
+      injection and confirm its registered fallback has an intentional visible
+      appearance (the debug model/checker are magenta), not a hole, invisible
+      material, or crash. The current pipeline-smoke fixtures are preload-only,
+      so their fallback proof is the readiness mark and probe row above.
+- [ ] Trigger and restore WebGL context loss in a development run. One safe
+      DevTools snippet is
+      `(() => { const g = document.querySelector('canvas')?.getContext('webgl2'); const e = g?.getExtension('WEBGL_lose_context'); e?.loseContext(); setTimeout(() => e?.restoreContext(), 2000); })()`.
+      The recovery UI appears, context restoration clears it, the scene becomes
+      interactive again, and a subsequent quality change does not strand an
+      asset preload or duplicate scene resources.
+- [ ] After `pnpm desktop:package`, run `pnpm desktop:smoke` with networking
+      unavailable. It must fetch
+      `app://turtleback/assets/system/pipeline-smoke.glb` as
+      `model/gltf-binary`, the KTX2 as `image/ktx2`, and the Basis JS/WASM/relay
+      from the same origin; `authoredReady` is true, both smoke IDs are loaded,
+      no fallback ID is present, and coordinated shutdown reports no renderer
+      error.
+- [ ] At Low, Medium, High, and Ultra, inspect the forest from the same fixed
+      overlook and while crossing the two boundaries. Near trees may change
+      density/LOD, but the seeded horizon-tree identity and broad silhouette do
+      not reshuffle, vanish, or pop into a different forest.
 
 ## Accessibility & comfort
 

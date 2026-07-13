@@ -1,9 +1,10 @@
 # Performance Baseline
 
-This document retains the historical Phase 0 browser baseline and adds the
-controlled Phase 1 packaged-Electron measurement below. The two observations use
-different runtimes and measurement methods and should not be treated as a direct
-before/after regression comparison.
+This document retains the historical Phase 0 browser baseline, the controlled
+Phase 1 packaged-Electron measurement, and the Phase A rendering-foundation
+software-renderer benchmark below. These observations use different runtimes and
+measurement methods and should not be treated as direct before/after regression
+comparisons.
 
 ## Scope
 
@@ -252,15 +253,87 @@ credentialed release configurations, and completed native automation for the two
 declared release targets. This does not change or broaden the fixed-scene
 performance measurement above.
 
-| Target                         | Phase 2 automated proof                                                                                                                |
-| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
-| macOS 12+ Apple silicon        | Arm64 identity, branded icon, ad-hoc proof signature, offline launch/relaunch, persistence, second-instance, and synthetic suspend/resume |
-| Windows 10/11 x64              | AMD64 payload and version resources, NSIS install, installed-app lifecycle/persistence smoke, shortcuts, uninstall, and cleanup       |
-| Credentialed public release    | Not yet verified; Developer ID/notarization and Authenticode credentials are external gates                                           |
-| Physical target-device checks  | Audio, controller, real sleep/wake, fullscreen/display scaling, and long-session soak remain manual gates                             |
-| Intel macOS / Windows Arm / Linux | Explicitly deferred                                                                                                                 |
+| Target                            | Phase 2 automated proof                                                                                                                   |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS 12+ Apple silicon           | Arm64 identity, branded icon, ad-hoc proof signature, offline launch/relaunch, persistence, second-instance, and synthetic suspend/resume |
+| Windows 10/11 x64                 | AMD64 payload and version resources, NSIS install, installed-app lifecycle/persistence smoke, shortcuts, uninstall, and cleanup           |
+| Credentialed public release       | Not yet verified; Developer ID/notarization and Authenticode credentials are external gates                                               |
+| Physical target-device checks     | Audio, controller, real sleep/wake, fullscreen/display scaling, and long-session soak remain manual gates                                 |
+| Intel macOS / Windows Arm / Linux | Explicitly deferred                                                                                                                       |
 
 The exact native CI evidence is recorded in
 [phase-2-native-ci-proof.json](phase-2-native-ci-proof.json). No Windows frame
 rate or memory baseline was collected, so the Apple M5 figures above remain the
 only performance measurements and must not be generalized to Windows hardware.
+
+## Phase A rendering-foundation benchmark — 2026-07-13
+
+The checked-in evidence summary is
+[phase-a-high-rain-swiftshader.json](performance/phase-a-high-rain-swiftshader.json);
+it records the location of the much larger raw runner artifact under
+`test-results/`.
+It was produced by `pnpm benchmark:graphics -- --scenario=arrival-bridge-high-noon-rain`
+against a Vite development server. The runner fixed the art-review camera and
+condition, waited for rain/wetness and quality to settle, warmed the scene, then
+sampled `requestAnimationFrame` for 60 seconds while collecting a scene probe
+approximately once per second.
+
+### Environment and condition
+
+| Item               | Phase A artifact value                                                         |
+| ------------------ | ------------------------------------------------------------------------------ |
+| Captured           | 2026-07-13 22:31:50.991 UTC                                                    |
+| Browser            | Headless Playwright Chromium 149.0.7827.55                                     |
+| Renderer path      | **SwiftShader software renderer** via `--use-gl=angle --use-angle=swiftshader` |
+| Viewport           | 1920 × 1080 CSS px                                                             |
+| Scenario / variant | `arrival-bridge-high-noon-rain` / `default`                                    |
+| Camera / condition | Arrival Bridge / noon rain (`time = 0.5`, rain and wetness settled)            |
+| Graphics preset    | High                                                                           |
+| Warm-up / sample   | 1.5 seconds / 60 seconds                                                       |
+
+The JSON artifact does not record a source commit or hardware/driver identity.
+The renderer label above comes from the checked-in benchmark launch flags, not
+an inference from the host machine.
+
+### Frame-time result
+
+| Metric                                  | Measured result |
+| --------------------------------------- | --------------: |
+| Frame samples                           |             149 |
+| p50 frame time                          |        418.3 ms |
+| p95 frame time                          |        500.0 ms |
+| p99 frame time                          |        525.0 ms |
+| Minimum / maximum raw delta             |  8.3 / 925.2 ms |
+| Renderer console errors during scenario |               0 |
+
+### Probe summary
+
+All 62 probe snapshots kept the same spatial and asset state during the fixed
+camera sample:
+
+| Probe field                      | Observed value or range                                                     |
+| -------------------------------- | --------------------------------------------------------------------------- |
+| Center / active / retained cells | `0:-4` / 49 / 81                                                            |
+| Vegetation instances             | 4,187 total: 4,168 near + 19 retained-horizon                               |
+| Authored assets                  | `model.pipeline-smoke` and `texture.pipeline-smoke` loaded; no fallback IDs |
+| Manifest decoded-byte estimates  | 42 B model + 84 B texture; 84 B estimated texture memory                    |
+| Renderer calls                   | 179–182                                                                     |
+| Rendered triangles               | 628,770–632,658                                                             |
+| Points                           | 7,656                                                                       |
+| Geometry / texture objects       | 253–256 / 44                                                                |
+
+### Acceptance interpretation
+
+This capture proves that the fixed High/noon/rain scenario can boot, that the
+Meshopt GLB and Basis/KTX2 paths decode, that the retained horizon-vegetation
+path contributes instances, and that the deterministic probe remains populated
+without a renderer console error. It also provides a repeatable software-path
+regression artifact.
+
+It is **not** High-preset 16.7 ms acceptance and it is **not** Low-preset 33.3 ms
+acceptance. SwiftShader is a CPU software rasterizer, the artifact contains no
+named integrated or dedicated reference GPU, and its p95 is 500.0 ms. The Apple
+M5 packaged result above remains useful historical hardware evidence but uses a
+different scene condition, viewport, runtime, and measurement path. Release
+acceptance still requires separate Low and High captures on the named integrated
+and dedicated reference hardware, respectively.
