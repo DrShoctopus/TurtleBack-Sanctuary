@@ -10,6 +10,8 @@ third-party content retain their provenance, license, and attribution here.
 <!-- BEGIN GENERATED ASSET LICENSES -->
 | Asset ID | Kind | Author | License | Provenance | Attribution |
 | --- | --- | --- | --- | --- | --- |
+| `model.pipeline-smoke` | model | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
+| `texture.pipeline-smoke` | texture | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
 <!-- END GENERATED ASSET LICENSES -->
 
 ## Procedural content sources
@@ -37,11 +39,15 @@ third-party content retain their provenance, license, and attribution here.
   streams they add. The bundled `public/config/radio-stations.example.json`
   contains **no real endpoints**.
 
-## Third-party software (dependencies)
+## Third-party software and bundled runtime data
 
-These libraries are used at build/runtime under their own open-source licenses
-(MIT unless noted). They are dependencies, not bundled assets, and are installed
-via the lockfile:
+Most libraries below are installed through the lockfile and are not authored
+media. Production distributions also bundle the Basis Universal transcoder
+JavaScript and WebAssembly runtime from Binomial LLC so KTX2 textures can be
+decoded offline. Basis Universal is licensed under Apache-2.0; its complete
+license and required attribution notice are shipped at
+`public/assets/decoders/basis/LICENSE.txt` and
+`public/assets/decoders/basis/NOTICE.txt`.
 
 | Package | License |
 | --- | --- |
@@ -50,15 +56,19 @@ via the lockfile:
 | @react-three/fiber, @react-three/drei, @react-three/rapier | MIT |
 | @react-three/postprocessing, postprocessing | MIT / Zlib |
 | @dimforge/rapier3d-compat | Apache-2.0 |
+| Basis Universal transcoder (bundled JS/WASM), Binomial LLC | Apache-2.0; `public/assets/decoders/basis/LICENSE.txt`, `public/assets/decoders/basis/NOTICE.txt` |
 | three-stdlib | MIT |
+| meshoptimizer | MIT |
 | zustand | MIT |
 | vite, @vitejs/plugin-react | MIT |
+| vite-plugin-static-copy | MIT |
+| tsx | MIT |
 | typescript, typescript-eslint, eslint | MIT / Apache-2.0 |
 | vitest, @playwright/test | MIT / Apache-2.0 |
 | prettier | MIT |
 
-Refer to each package's own license text in `node_modules/<pkg>/LICENSE` for the
-authoritative terms.
+Refer to each package's own license text in `node_modules/<pkg>/LICENSE` and the
+bundled Basis license and notice above for the authoritative terms.
 
 ## Policy for adding assets
 

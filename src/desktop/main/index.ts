@@ -1,12 +1,15 @@
 import { readFile } from 'node:fs/promises'
-import { extname, join, resolve } from 'node:path'
+import { join, resolve } from 'node:path'
 import { app, BrowserWindow, Menu, powerMonitor, protocol, session, type Session } from 'electron'
 import { IPC_CHANNELS, type DesktopLifecycleEvent } from '../shared/contracts'
 import { registerIpcHandlers } from './ipc/registerIpc'
 import { RendererRecoveryPolicy, rendererRecoveryUrl } from './lifecycle/recoveryPolicy'
 import { AppLogger } from './logging/logger'
+import { rendererCacheControl } from './security/rendererCacheControl'
+import { contentSecurityPolicyForResponse } from './security/contentSecurityPolicy'
 import { RemoteRequestPolicy } from './security/urlPolicy'
 import { resolveRendererFile } from './security/rendererProtocol'
+import { rendererContentType } from './security/rendererContentType'
 import { LocalAudioLibrary } from './storage/localAudioLibrary'
 import { DesktopRepositories } from './storage/repositories'
 import { WindowStateManager } from './window/windowState'
@@ -336,7 +339,7 @@ async function installProtocols(
       return new Response(body, {
         headers: {
           'Content-Type': rendererContentType(file),
-          'Cache-Control': rendererCacheControl(file),
+          'Cache-Control': rendererCacheControl(file, app.isPackaged),
         },
       })
     } catch (error) {
@@ -347,39 +350,6 @@ async function installProtocols(
   await protocol.handle('turtleback-media', (request) => localAudio.handleProtocol(request))
 }
 
-function rendererCacheControl(file: string): string {
-  if (!app.isPackaged) return 'no-store'
-  return extname(file).toLowerCase() === '.html'
-    ? 'no-cache'
-    : 'public, max-age=31536000, immutable'
-}
-
-function rendererContentType(file: string): string {
-  switch (extname(file).toLowerCase()) {
-    case '.html':
-      return 'text/html; charset=utf-8'
-    case '.js':
-      return 'text/javascript; charset=utf-8'
-    case '.css':
-      return 'text/css; charset=utf-8'
-    case '.json':
-      return 'application/json; charset=utf-8'
-    case '.wasm':
-      return 'application/wasm'
-    case '.svg':
-      return 'image/svg+xml'
-    case '.png':
-      return 'image/png'
-    case '.jpg':
-    case '.jpeg':
-      return 'image/jpeg'
-    case '.webp':
-      return 'image/webp'
-    default:
-      return 'application/octet-stream'
-  }
-}
-
 function installSessionSecurity(
   targetSession: Session,
   requestPolicy: RemoteRequestPolicy,
@@ -387,24 +357,6 @@ function installSessionSecurity(
   developmentUrl: string | null,
 ): void {
   const developmentOrigin = developmentUrl ? new URL(developmentUrl).origin : undefined
-  const scriptPolicy = developmentUrl
-    ? "script-src 'self' 'wasm-unsafe-eval' 'unsafe-inline'"
-    : "script-src 'self' 'wasm-unsafe-eval'"
-  const csp = [
-    "default-src 'self'",
-    "base-uri 'self'",
-    "object-src 'none'",
-    "frame-ancestors 'none'",
-    "form-action 'none'",
-    scriptPolicy,
-    "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' data: blob: https:",
-    "font-src 'self' data:",
-    "media-src 'self' blob: turtleback-media: https:",
-    "connect-src 'self' https: wss: ws:",
-    'frame-src https://www.youtube-nocookie.com https://www.youtube.com',
-    "worker-src 'self' blob:",
-  ].join('; ')
 
   targetSession.setPermissionRequestHandler((_webContents, _permission, callback) =>
     callback(false),
@@ -423,11 +375,13 @@ function installSessionSecurity(
   })
 
   targetSession.webRequest.onHeadersReceived((details, callback) => {
-    const isRendererDocument =
-      details.resourceType === 'mainFrame' &&
-      (details.url.startsWith(`${APP_ORIGIN}/`) ||
-        (developmentOrigin !== undefined && details.url.startsWith(`${developmentOrigin}/`)))
-    if (!isRendererDocument) {
+    const csp = contentSecurityPolicyForResponse({
+      url: details.url,
+      resourceType: details.resourceType,
+      appOrigin: APP_ORIGIN,
+      ...(developmentOrigin ? { developmentOrigin } : {}),
+    })
+    if (!csp) {
       callback({ responseHeaders: details.responseHeaders })
       return
     }

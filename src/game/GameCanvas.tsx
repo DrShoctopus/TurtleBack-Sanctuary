@@ -12,6 +12,7 @@ import { useSettings } from './state/settingsStore'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { configureRendererColor } from './rendering/colorContract'
 import { useDevicePixelRatio } from './core/devicePixelRatio'
+import { AssetProvider } from './assets/AssetProvider'
 
 export function GameCanvas() {
   const autoQuality = useGame((s) => s.autoQuality)
@@ -50,16 +51,18 @@ export function GameCanvas() {
       }}
     >
       <color attach="background" args={['#0d1a26']} />
-      <FrameDriver />
-      <Suspense fallback={null}>
-        <Physics gravity={[0, WORLD.gravity, 0]} timeStep="vary">
-          <PlayerController />
-          <TurtleWorld />
-          <SceneReadyProbe />
-        </Physics>
-      </Suspense>
-      <SanctuaryPostProcessing bloomAllowed={profile.bloomAllowed} />
-      <EndFrame />
+      <AssetProvider quality={level} baseUrl={document.baseURI}>
+        <FrameDriver />
+        <Suspense fallback={null}>
+          <Physics gravity={[0, WORLD.gravity, 0]} timeStep="vary">
+            <PlayerController />
+            <TurtleWorld />
+            <SceneReadyProbe />
+          </Physics>
+        </Suspense>
+        <SanctuaryPostProcessing bloomAllowed={profile.bloomAllowed} />
+        <EndFrame />
+      </AssetProvider>
     </Canvas>
   )
 }

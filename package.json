@@ -8,7 +8,7 @@
   "description": "A calming first-person exploration game set in a village on the back of a colossal sea turtle.",
   "author": "Turtleback Sanctuary contributors",
   "engines": {
-    "node": ">=20"
+    "node": "^20.19.0 || >=22.12.0"
   },
   "scripts": {
     "dev": "vite",
@@ -73,6 +73,7 @@
     "typescript": "^5.9.0",
     "typescript-eslint": "^8.40.0",
     "vite": "^7.1.0",
+    "vite-plugin-static-copy": "3.2.0",
     "vitest": "^3.2.4"
   }
 }

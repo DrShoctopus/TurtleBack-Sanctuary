@@ -1,4 +1,73 @@
 {
   "schemaVersion": 1,
-  "assets": []
+  "assets": [
+    {
+      "id": "model.pipeline-smoke",
+      "slice": "rendering",
+      "variants": [
+        {
+          "id": "model.pipeline-smoke.lod0",
+          "path": "assets/system/pipeline-smoke.glb",
+          "quality": [
+            "low",
+            "medium",
+            "high",
+            "ultra"
+          ],
+          "lod": 0,
+          "sha256": "8df14b639313b884daca98eb272c939086a0ca422b6f31b6a224d65d88995bf8",
+          "encodedBytes": 1612,
+          "decodedBytes": 42
+        }
+      ],
+      "generationRecord": "docs/assets/generation/pipeline-smoke.md",
+      "author": "Turtleback Sanctuary contributors",
+      "license": "Original",
+      "attribution": "Turtleback Sanctuary contributors",
+      "preloadRegions": [
+        "system"
+      ],
+      "fallback": {
+        "kind": "procedural",
+        "key": "procedural.debug-box"
+      },
+      "kind": "model",
+      "capabilities": {
+        "animation": false
+      }
+    },
+    {
+      "id": "texture.pipeline-smoke",
+      "slice": "rendering",
+      "variants": [
+        {
+          "id": "texture.pipeline-smoke.color",
+          "path": "assets/system/pipeline-smoke.ktx2",
+          "quality": [
+            "low",
+            "medium",
+            "high",
+            "ultra"
+          ],
+          "sha256": "94405cdd8e3d4fb1e44fc26f1bb48e71cf18aed84378b680acaa7097fd1980cf",
+          "encodedBytes": 352,
+          "decodedBytes": 84
+        }
+      ],
+      "generationRecord": "docs/assets/generation/pipeline-smoke.md",
+      "author": "Turtleback Sanctuary contributors",
+      "license": "Original",
+      "attribution": "Turtleback Sanctuary contributors",
+      "preloadRegions": [
+        "system"
+      ],
+      "fallback": {
+        "kind": "procedural",
+        "key": "procedural.debug-checker"
+      },
+      "kind": "texture",
+      "capabilities": {},
+      "textureRole": "color"
+    }
+  ]
 }

@@ -11,6 +11,17 @@ const root = resolve(import.meta.dirname, '..')
 const measurementSeconds = parseMeasurementSeconds(process.argv)
 const profile = await mkdtemp(join(tmpdir(), 'turtleback-desktop-smoke-'))
 const executablePath = await findPackagedExecutable()
+const requiredPipelineResources = [
+  { path: 'assets/system/pipeline-smoke.glb', contentType: 'model/gltf-binary' },
+  { path: 'assets/system/pipeline-smoke.ktx2', contentType: 'image/ktx2' },
+  { path: 'assets/decoders/basis/basis_transcoder.js', contentType: 'text/javascript' },
+  { path: 'assets/decoders/basis/basis_transcoder.wasm', contentType: 'application/wasm' },
+  {
+    path: 'assets/decoders/basis/turtleback-basis-worker.js',
+    contentType: 'text/javascript',
+    isolatedWorkerPolicy: true,
+  },
+]
 const report = {
   schemaVersion: 2,
   measuredAt: new Date().toISOString(),
@@ -142,15 +153,40 @@ async function launchPackagedApp(label) {
 }
 
 async function verifyProductionWindow(run, cleanProfile) {
-  await run.page.getByRole('button', { name: 'Enter Sanctuary' }).waitFor({
-    state: 'visible',
-    timeout: 20_000,
-  })
+  try {
+    await run.page.getByRole('button', { name: 'Enter Sanctuary' }).waitFor({
+      state: 'visible',
+      timeout: 20_000,
+    })
+  } catch (error) {
+    const body = await run.page
+      .locator('body')
+      .innerText()
+      .catch(() => '<body unavailable>')
+    const details = [
+      `Packaged title readiness timed out: ${error instanceof Error ? error.message : String(error)}`,
+      ...run.errors,
+      `Visible renderer text: ${body.slice(0, 2_000)}`,
+    ]
+    throw new Error(details.join('\n'), { cause: error })
+  }
   const titleReadyMs = round(performance.now() - run.startedAt)
-  const state = await run.page.evaluate(() => {
+  const state = await run.page.evaluate(async (requiredResources) => {
     const paint = performance.getEntriesByType('paint')
     const navigation = performance.getEntriesByType('navigation')[0]
     const canvas = document.querySelector('canvas')
+    const assetResources = await Promise.all(
+      requiredResources.map(async ({ path }) => {
+        const response = await fetch(new URL(path, document.baseURI))
+        await response.arrayBuffer()
+        return {
+          path,
+          status: response.status,
+          contentType: response.headers.get('content-type') ?? '',
+          contentSecurityPolicy: response.headers.get('content-security-policy') ?? '',
+        }
+      }),
+    )
     return {
       url: window.location.href,
       protocol: window.location.protocol,
@@ -162,13 +198,50 @@ async function verifyProductionWindow(run, cleanProfile) {
         paint.find((entry) => entry.name === 'first-contentful-paint')?.startTime ?? null,
       domContentLoadedMs: navigation?.domContentLoadedEventEnd ?? null,
       viewport: { width: window.innerWidth, height: window.innerHeight, devicePixelRatio },
+      javascriptEvalBlocked: (() => {
+        try {
+          new Function('return 1')()
+          return false
+        } catch (error) {
+          return error instanceof EvalError
+        }
+      })(),
+      assetPipeline: {
+        authoredReady:
+          performance.getEntriesByName('turtleback:asset-pipeline-authored').length === 1,
+        fallbackUsed: performance.getEntriesByName('turtleback:asset-pipeline-fallback').length > 0,
+        resources: assetResources,
+      },
     }
-  })
+  }, requiredPipelineResources)
   assert(state.protocol === 'app:', `expected app: production origin, received ${state.url}`)
   assert(state.bridgeAvailable, 'preload bridge is unavailable')
   assert(state.requireType === 'undefined', 'renderer unexpectedly exposes require')
   assert(state.processType === 'undefined', 'renderer unexpectedly exposes process')
+  assert(state.javascriptEvalBlocked, 'renderer document unexpectedly permits JavaScript eval')
   assert(state.canvasVisible, 'Rapier/Three canvas is not visible at title readiness')
+  assert(state.assetPipeline.authoredReady, 'authored GLB/KTX2 pipeline did not decode')
+  assert(!state.assetPipeline.fallbackUsed, 'pipeline smoke unexpectedly used a fallback')
+  for (const required of requiredPipelineResources) {
+    const resource = state.assetPipeline.resources.find(({ path }) => path === required.path)
+    assert(resource, `missing pipeline resource response for ${required.path}`)
+    assert(resource.status === 200, `${required.path} returned HTTP ${resource.status}`)
+    assert(
+      resource.contentType.includes(required.contentType),
+      `${required.path} returned unexpected content type ${resource.contentType}`,
+    )
+    if (required.isolatedWorkerPolicy) {
+      assert(
+        resource.contentSecurityPolicy.includes("script-src blob: 'unsafe-eval'"),
+        `${required.path} is missing its isolated generated-code policy`,
+      )
+    } else {
+      assert(
+        !resource.contentSecurityPolicy.includes("'unsafe-eval'"),
+        `${required.path} unexpectedly received a JavaScript eval allowance`,
+      )
+    }
+  }
   if (cleanProfile) assert(!state.url.includes('recovery='), 'clean launch entered recovery mode')
   assertNoRendererErrors(run)
   return {
@@ -216,7 +289,10 @@ async function verifySecondInstance(run) {
     { env: { ...process.env, NODE_ENV: 'production' }, timeout: 10_000 },
   )
   await run.page.locator('.hud').waitFor({ state: 'visible' })
-  return { duplicateExitedMs: round(performance.now() - startedAt), primaryRemainedResponsive: true }
+  return {
+    duplicateExitedMs: round(performance.now() - startedAt),
+    primaryRemainedResponsive: true,
+  }
 }
 
 async function verifyPowerCycle(run) {

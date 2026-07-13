@@ -8,6 +8,7 @@ import {
   ASSET_LICENSES_END_MARKER,
   renderAssetLicenseLedger,
 } from './licenseLedger'
+import { PROCEDURAL_FALLBACK_KEYS } from './proceduralFallbacks'
 import { createAssetRegistry } from './registry'
 import { assetManifestSchema, type AssetRecord, type AssetVariant } from './schema'
 
@@ -24,7 +25,6 @@ export interface AssetValidationReport {
   generatedLedger: string
 }
 
-const PROCEDURAL_FALLBACK_KEYS = new Set(['procedural.debug-box', 'procedural.debug-checker'])
 const KTX2_MAGIC = Buffer.from([
   0xab, 0x4b, 0x54, 0x58, 0x20, 0x32, 0x30, 0xbb, 0x0d, 0x0a, 0x1a, 0x0a,
 ])
