@@ -159,6 +159,8 @@ const home: InteriorFn = () => {
   p.bed(plan, -3.6, 2.6, Math.PI / 2)
   p.nightstand(plan, -2.5, 3.7, 0)
   p.wardrobe(plan, -5.2, 2.0, Math.PI / 2)
+  plan.cyl('metalDark', { pos: [-2.5, 0.6, 3.7], size: [0.12, 0.04, 0.12] }, 14)
+  plan.cyl('metalDark', { pos: [-2.5, 0.72, 3.7], size: [0.035, 0.24, 0.035] }, 10)
   extras.lampShades.push({ pos: [-2.5, 0.86, 3.7], r: 0.13 })
 
   // study corner (east front)
@@ -172,6 +174,7 @@ const home: InteriorFn = () => {
   plan.box('metalBrushed', { pos: [-5.25, 1.35, -2.5], size: [0.5, 0.65, 0.04] })
   plan.box('glass', { pos: [-4.95, 1.1, -3.6], size: [1.4, 2.0, 0.04], rot: [0, Math.PI / 2, 0] })
   p.towelStack(plan, -5.3, 1.0, -3.4)
+  plan.box('woodPale', { pos: [-5.3, 0.91, -3.4], size: [0.68, 0.08, 0.5] })
 
   // wall art (dynamic canvases)
   p.paintingFrame(plan, 0.5, 1.7, -4.11, 0, 1.5, 1.0)
@@ -540,6 +543,7 @@ const bathhouse: InteriorFn = () => {
   p.benchOutdoor(plan, -3.4, 2.9, 0)
   p.benchOutdoor(plan, 0.8, -3.6, Math.PI)
   p.towelStack(plan, 4.02, 1.0, -3.3)
+  plan.box('woodPale', { pos: [4.02, 0.91, -3.3], size: [0.68, 0.08, 0.5] })
   plan.solid('woodWarm', { pos: [4.75, 0.9, -3.3], size: [0.9, 1.8, 0.5] })
   p.plantPot(plan, -4.6, 3.4, 'l', 81)
   p.plantPot(plan, 4.6, 3.6, 'm', 82)

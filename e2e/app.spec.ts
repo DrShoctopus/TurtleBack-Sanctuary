@@ -105,7 +105,20 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
     })
 
   const before = await probe()
-  await page.waitForTimeout(900)
+  await expect
+    .poll(
+      async () => {
+        const current = await probe()
+        return (
+          current.SkyDomeMaterial.time > before.SkyDomeMaterial.time &&
+          current.CloudsMaterial.time > before.CloudsMaterial.time &&
+          current.OceanMaterial.time > before.OceanMaterial.time &&
+          current.RimMistMaterial.time > before.RimMistMaterial.time
+        )
+      },
+      { timeout: 15_000 },
+    )
+    .toBe(true)
   const after = await probe()
   expect(after.SkyDomeMaterial.time).toBeGreaterThan(before.SkyDomeMaterial.time)
   expect(after.CloudsMaterial.time).toBeGreaterThan(before.CloudsMaterial.time)
@@ -118,7 +131,9 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
       rainIntensity: 1,
     }),
   )
-  await page.waitForTimeout(1_200)
+  await expect
+    .poll(async () => (await probe()).RainMaterial.rain, { timeout: 15_000 })
+    .toBeGreaterThan(0.01)
   const rainy = await probe()
   expect(rainy.SkyDomeMaterial.rain).toBeGreaterThan(0.01)
   expect(rainy.OceanMaterial.rain).toBeGreaterThan(0.01)
@@ -128,7 +143,9 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'low' }),
   )
-  await page.waitForTimeout(700)
+  await expect
+    .poll(async () => (await probe()).RainMaterial.vertices, { timeout: 10_000 })
+    .toBe(1_600)
   const low = await probe()
   expect(low.OceanMaterial.vertices).toBe(9_409)
   expect(low.RainMaterial.vertices).toBe(1_600)
@@ -138,7 +155,9 @@ test('live shaders advance and quality rebuilds geometry immediately', async ({ 
   await page.evaluate(() =>
     (window as any).__sanctuary.settings.getState().set('graphics', { quality: 'high' }),
   )
-  await page.waitForTimeout(900)
+  await expect
+    .poll(async () => (await probe()).RainMaterial.vertices, { timeout: 10_000 })
+    .toBe(6_000)
   const high = await probe()
   expect(high.OceanMaterial.vertices).toBe(50_625)
   expect(high.RainMaterial.vertices).toBe(6_000)
@@ -182,13 +201,22 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
   })
 
   // Walk south from the crown of the garden pond bridge.
-  await page.evaluate(() => (window as any).__sanctuary.teleport(-52, 13.9, 83, 0))
-  await page.waitForTimeout(350)
+  await page.evaluate(() => (window as any).__sanctuary.teleport(-52, 16, 83, 0))
+  await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.grounded, null, {
+    timeout: 3_000,
+  })
   await page.keyboard.down('ShiftLeft')
   await page.keyboard.down('KeyW')
-  await page.waitForTimeout(6_000)
+  await page.waitForFunction(
+    () => (window as any).__sanctuary.runtime.player.pos.z < 82,
+    null,
+    { timeout: 15_000 },
+  )
   await page.keyboard.up('KeyW')
   await page.keyboard.up('ShiftLeft')
+  await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.grounded, null, {
+    timeout: 3_000,
+  })
   const bridge = await page.evaluate(() => ({
     z: (window as any).__sanctuary.runtime.player.pos.z,
     grounded: (window as any).__sanctuary.runtime.player.grounded,
@@ -201,9 +229,16 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
   await page.waitForTimeout(350)
   await page.keyboard.down('ShiftLeft')
   await page.keyboard.down('KeyW')
-  await page.waitForTimeout(10_000)
+  await page.waitForFunction(
+    () => (window as any).__sanctuary.runtime.player.pos.z > 228,
+    null,
+    { timeout: 25_000 },
+  )
   await page.keyboard.up('KeyW')
   await page.keyboard.up('ShiftLeft')
+  await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.grounded, null, {
+    timeout: 2_000,
+  })
   const stern = await page.evaluate(() => ({
     z: (window as any).__sanctuary.runtime.player.pos.z,
     grounded: (window as any).__sanctuary.runtime.player.grounded,

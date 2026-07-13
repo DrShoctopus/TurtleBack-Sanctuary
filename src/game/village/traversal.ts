@@ -158,7 +158,10 @@ function buildBridge(
     const tm = (t0 + t1) / 2
     const [x, z] = pointAt(span, f, tm)
     const length = f.run / segments + 0.055
-    plan.solid(span.material, {
+    // Keep the visible boards level, but give the character a continuous
+    // pitched surface under them. Horizontal box colliders formed tiny uphill
+    // risers along the arch that could catch the capsule at walking speed.
+    plan.box(span.material, {
       pos: [x, deckY(tm), z],
       size: [span.width, 0.18, length],
       rot: [0, f.yaw, 0],
@@ -167,6 +170,23 @@ function buildBridge(
       pos: [x, deckY(tm) + 0.105, z],
       size: [span.width - 0.08, 0.035, length - 0.035],
       rot: [0, f.yaw, 0],
+    })
+  }
+
+  // Two broad ramps follow the arch without the vertical faces produced by a
+  // collider per board. Their overlap at the crown is intentionally generous.
+  for (const [t0, t1] of [
+    [0, 0.5],
+    [0.5, 1],
+  ] as const) {
+    const tm = (t0 + t1) / 2
+    const [x, z] = pointAt(span, f, tm)
+    const run = f.run * (t1 - t0)
+    const rise = deckY(t1) - deckY(t0)
+    plan.collider({
+      pos: [x, (deckY(t0) + deckY(t1)) / 2, z],
+      size: [span.width, 0.18, Math.hypot(run, rise) + 0.16],
+      rot: [-Math.atan2(rise, run), f.yaw, 0],
     })
   }
 

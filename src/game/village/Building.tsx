@@ -287,7 +287,7 @@ function HomeDecor({ blinds, theme }: { blinds: number; theme: DecorTheme }) {
           </mesh>
         )
       })}
-      <mesh position={[2.6, 0.038, 0.6]} rotation={[0, 0, 0]} scale={[1.75, 1, 1.3]}>
+      <mesh position={[2.6, 0.045, 0.6]} rotation={[0, 0, 0]} scale={[1.75, 1, 1.3]}>
         <cylinderGeometry args={[1, 1, 0.018, 40]} />
         <meshStandardMaterial color={accent} roughness={0.98} />
       </mesh>
