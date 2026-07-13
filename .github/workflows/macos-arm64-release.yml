@@ -1,6 +1,17 @@
 name: macOS Apple Silicon release proof
 
 on:
+  push:
+    branches:
+      - work
+    paths:
+      - '.github/workflows/macos-arm64-release.yml'
+      - 'build/**'
+      - 'electron-builder*.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'scripts/**'
+      - 'src/**'
   workflow_dispatch:
     inputs:
       mode:
@@ -14,6 +25,9 @@ on:
 
 permissions:
   contents: read
+
+env:
+  RELEASE_MODE: ${{ inputs.mode || 'unsigned-proof' }}
 
 jobs:
   macos-arm64:
@@ -32,16 +46,16 @@ jobs:
       - run: pnpm test
       - run: pnpm lint
       - name: Build unsigned Apple silicon proof
-        if: inputs.mode == 'unsigned-proof'
+        if: env.RELEASE_MODE == 'unsigned-proof'
         run: pnpm desktop:package:mac
       - name: Verify unsigned Apple silicon metadata
-        if: inputs.mode == 'unsigned-proof'
+        if: env.RELEASE_MODE == 'unsigned-proof'
         run: node scripts/verify-macos-release.mjs --mode=local | tee release/macos-arm64-verification.json
       - name: Smoke unsigned Apple silicon application
-        if: inputs.mode == 'unsigned-proof'
+        if: env.RELEASE_MODE == 'unsigned-proof'
         run: pnpm desktop:smoke
       - name: Prepare Apple notarization API key
-        if: inputs.mode == 'signed-release'
+        if: env.RELEASE_MODE == 'signed-release'
         env:
           APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
           APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
@@ -52,7 +66,7 @@ jobs:
           printf '%s' "$APPLE_API_KEY_P8" > "$key_path"
           echo "APPLE_API_KEY=$key_path" >> "$GITHUB_ENV"
       - name: Build signed and notarized Apple silicon release
-        if: inputs.mode == 'signed-release'
+        if: env.RELEASE_MODE == 'signed-release'
         env:
           CSC_LINK: ${{ secrets.MACOS_CSC_LINK }}
           CSC_KEY_PASSWORD: ${{ secrets.MACOS_CSC_KEY_PASSWORD }}
@@ -60,14 +74,14 @@ jobs:
           APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
         run: pnpm desktop:release:mac
       - name: Verify signed and notarized Apple silicon release
-        if: inputs.mode == 'signed-release'
+        if: env.RELEASE_MODE == 'signed-release'
         run: node scripts/verify-macos-release.mjs --mode=release | tee release/macos-arm64-verification.json
       - name: Smoke signed Apple silicon application
-        if: inputs.mode == 'signed-release'
+        if: env.RELEASE_MODE == 'signed-release'
         run: pnpm desktop:smoke
       - uses: actions/upload-artifact@v4
         with:
-          name: turtleback-macos-arm64-${{ inputs.mode }}
+          name: turtleback-macos-arm64-${{ env.RELEASE_MODE }}
           path: |
             release/*.dmg
             release/*.zip

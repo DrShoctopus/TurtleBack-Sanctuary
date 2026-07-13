@@ -1,6 +1,6 @@
 import { access, mkdtemp, readFile, rm } from 'node:fs/promises'
 import { tmpdir, arch, cpus, platform, release, totalmem } from 'node:os'
-import { join, resolve } from 'node:path'
+import { join, resolve, sep } from 'node:path'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { performance } from 'node:perf_hooks'
@@ -15,7 +15,7 @@ const report = {
   schemaVersion: 2,
   measuredAt: new Date().toISOString(),
   sourceCommit: await currentCommit(),
-  artifact: executablePath.slice(root.length + 1),
+  artifact: artifactLabel(executablePath),
   offlineMode: 'Chromium host resolver maps all DNS names to NOTFOUND',
   host: {
     platform: platform(),
@@ -315,6 +315,14 @@ function parseMeasurementSeconds(args) {
 }
 
 async function findPackagedExecutable() {
+  const explicit = process.argv
+    .find((argument) => argument.startsWith('--executable='))
+    ?.slice('--executable='.length)
+  if (explicit) {
+    const absolute = resolve(root, explicit)
+    await access(absolute)
+    return absolute
+  }
   const candidates =
     platform() === 'darwin'
       ? [
@@ -342,4 +350,8 @@ async function currentCommit() {
   } catch {
     return 'unknown'
   }
+}
+
+function artifactLabel(file) {
+  return file.startsWith(`${root}${sep}`) ? file.slice(root.length + 1) : file
 }

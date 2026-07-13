@@ -19,9 +19,6 @@ mac:
   entitlements: build/entitlements.mac.plist
   entitlementsInherit: build/entitlements.mac.inherit.plist
   notarize: false
-win:
-  target:
-    - nsis
 linux:
   category: Game
   target:

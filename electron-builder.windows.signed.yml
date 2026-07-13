@@ -1,0 +1,7 @@
+extends: electron-builder.windows.yml
+win:
+  signExecutable: true
+  forceCodeSigning: true
+  signtoolOptions:
+    signingHashAlgorithms:
+      - sha256

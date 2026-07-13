@@ -45,6 +45,9 @@ pnpm desktop:package  # unpacked platform application → release/
 pnpm desktop:package:mac # unpacked macOS arm64 application → release/mac-arm64/
 pnpm desktop:release:mac # signed/notarized arm64 DMG + ZIP (credentials required)
 pnpm desktop:verify:mac  # verify local bundle identity, icon, OS floor, architecture
+pnpm desktop:package:win # unpacked Windows x64 application → release/win-unpacked/
+pnpm desktop:installer:win # unsigned Windows x64 NSIS proof installer
+pnpm desktop:release:win # signed Windows x64 NSIS installer (credentials required)
 pnpm desktop:smoke    # verify the existing unpacked app offline
 pnpm desktop:measure  # smoke + fixed 60-second frame/process sample
 ```
@@ -68,6 +71,9 @@ pnpm desktop:measure  # smoke + fixed 60-second frame/process sample
 | `pnpm desktop:package:mac` | Unpacked macOS arm64 app in `release/mac-arm64/` |
 | `pnpm desktop:release:mac` | Strict signed/notarized macOS arm64 DMG + ZIP  |
 | `pnpm desktop:verify:mac` | Verify local macOS bundle metadata and arm64 binary |
+| `pnpm desktop:package:win` | Cross-package unpacked Windows x64 app           |
+| `pnpm desktop:installer:win` | Build unsigned Windows x64 NSIS proof installer |
+| `pnpm desktop:release:win` | Build signed Windows x64 NSIS release installer |
 | `pnpm desktop:smoke`   | Offline packaged-app quit/relaunch smoke           |
 | `pnpm desktop:measure` | Smoke plus 60-second frame/process sample          |
 

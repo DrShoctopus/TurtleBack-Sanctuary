@@ -73,6 +73,21 @@ trust, and repeatability gaps around the existing desktop application.
 - Configure install scope, shortcuts, uninstall identity, and artifact names.
 - Keep platform-specific commands separate from the macOS release path.
 
+Implementation uses a non-elevating per-user assisted installer, preserves
+application data during uninstall, and creates Desktop and Start Menu shortcuts.
+Unsigned proof and credentialed Authenticode configurations are separate.
+
+### Cross-package proof — 2026-07-13
+
+- Produced the branded Windows x64 unpacked application and unsigned NSIS
+  installer from the Apple silicon build host.
+- Verified the installed payload executable is an AMD64 PE. The NSIS bootstrap
+  executable is an x86 PE by design and carries only the x64 application
+  payload.
+- Verified the generated ICO matches the original Turtleback vector source.
+- Native Windows version-resource checks, installed-app smoke, shortcut checks,
+  and uninstall cleanup remain gated on the Windows workflow.
+
 ### B2. Real Windows automation
 
 - Run unit/type/lint/build checks on Windows.
