@@ -1,0 +1,300 @@
+{
+  "schemaVersion": 1,
+  "collectionStartedAt": "2026-07-13T18:45:23.864Z",
+  "capturedAt": "2026-07-13T19:00:19.896Z",
+  "sourceCommit": "4fcbaa792775d345672da0d4f8d6362249234a81",
+  "branch": "work",
+  "purpose": "Pre-overhaul browser and packaged-desktop baseline",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "product": "macOS",
+    "productVersion": "26.5.1",
+    "buildVersion": "25F80",
+    "kernelRelease": "25.5.0",
+    "cpu": "Apple M5",
+    "logicalCpuCount": 10,
+    "totalMemoryBytes": 17179869184,
+    "gpuDescription": "Apple M5 integrated GPU, 10 cores",
+    "referenceClass": "development baseline only; not the named integrated- or dedicated-GPU release reference path"
+  },
+  "toolchain": {
+    "node": "26.5.0",
+    "pnpm": "11.12.0",
+    "electron": "43.1.0",
+    "chromium": "150.0.7871.47",
+    "three": "0.182.0",
+    "appVersion": "1.0.0"
+  },
+  "commands": [
+    {
+      "command": "node_modules/.bin/tsc --noEmit",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm lint",
+      "status": "passed"
+    },
+    {
+      "command": "pnpm test",
+      "status": "passed",
+      "result": "22 files, 157 tests"
+    },
+    {
+      "command": "pnpm build",
+      "status": "passed",
+      "result": "529 modules transformed",
+      "warnings": [
+        "Existing physics chunk is 3158.66 kB, above the configured 1600 kB warning threshold."
+      ]
+    },
+    {
+      "command": "pnpm test:e2e",
+      "status": "passed",
+      "result": "12 of 12 Chromium tests"
+    },
+    {
+      "command": "pnpm capture:graphics",
+      "status": "passed",
+      "result": "24 PNG benchmark views"
+    },
+    {
+      "command": "pnpm desktop:package:mac",
+      "status": "passed",
+      "artifact": "release/mac-arm64/Turtleback Sanctuary.app",
+      "artifactSizeApproximate": "279 MiB",
+      "notarization": "skipped by project configuration"
+    },
+    {
+      "command": "pnpm desktop:smoke",
+      "status": "passed",
+      "result": "first launch, relaunch, app protocol, isolated bridge, persistence, autosave, second instance, suspend, and resume"
+    },
+    {
+      "command": "pnpm desktop:measure",
+      "status": "passed",
+      "result": "fixed 60-second packaged-runtime frame sample"
+    }
+  ],
+  "browserEvidence": {
+    "graphicsCaptureCount": 24,
+    "graphicsCaptureDirectory": "test-results/graphics-captures/graphics.capture.ts-captur-1e416-igh-quality-benchmark-views-chromium",
+    "captureProfile": {
+      "quality": "high",
+      "weather": "clear",
+      "manualTime": 0.5
+    },
+    "notes": "The capture suite is structural browser evidence. It does not substitute for real-GPU visual or frame-time approval."
+  },
+  "packagedRuntime": {
+    "artifactExecutable": "release/mac-arm64/Turtleback Sanctuary.app/Contents/MacOS/Turtleback Sanctuary",
+    "origin": "app://turtleback/index.html",
+    "offlineMode": "Chromium host resolver maps all DNS names to NOTFOUND",
+    "security": {
+      "bridgeAvailable": true,
+      "rendererRequireType": "undefined",
+      "rendererProcessType": "undefined"
+    },
+    "configuredQuality": "high",
+    "resolvedQuality": "high",
+    "evidenceRunRelationship": "The 60-second frame sample and the later GPU resource probe are separate runs of the same packaged artifact. The frame run retained default automatic time/weather; the resource run fixed noon and clear weather for repeatable resource comparison.",
+    "viewport": {
+      "cssWidth": 1280,
+      "cssHeight": 688,
+      "devicePixelRatio": 2,
+      "canvasBackingWidth": 2560,
+      "canvasBackingHeight": 1376,
+      "drawingBufferWidth": 2560,
+      "drawingBufferHeight": 1376
+    },
+    "renderer": {
+      "context": "WebGL2",
+      "webglVendor": "WebKit",
+      "webglRenderer": "WebKit WebGL",
+      "unmaskedVendor": "Google Inc. (Apple)",
+      "unmaskedRenderer": "ANGLE (Apple, ANGLE Metal Renderer: Apple M5, Unspecified Version)",
+      "debugRendererInfoAvailable": true,
+      "version": "WebGL 2.0 (OpenGL ES 3.0 Chromium)",
+      "shadingLanguageVersion": "WebGL GLSL ES 3.00 (OpenGL ES GLSL ES 3.0 Chromium)"
+    },
+    "sceneResources": {
+      "scenarioId": "packaged-high-home-idle-v1",
+      "measuredAt": "2026-07-13T19:00:19.896Z",
+      "quality": "high",
+      "time": {
+        "auto": false,
+        "manual": 0.5
+      },
+      "weather": "clear",
+      "spawn": "home-default",
+      "camera": "idle-no-input",
+      "warmupRequestedMs": 5000,
+      "warmupObservedMs": 5002.1,
+      "sampleWindowRequestedMs": 3000,
+      "sampleWindowObservedMs": 3005.199999809265,
+      "sampledFrames": 361,
+      "nonzeroDrawFrames": 361,
+      "drawCallsPerFrame": {
+        "min": 367,
+        "median": 368,
+        "p95": 369,
+        "max": 370,
+        "average": 367.7728531855956
+      },
+      "submittedTrianglesPerFrame": {
+        "min": 1533387,
+        "median": 1533401,
+        "p95": 1533413,
+        "max": 1533425,
+        "average": 1533397.6426592798,
+        "definition": "API primitive count including instance multiplication; excludes post-submit clipping and shader discard"
+      },
+      "drawArraysPerFrame": 19,
+      "drawElementsPerFrame": {
+        "min": 328,
+        "median": 329,
+        "p95": 330,
+        "max": 331,
+        "average": 328.7728531855956
+      },
+      "drawArraysInstancedPerFrame": 9,
+      "drawElementsInstancedPerFrame": 11,
+      "multiDrawCallsPerFrame": 0,
+      "liveTextures": 55,
+      "estimatedTextureBytes": 216007408,
+      "estimatedTextureMiB": 206.00071716308594,
+      "textureAllocationCoverage": {
+        "knownCalls": 91,
+        "unsupportedCalls": 0,
+        "probeErrors": 0
+      },
+      "probeMethod": "Temporary pre-document WebGL2 instrumentation against the unchanged packaged artifact; create/delete texture lifetime accounting and allocation tracking across texImage, compressedTexImage, texStorage, copyTexImage, and mip generation calls.",
+      "textureEstimateLimitations": "Complete for observed texture allocation API calls, but not physical VRAM: excludes driver padding and copies, renderbuffers, framebuffers, shader/program/buffer memory, and opaque driver duplication."
+    },
+    "firstLaunch": {
+      "electronAttachedMs": 187.5,
+      "windowCreatedMs": 187.6,
+      "titleAndRapierReadyMs": 1800.7,
+      "controllableFrameMs": 1904.7,
+      "enterTransitionMs": 96.8,
+      "firstContentfulPaintMs": 152,
+      "domContentLoadedMs": 98.80000019073486,
+      "canvasVisible": true
+    },
+    "relaunch": {
+      "electronAttachedMs": 188,
+      "windowCreatedMs": 188,
+      "titleAndRapierReadyMs": 1785.9,
+      "firstContentfulPaintMs": 152,
+      "domContentLoadedMs": 93.7999997138977,
+      "persistedFov": 83,
+      "persistedQuality": "high",
+      "mediaRepositoryAvailable": true,
+      "saveSlots": [
+        "autosave"
+      ]
+    },
+    "lifecycle": {
+      "secondInstance": {
+        "duplicateExitedMs": 134.3,
+        "primaryRemainedResponsive": true
+      },
+      "powerCycle": {
+        "elapsedMs": 542.7,
+        "rendererRemainedResponsive": true
+      },
+      "observedEvents": [
+        "lifecycle.second_instance",
+        "lifecycle.system_suspend",
+        "lifecycle.system_resume"
+      ]
+    },
+    "frameSample": {
+      "scenarioId": "packaged-high-home-idle-auto-environment-v1",
+      "scenarioDescription": "Fresh profile set to High, clean relaunch, enter at the authored home spawn, then remain idle with the default camera and default automatic time/weather",
+      "measuredAt": "2026-07-13T18:45:23.864Z",
+      "warmupSeconds": 5,
+      "durationMs": 60000,
+      "elapsedMs": 60005.300000190735,
+      "frameCount": 7201,
+      "averageFps": 120.00606613044366,
+      "p50FrameMs": 8.30000000000291,
+      "p95FrameMs": 9.5,
+      "p99FrameMs": 10,
+      "maxFrameMs": 10.400000000001455,
+      "framesOver25Ms": 0,
+      "framesOver50Ms": 0
+    },
+    "processMemory": {
+      "unitsAsEmitted": "KiB-compatible 1024-byte units reported by Electron as KB",
+      "title": {
+        "totalWorkingSetKb": 741776,
+        "totalWorkingSetBytes": 759578624,
+        "processes": [
+          {
+            "type": "Browser",
+            "workingSetKb": 190224,
+            "workingSetBytes": 194789376,
+            "peakWorkingSetKb": 190224,
+            "peakWorkingSetBytes": 194789376
+          },
+          {
+            "type": "GPU",
+            "workingSetKb": 158640,
+            "workingSetBytes": 162447360,
+            "peakWorkingSetKb": 164320,
+            "peakWorkingSetBytes": 168263680
+          },
+          {
+            "type": "Utility",
+            "workingSetKb": 46288,
+            "workingSetBytes": 47398912,
+            "peakWorkingSetKb": 46288,
+            "peakWorkingSetBytes": 47398912
+          },
+          {
+            "type": "Tab",
+            "workingSetKb": 346624,
+            "workingSetBytes": 354942976,
+            "peakWorkingSetKb": 346624,
+            "peakWorkingSetBytes": 354942976
+          }
+        ]
+      },
+      "gameplayStart": {
+        "totalWorkingSetKb": 839248,
+        "totalWorkingSetBytes": 859389952,
+        "tabWorkingSetKb": 399504,
+        "tabWorkingSetBytes": 409092096
+      },
+      "gameplayEnd": {
+        "totalWorkingSetKb": 872320,
+        "totalWorkingSetBytes": 893255680,
+        "tabWorkingSetKb": 435664,
+        "tabWorkingSetBytes": 446119936,
+        "cpuPercent": {
+          "Browser": 0.05470092180936187,
+          "GPU": 3.6600246702027532,
+          "Utility1": 0.00012230789940565192,
+          "Tab": 3.2417885458930273,
+          "Utility2": 0.04882384870812277
+        }
+      },
+      "growth": {
+        "totalWorkingSetKb": 33072,
+        "totalWorkingSetBytes": 33865728,
+        "totalWorkingSetPercent": 3.94,
+        "tabWorkingSetKb": 36160,
+        "tabWorkingSetBytes": 37027840,
+        "tabWorkingSetPercent": 9.05
+      }
+    }
+  },
+  "limitations": [
+    "This Apple M5 run is a development baseline, not release acceptance on the named integrated- and dedicated-GPU reference paths.",
+    "Renderer and resource counts came from temporary pre-document instrumentation because the pre-overhaul application did not yet publish a scene probe; Phase A must replace this with a maintained in-app contract.",
+    "The texture byte value estimates observed WebGL texture allocation calls and is not a physical-VRAM measurement.",
+    "The 60-second sample is not the required 30-minute traversal soak and cannot prove the final memory-growth gate.",
+    "The capture suite uses Chromium automation and cannot approve final material response or near-photorealistic image quality."
+  ]
+}
