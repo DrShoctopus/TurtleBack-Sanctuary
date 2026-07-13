@@ -229,7 +229,7 @@ The unpacked application occupied approximately 280.1 MiB including the Electron
 runtime. `app.asar` was approximately 4.25 MiB. The package used Electron's
 default icon and was unsigned, both as explicitly excluded from Phase 1.
 
-### Current platform coverage
+### Phase 1 platform coverage at measurement time
 
 | Target                                          | Current status                                                                                 |
 | ----------------------------------------------- | ---------------------------------------------------------------------------------------------- |
@@ -244,3 +244,23 @@ default icon and was unsigned, both as explicitly excluded from Phase 1.
 
 No cross-platform or release-hardware support claim should be inferred from the
 Apple M5 result.
+
+## Phase 2 native platform proof — 2026-07-13
+
+Phase 2 replaced the default package icon, added separate proof and strict
+credentialed release configurations, and completed native automation for the two
+declared release targets. This does not change or broaden the fixed-scene
+performance measurement above.
+
+| Target                         | Phase 2 automated proof                                                                                                                |
+| ------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
+| macOS 12+ Apple silicon        | Arm64 identity, branded icon, ad-hoc proof signature, offline launch/relaunch, persistence, second-instance, and synthetic suspend/resume |
+| Windows 10/11 x64              | AMD64 payload and version resources, NSIS install, installed-app lifecycle/persistence smoke, shortcuts, uninstall, and cleanup       |
+| Credentialed public release    | Not yet verified; Developer ID/notarization and Authenticode credentials are external gates                                           |
+| Physical target-device checks  | Audio, controller, real sleep/wake, fullscreen/display scaling, and long-session soak remain manual gates                             |
+| Intel macOS / Windows Arm / Linux | Explicitly deferred                                                                                                                 |
+
+The exact native CI evidence is recorded in
+[phase-2-native-ci-proof.json](phase-2-native-ci-proof.json). No Windows frame
+rate or memory baseline was collected, so the Apple M5 figures above remain the
+only performance measurements and must not be generalized to Windows hardware.

@@ -68,6 +68,28 @@ environment. Windows, Intel macOS, Linux, other GPU classes, signed/notarized
 distribution, installers, controller-connected packaged play, real hardware
 sleep/wake, and long-session soak remain unverified or out of scope.
 
+## Phase 2 implementation outcome — 2026-07-13
+
+Phase 2 closed the uncredentialed engineering and native-automation gaps for the
+two declared release targets: macOS 12+ on Apple silicon first, then Windows
+10/11 x64. The historical Phase 0 and Phase 1 findings below remain unchanged as
+point-in-time evidence.
+
+| Target or gap                     | Phase 2 verified outcome                                                                                                      |
+| --------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| macOS identity and packaging      | Branded, arm64-only package with `com.turtleback.sanctuary`, macOS 12.0 floor, ad-hoc local proof, and strict release config |
+| macOS native automation           | Apple-silicon CI passed metadata checks and the offline persistence, second-instance, and suspend/resume lifecycle smoke      |
+| Windows package and installer     | Branded x64 payload in a per-user NSIS installer with Desktop/Start Menu shortcuts and a strict signed-release config         |
+| Windows native automation         | Windows CI passed AMD64/version checks, silent install, installed-app lifecycle smoke, shortcut checks, and clean uninstall  |
+| Reproducible release separation   | Proof builds cannot be mistaken for credentialed releases; release commands require the platform signing identity            |
+
+Exact native run URLs, artifact sizes, and assertions are recorded in
+[phase-2-native-ci-proof.json](phase-2-native-ci-proof.json). Phase 2 engineering
+and unsigned native proof are complete. Developer ID signing, notarization,
+stapling, Gatekeeper assessment, Windows Authenticode signing/timestamping, and
+the physical audio/controller/sleep/display checklists remain external release
+gates. Intel macOS, Windows on Arm, and Linux remain explicitly deferred.
+
 ## Build system and project configuration
 
 The application is a TypeScript ESM project built by Vite. `pnpm build` runs a

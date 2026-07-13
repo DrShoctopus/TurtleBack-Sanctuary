@@ -20,6 +20,22 @@ do not replace the unchecked human/hardware passes below.
 - [x] Three rapid renderer crashes stop on the safe screen instead of looping
 - [x] Fixed 60-second High/Arrival Overlook sample completes without a renderer console error
 
+## Phase 2 automated desktop coverage
+
+These checks passed in native GitHub-hosted CI against commit `32a0ab0`. They
+prove package, installer, and synthetic lifecycle behavior, but not physical
+audio, controller, display, or sleep/wake behavior.
+
+- [x] Apple-silicon macOS package is arm64-only, branded, ad-hoc signed, and declares macOS 12.0 plus `com.turtleback.sanctuary`
+- [x] Apple-silicon package passes offline launch/relaunch, persistence, second-instance, and synthetic suspend/resume smoke
+- [x] Windows installer contains an AMD64 application payload with the expected version metadata
+- [x] Windows silent per-user install creates Desktop and Start Menu shortcuts
+- [x] Installed Windows app passes offline lifecycle, persistence, second-instance, and synthetic suspend/resume smoke
+- [x] Windows silent uninstall removes the application and test shortcuts cleanly
+
+Run URLs and machine-readable results are in
+[`docs/phase-2-native-ci-proof.json`](docs/phase-2-native-ci-proof.json).
+
 ## Electron desktop manual checks
 
 - [ ] Put the Mac to sleep while playing; wake resumes safely with audio/input in a sane state
@@ -30,7 +46,8 @@ do not replace the unchecked human/hardware passes below.
 - [ ] Exercise fullscreen/borderless/windowed transitions on each target display
 - [ ] Run at least a 30-minute traversal/rain/interior/media soak and compare memory afterward
 - [ ] Repeat packaged play with a controller and verify vibration/disconnect behavior
-- [ ] Repeat the packaged smoke on every claimed Windows, Intel macOS, and Linux target
+- [ ] Repeat packaged play on physical Apple-silicon macOS and Windows 10/11 x64 target systems
+- [ ] Test Intel macOS, Windows on Arm, and Linux only before expanding the declared support matrix
 
 ## Movement & camera
 

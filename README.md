@@ -32,11 +32,15 @@ Then open **http://localhost:5173** and click **Enter Sanctuary**. (The click is
 
 ### Electron desktop development
 
-Phase 1 of the desktop conversion is complete. The secure Electron shell,
-durable application-profile persistence, native local-audio folder access,
-lifecycle recovery, and automated unpacked-app verification are implemented and
-documented in the
-[Phase 1 plan](docs/phase-1-electron-vertical-slice.md).
+Phases 1 and 2 of the desktop conversion are complete for engineering and
+unsigned native proof, targeting macOS on Apple silicon first and Windows x64
+second. The secure Electron shell, durable application-profile persistence,
+native local-audio folder access, lifecycle recovery, branded platform packages,
+installers, and native CI verification are documented in the
+[Phase 1 plan](docs/phase-1-electron-vertical-slice.md),
+[Phase 2 release-readiness plan](docs/phase-2-release-readiness.md), and
+[native CI proof](docs/phase-2-native-ci-proof.json). Public release candidates
+still require external signing credentials and the physical-device checklists.
 
 ```bash
 pnpm desktop:dev      # Vite renderer + sandboxed Electron window
