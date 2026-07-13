@@ -77,7 +77,7 @@ Implementation uses a non-elevating per-user assisted installer, preserves
 application data during uninstall, and creates Desktop and Start Menu shortcuts.
 Unsigned proof and credentialed Authenticode configurations are separate.
 
-### Cross-package proof — 2026-07-13
+### Cross-package and native proof — 2026-07-13
 
 - Produced the branded Windows x64 unpacked application and unsigned NSIS
   installer from the Apple silicon build host.
@@ -85,8 +85,9 @@ Unsigned proof and credentialed Authenticode configurations are separate.
   executable is an x86 PE by design and carries only the x64 application
   payload.
 - Verified the generated ICO matches the original Turtleback vector source.
-- Native Windows version-resource checks, installed-app smoke, shortcut checks,
-  and uninstall cleanup remain gated on the Windows workflow.
+- Native Windows CI then passed version-resource checks, a silent per-user
+  install, the complete installed-app lifecycle/persistence smoke, Desktop and
+  Start Menu shortcut checks, silent uninstall, and cleanup.
 
 ### B2. Real Windows automation
 
@@ -131,3 +132,15 @@ release gates. They must remain visibly open until their evidence exists.
   post-event renderer responsiveness.
 - The credentialed Developer ID/notarization workflow and hands-on hardware
   checklist remain open release gates.
+
+### Native CI closeout — 2026-07-13
+
+Both platform proof workflows passed against commit `32a0ab0`. The Windows run
+retained the unsigned NSIS installer and machine-readable install/smoke evidence;
+the Apple silicon run retained its bundle verification JSON. Exact run IDs,
+URLs, artifact sizes, and gate results are recorded in
+`docs/phase-2-native-ci-proof.json`.
+
+Phase 2 engineering and unsigned native proof are complete. Public release is
+still blocked by the explicitly external signing credentials and physical
+hardware checklists listed in that evidence file.
