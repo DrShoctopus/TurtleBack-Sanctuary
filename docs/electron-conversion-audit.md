@@ -25,21 +25,48 @@ The required finding classifications used below are:
 
 ## Baseline status
 
-| Item | Audited baseline |
-| --- | --- |
-| Source reference | Clean commit `a1f7ec3` |
-| Package manager | pnpm 11.12.0 (`package.json` pins `pnpm@11.12.0`) |
-| Runtime requirement | Node 20 or newer; audit machine used Node 26.5.0 |
-| Browser build | Vite static production bundle with `base: './'` |
-| Browser launch | Start screen and playable Arrival Overlook verified in the in-app browser |
-| Type checking | Passed with `tsc --noEmit` |
-| Linting | Passed with ESLint over `src` |
-| Unit tests | 18 Vitest files, 140 tests passed |
-| Browser E2E | 12 Playwright tests are defined; a full Phase 0 Playwright run was not recorded |
-| Desktop support | No Electron application, preload bridge, IPC, packaging, installer, or desktop tests at baseline |
+| Item                | Audited baseline                                                                                 |
+| ------------------- | ------------------------------------------------------------------------------------------------ |
+| Source reference    | Clean commit `a1f7ec3`                                                                           |
+| Package manager     | pnpm 11.12.0 (`package.json` pins `pnpm@11.12.0`)                                                |
+| Runtime requirement | Node 20 or newer; audit machine used Node 26.5.0                                                 |
+| Browser build       | Vite static production bundle with `base: './'`                                                  |
+| Browser launch      | Start screen and playable Arrival Overlook verified in the in-app browser                        |
+| Type checking       | Passed with `tsc --noEmit`                                                                       |
+| Linting             | Passed with ESLint over `src`                                                                    |
+| Unit tests          | 18 Vitest files, 140 tests passed                                                                |
+| Browser E2E         | 12 Playwright tests are defined; a full Phase 0 Playwright run was not recorded                  |
+| Desktop support     | No Electron application, preload bridge, IPC, packaging, installer, or desktop tests at baseline |
 
-The README's stated count of 124 unit tests is stale; the audited suite contains
-140. This is documentation drift, not a test failure.
+The README's stated count of 124 unit tests is stale; the audited suite contains 140. This is documentation drift, not a test failure.
+
+## Phase 1 implementation outcome — 2026-07-13
+
+The remainder of this audit intentionally preserves the Phase 0 findings at
+commit `a1f7ec3`. Phase 1 implemented the planned adapter architecture without
+rewriting the React/Three/Rapier gameplay path.
+
+| Phase 0 gap or risk                  | Phase 1 verified outcome                                                                                                                           |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No Electron shell or package         | Sandboxed, context-isolated Electron 43 shell and unpacked arm64 macOS artifact                                                                    |
+| Browser storage authoritative        | Validated main-process settings, media, preferences, and portable-save repositories with atomic writes, backup recovery, and corruption quarantine |
+| Browser-only local files             | Native folder selection and opaque `turtleback-media://` streaming; no absolute renderer paths                                                     |
+| No production security proof         | `app://turtleback` origin, restrictive CSP, denied popups/navigation/permissions, request policy, no renderer Node globals                         |
+| No lifecycle owner                   | Coordinated persistence/audio/media/input/React/texture teardown, sleep/wake events, window recovery, and bounded shutdown                         |
+| Crash/GPU recovery uncertain         | Structured diagnostics, two bounded reloads, then a low-activity safe screen; deliberate packaged renderer crashes verified                        |
+| Rapier/CSP startup uncertain         | Packaged Rapier/title and controllable Arrival Overlook verified offline                                                                           |
+| No desktop automation or measurement | Repeatable packaged quit/relaunch smoke plus fixed 60-second frame/process measurement                                                             |
+
+Verification at source commit `ba74f47fea7d4af58e022ba66e22f5148fed7951`
+passed strict TypeScript, ESLint, 157 unit tests, 12 browser E2E flows, production
+browser/desktop builds, unpacked packaging, offline packaged smoke, crash-loop
+recovery, and the Apple M5 measurement documented in
+[performance-baseline.md](performance-baseline.md).
+
+This closes the Phase 1 findings only for the measured Apple Silicon macOS
+environment. Windows, Intel macOS, Linux, other GPU classes, signed/notarized
+distribution, installers, controller-connected packaged play, real hardware
+sleep/wake, and long-session soak remain unverified or out of scope.
 
 ## Build system and project configuration
 
@@ -65,21 +92,21 @@ documentation.
 
 The installed dependency tree at audit time resolved to:
 
-| Package | Version |
-| --- | ---: |
-| React / React DOM | 19.2.7 |
-| Three.js | 0.182.0 |
-| `@react-three/fiber` | 9.6.1 |
-| `@react-three/drei` | 10.7.7 |
-| `@react-three/postprocessing` | 3.0.4 |
-| `postprocessing` | 6.39.2 |
-| `@react-three/rapier` | 2.2.0 |
-| `@dimforge/rapier3d-compat` | 0.19.2 |
-| Zustand | 5.0.14 |
-| Vite | 7.3.6 |
-| TypeScript | 5.9.3 |
-| Vitest | 3.2.7 |
-| Playwright | 1.61.1 |
+| Package                       | Version |
+| ----------------------------- | ------: |
+| React / React DOM             |  19.2.7 |
+| Three.js                      | 0.182.0 |
+| `@react-three/fiber`          |   9.6.1 |
+| `@react-three/drei`           |  10.7.7 |
+| `@react-three/postprocessing` |   3.0.4 |
+| `postprocessing`              |  6.39.2 |
+| `@react-three/rapier`         |   2.2.0 |
+| `@dimforge/rapier3d-compat`   |  0.19.2 |
+| Zustand                       |  5.0.14 |
+| Vite                          |   7.3.6 |
+| TypeScript                    |   5.9.3 |
+| Vitest                        |   3.2.7 |
+| Playwright                    |  1.61.1 |
 
 No Electron, packaging, schema-validation, structured-logging, or desktop E2E
 dependency was present at the audited baseline.
@@ -288,31 +315,31 @@ Classification:
 
 ## Browser-specific API inventory
 
-| Browser feature | Current use | Classification and desktop decision |
-| --- | --- | --- |
-| `window` / `document` | DOM mounting, events, timers, visibility, focus, canvas generation, CSS variables | **Directly reusable** in the sandboxed renderer; do not move ordinary DOM work to main |
-| `localStorage` | Settings and media/journal persistence | **Browser-only and requiring replacement** for desktop durability; retain only as browser adapter |
-| `sessionStorage` | Playwright test isolation only | **Directly reusable** in browser tests; not part of production state |
-| IndexedDB | Optional file-handle helper | **Browser-only and requiring replacement** for desktop media; helper is currently not wired into UI |
-| File System Access API | Select local audio files | **Browser-only and requiring replacement** with main-process picker and opaque app references |
-| Blob/object URLs | Play selected local files | **Reusable with an Electron adapter** once the renderer receives only validated app-controlled media references |
-| Gamepad API | Poll pads, connection events, haptics | **Directly reusable**, **risky or uncertain** until packaged hardware tests pass |
-| Web Audio API | All game audio and local/radio media graph | **Directly reusable** with desktop lifecycle integration |
-| Pointer Lock API | Mouse-look capture | **Directly reusable**, packaged behavior must be verified |
-| WebGL2 | Mandatory renderer | **Directly reusable**, GPU failures need Electron recovery/logging |
-| `matchMedia` | OS reduced-motion preference | **Directly reusable** |
-| `window.location.search` | Development seed override | **Directly reusable** for browser/dev; desktop launch arguments should not depend on it |
-| `window.location.reload` | Error recovery and erase-all | **Reusable with an Electron adapter** so reload/recovery is coordinated and logged |
-| `<iframe>` / `postMessage` | YouTube player and volume commands | **Risky or uncertain**; constrain navigation and use external-browser fallback if secure embedding fails |
-| Remote `<img>` | YouTube thumbnails | **Risky or uncertain** under offline/CSP policy; failures already degrade visually |
-| Remote `<audio>` | User-entered HTTPS radio streams | **Risky or uncertain**; requires explicit policy, offline errors, and no weakened web security |
-| `fetch` / XHR | Not used by application source | No migration required |
-| Service workers | Not used | No migration required |
-| Web workers / shared workers | Not used by application source | No migration required |
-| Clipboard API | Not used | No migration required |
-| Browser notifications | Not used | No migration required |
-| Pop-up windows / `window.open` | Not used | Add only through a validated external-link desktop service |
-| Drag and drop | Not used | No migration required |
+| Browser feature                | Current use                                                                       | Classification and desktop decision                                                                             |
+| ------------------------------ | --------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `window` / `document`          | DOM mounting, events, timers, visibility, focus, canvas generation, CSS variables | **Directly reusable** in the sandboxed renderer; do not move ordinary DOM work to main                          |
+| `localStorage`                 | Settings and media/journal persistence                                            | **Browser-only and requiring replacement** for desktop durability; retain only as browser adapter               |
+| `sessionStorage`               | Playwright test isolation only                                                    | **Directly reusable** in browser tests; not part of production state                                            |
+| IndexedDB                      | Optional file-handle helper                                                       | **Browser-only and requiring replacement** for desktop media; helper is currently not wired into UI             |
+| File System Access API         | Select local audio files                                                          | **Browser-only and requiring replacement** with main-process picker and opaque app references                   |
+| Blob/object URLs               | Play selected local files                                                         | **Reusable with an Electron adapter** once the renderer receives only validated app-controlled media references |
+| Gamepad API                    | Poll pads, connection events, haptics                                             | **Directly reusable**, **risky or uncertain** until packaged hardware tests pass                                |
+| Web Audio API                  | All game audio and local/radio media graph                                        | **Directly reusable** with desktop lifecycle integration                                                        |
+| Pointer Lock API               | Mouse-look capture                                                                | **Directly reusable**, packaged behavior must be verified                                                       |
+| WebGL2                         | Mandatory renderer                                                                | **Directly reusable**, GPU failures need Electron recovery/logging                                              |
+| `matchMedia`                   | OS reduced-motion preference                                                      | **Directly reusable**                                                                                           |
+| `window.location.search`       | Development seed override                                                         | **Directly reusable** for browser/dev; desktop launch arguments should not depend on it                         |
+| `window.location.reload`       | Error recovery and erase-all                                                      | **Reusable with an Electron adapter** so reload/recovery is coordinated and logged                              |
+| `<iframe>` / `postMessage`     | YouTube player and volume commands                                                | **Risky or uncertain**; constrain navigation and use external-browser fallback if secure embedding fails        |
+| Remote `<img>`                 | YouTube thumbnails                                                                | **Risky or uncertain** under offline/CSP policy; failures already degrade visually                              |
+| Remote `<audio>`               | User-entered HTTPS radio streams                                                  | **Risky or uncertain**; requires explicit policy, offline errors, and no weakened web security                  |
+| `fetch` / XHR                  | Not used by application source                                                    | No migration required                                                                                           |
+| Service workers                | Not used                                                                          | No migration required                                                                                           |
+| Web workers / shared workers   | Not used by application source                                                    | No migration required                                                                                           |
+| Clipboard API                  | Not used                                                                          | No migration required                                                                                           |
+| Browser notifications          | Not used                                                                          | No migration required                                                                                           |
+| Pop-up windows / `window.open` | Not used                                                                          | Add only through a validated external-link desktop service                                                      |
+| Drag and drop                  | Not used                                                                          | No migration required                                                                                           |
 
 ## Local and remote media audit
 
@@ -514,4 +541,3 @@ Missing at baseline:
    achieve a preferred directory layout.
 7. Windows, macOS packaged behavior, installers, signing, notarization, gamepad
    hardware, and long-session stability remain unverified after Phase 0.
-

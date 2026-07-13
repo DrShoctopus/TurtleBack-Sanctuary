@@ -6,6 +6,32 @@ GPU. Tick each item; note the browser and OS used.
 
 Tested on: ______________________ Date: __________
 
+## Phase 1 automated desktop coverage
+
+These items are checked because `pnpm desktop:smoke`, `pnpm desktop:measure`, or
+the deliberate packaged crash run verified them on Apple M5 macOS 26.5.1. They
+do not replace the unchecked human/hardware passes below.
+
+- [x] Unpacked arm64 app starts with DNS disabled and reaches the Rapier-backed title scene
+- [x] Renderer origin is `app://turtleback`; preload bridge exists; `require` and `process` do not
+- [x] Real FOV/High UI changes survive coordinated quit and full process relaunch
+- [x] Clean quit creates and relaunch lists the `autosave` slot
+- [x] Deliberate renderer crash reloads with durable data and a visible recovery notice
+- [x] Three rapid renderer crashes stop on the safe screen instead of looping
+- [x] Fixed 60-second High/Arrival Overlook sample completes without a renderer console error
+
+## Electron desktop manual checks
+
+- [ ] Put the Mac to sleep while playing; wake resumes safely with audio/input in a sane state
+- [ ] Change audio output devices while playing and while the app is suspended
+- [ ] Close/reopen from the Dock and verify second-instance focus behavior
+- [ ] Disconnect/reconnect an external display; the window remains reachable
+- [ ] Select a real local-audio folder; relaunch, rescan, seek, and play several supported formats
+- [ ] Exercise fullscreen/borderless/windowed transitions on each target display
+- [ ] Run at least a 30-minute traversal/rain/interior/media soak and compare memory afterward
+- [ ] Repeat packaged play with a controller and verify vibration/disconnect behavior
+- [ ] Repeat the packaged smoke on every claimed Windows, Intel macOS, and Linux target
+
 ## Movement & camera
 
 - [ ] WASD / arrows move in all directions; diagonal isn't faster

@@ -26,7 +26,7 @@ Node APIs into game modules.
 
 ### 1. Executable desktop shell and security boundary
 
-Status: **implemented; automated smoke coverage pending**
+Status: **implemented and verified**
 
 - Add the Electron main-process composition root.
 - Register the `app://turtleback` renderer protocol and the
@@ -103,7 +103,7 @@ Acceptance gates:
 
 ### 4. Tests, package proof, and baseline update
 
-Status: **pending**
+Status: **implemented and verified**
 
 - Unit-test protocol path containment, URL/request policy, atomic JSON writes,
   backup recovery, schemas, and window-state decisions where they can be pure.
@@ -181,12 +181,9 @@ Verified on Apple Silicon macOS 26.5 with Electron 43.1.0 / Chromium 150.0.7871.
 - Closing through the preload bridge logged `lifecycle.shutdown_requested` and
   `lifecycle.renderer_shutdown_ready`, then the process exited cleanly.
 
-Still open before slice 1 is closed:
-
-- Add an automated Electron smoke test so the production checks above are
-  repeatable without a temporary debugging port.
-- Replace Electron's default application icon when final original icon artwork
-  is available. Signing/notarization remains outside Phase 1.
+The automated packaged-app proof was completed in slice 4. Replacing Electron's
+default icon remains dependent on final original artwork; signing and
+notarization remain outside Phase 1.
 
 ### 2026-07-13 — Slice 2 durable adapters established
 
@@ -255,3 +252,49 @@ Verified:
 - A real machine sleep cycle was not forced during automation; the packaged
   suspend/resume path is wired through Electron `powerMonitor` and remains a
   manual QA check to exercise on target hardware.
+
+### 2026-07-13 — Slice 4 package proof and baseline closed
+
+Implemented:
+
+- `pnpm desktop:smoke` launches the existing unpacked artifact under Playwright
+  with a clean profile and DNS resolution disabled, then verifies the production
+  origin, preload boundary, restricted globals, visible Rapier/Three canvas,
+  settings UI persistence, autosave-on-quit, full relaunch hydration, and clean
+  process exit.
+- `pnpm desktop:measure` runs the same proof and adds a five-second warm-up plus
+  a fixed 60-second `requestAnimationFrame` sample and Electron per-process
+  memory/CPU snapshots.
+- README commands, architecture, conversion audit, performance baseline, raw
+  measurement evidence, and manual QA coverage now distinguish verified macOS
+  behavior from untested platforms and hardware.
+
+Verified on Apple M5 macOS 26.5.1 (build 25F80), 16 GB memory, 10 CPU cores / 10
+GPU cores, Electron 43.1.0, Chromium 150.0.7871.47:
+
+- The automated unpacked-app smoke passed twice from fresh profiles while DNS was
+  mapped to `NOTFOUND`. The renderer used `app://turtleback/index.html`, exposed
+  `window.desktopApp`, and exposed neither `require` nor `process`.
+- Clean-profile title/Rapier readiness was 1.776 seconds and the first
+  controllable frame was 1.889 seconds from process launch. Renderer navigation
+  reported first contentful paint at 144 ms.
+- A real UI change to FOV 83 and High quality survived coordinated quit/relaunch;
+  the media repository was present and the `autosave` slot was restored.
+- The 60.007-second High-preset Arrival Overlook sample captured 7,201 frames:
+  120.00 FPS average, 8.3 ms median, 9.5 ms p95, 10.0 ms p99, 10.4 ms maximum,
+  and zero frames over 25 ms.
+- The unpacked app occupied approximately 280.1 MiB, including Electron; its
+  `app.asar` was approximately 4.25 MiB. Aggregate working set was approximately
+  746 MiB at title, 806 MiB at gameplay sample start, and 839 MiB at sample end.
+- Strict TypeScript, ESLint, all 157 unit tests, all 12 browser Playwright flows,
+  browser/desktop production builds, unpacked packaging, packaged smoke, and the
+  60-second packaged measurement passed.
+
+## Phase 1 closeout
+
+All four work slices and Phase 1 acceptance gates are closed for the verified
+Apple Silicon macOS environment. Windows x64, Intel macOS, Linux, other GPU
+classes, controller-connected packaged play, real sleep/wake hardware exercise,
+long-session soak, final icon artwork, signing, notarization, and installers
+remain explicitly untested or out of scope; no support claim is inferred for
+them.

@@ -8,15 +8,20 @@ keep pure logic separable from rendering so it can be unit-tested in Node.
 ## Big picture
 
 ```
-main.tsx ─ attaches input + pointer-lock watchers, mounts <App/>
-  App.tsx ─ WebGL2 gate + <ErrorBoundary>
-    GameCanvas.tsx ─ the R3F <Canvas> + <Physics>
-      FrameDriver ─ the single authoritative per-frame update (time, weather,
-                    travel, input polling, audio, auto-quality)
-      PlayerController ─ kinematic capsule + camera rig
-      TurtleWorld ─ sky, ocean, shell terrain, turtle, landmarks, village,
-                    vegetation, rain, interaction + world systems
-    UIRoot.tsx ─ all DOM overlays (title, HUD, menus, media), outside the canvas
+Electron main ─ secure app/media protocols, BrowserWindow, repositories,
+                URL policy, diagnostics, recovery, bounded shutdown
+  preload ─ typed and validated desktopApp IPC bridge (no Node globals)
+    main.tsx ─ hydrates desktop state, attaches lifecycle/input, mounts <App/>
+      App.tsx ─ recovery/WebGL2 gates + <ErrorBoundary>
+        GameCanvas.tsx ─ the R3F <Canvas> + <Physics>
+          FrameDriver ─ authoritative per-frame update (time, weather, travel,
+                        input polling, audio, auto-quality)
+          PlayerController ─ kinematic capsule + camera rig
+          TurtleWorld ─ sky, ocean, shell terrain, turtle, landmarks, village,
+                        vegetation, rain, interaction + world systems
+        UIRoot.tsx ─ all DOM overlays, outside the canvas
+
+Browser builds enter at main.tsx directly and keep browser-safe fallbacks.
 ```
 
 ### The two worlds: React vs. the frame loop
@@ -104,20 +109,47 @@ A master analyser tap exposes `masterLevel()` for QA/visualizers.
   after pointer lock is released; it hosts the official iframe embed. We never
   texture cross-origin video onto a WebGL surface.
 - `media/safeUrl.ts` — pure radio-URL safety validation (tested).
-- `media/localFiles.ts` — File System Access API with a plain-input fallback and
-  optional IndexedDB handle persistence; object URLs are revoked when dropped.
+- `media/localFiles.ts` — Electron uses a native main-process folder picker and
+  opaque `turtleback-media://` track references; browsers use the File System
+  Access API or a plain-input fallback. Absolute desktop paths never enter the
+  renderer and browser object URLs are revoked when dropped.
 - `media/MediaPlayer.ts` — the stereo engine: built-in generative moods, local
   files, and direct radio, routed through a `PannerNode` for room/personal
   listening.
 
 ## State & persistence
 
-`state/settingsStore.ts` and `state/mediaStore.ts` are Zustand stores persisted
-to `localStorage` via a **crash-proof wrapper** (`core/save/storage.ts`) that
-falls back to in-memory storage when storage is unavailable. Settings are
-**versioned with a migration function** (`migrateSettings`) and a defensive
-deep-merge (`mergeWithDefaults`) that drops unknown keys and wrong types — both
-unit-tested. Nothing sensitive is persisted.
+The Zustand settings/media stores remain the renderer's live UI state. In a
+browser they persist through the crash-proof `localStorage` wrapper in
+`core/save/storage.ts`, which falls back to memory when browser storage is
+unavailable.
+
+In Electron, `localStorage` is deliberately non-authoritative. Before React
+mounts, `desktop/renderer/persistence.ts` hydrates validated settings, media,
+preferences, and autosave data through the preload bridge. Debounced changes and
+60-second autosaves cross IPC into main-process repositories under Electron's
+`userData` directory. JSON writes use synced temporary files, atomic rename,
+last-valid backups, corrupt-primary quarantine, and immediate backup promotion.
+Portable saves contain framework-neutral player, world, settings, media, and
+progression DTOs rather than serializing Zustand or Three/Rapier objects.
+
+Settings remain versioned with `migrateSettings` and a defensive deep merge that
+drops unknown keys and wrong types. Desktop browser-profile import is not
+automatic; any future migration must be an explicit validated export/import
+flow.
+
+## Desktop lifecycle and recovery
+
+The Electron main process owns the single-instance lifecycle, current-display
+window placement, session security, sleep/wake events, crash diagnostics, and a
+three-second coordinated shutdown deadline. The renderer flushes persistence,
+detaches global input/pointer listeners, unmounts React, and disposes media, Web
+Audio, and cached textures before acknowledging shutdown.
+
+Renderer/GPU failures reload at most twice within a one-minute window. A third
+failure opens a low-activity safe screen rather than looping. Reloaded renderers
+rehydrate only validated durable data and show a recovery notice. The same path
+is exercised by the packaged smoke tooling in `scripts/smoke-desktop.mjs`.
 
 ## Why no `<StrictMode>`
 
@@ -131,6 +163,7 @@ StrictMode is intentionally omitted; the trade-off is documented here.
 ```
 src/
   app/            App shell, error boundary, WebGL2 support check
+  desktop/        Electron main/preload/shared contracts + renderer adapters
   game/
     config/       constants, village layout data
     core/         runtime, events, rng, noise, math, quality, save
@@ -155,5 +188,6 @@ src/
   styles/         global CSS (design tokens + components)
 tests/            Vitest unit tests
 e2e/              Playwright browser tests
+scripts/          Desktop build/dev/package smoke helpers
 public/           favicon, example radio config, audio drop-in folder
 ```

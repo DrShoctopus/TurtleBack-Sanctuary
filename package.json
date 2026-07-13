@@ -23,6 +23,8 @@
     "desktop:build": "pnpm build && pnpm desktop:bundle",
     "desktop:run": "pnpm desktop:build && electron .",
     "desktop:package": "pnpm desktop:build && electron-builder --dir",
+    "desktop:smoke": "node scripts/smoke-desktop.mjs",
+    "desktop:measure": "node scripts/smoke-desktop.mjs --measure-seconds=60",
     "typecheck": "tsc --noEmit",
     "lint": "eslint src",
     "format": "prettier --write \"src/**/*.{ts,tsx,css}\""

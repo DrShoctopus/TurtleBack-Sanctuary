@@ -32,16 +32,18 @@ Then open **http://localhost:5173** and click **Enter Sanctuary**. (The click is
 
 ### Electron desktop development
 
-Phase 1 of the desktop conversion is in progress. The secure Electron shell,
-durable application-profile persistence, native local-audio folder access, and
-unpacked macOS build are runnable; lifecycle recovery and automated packaged-app
-coverage remain open in the
+Phase 1 of the desktop conversion is complete. The secure Electron shell,
+durable application-profile persistence, native local-audio folder access,
+lifecycle recovery, and automated unpacked-app verification are implemented and
+documented in the
 [Phase 1 plan](docs/phase-1-electron-vertical-slice.md).
 
 ```bash
 pnpm desktop:dev      # Vite renderer + sandboxed Electron window
 pnpm desktop:build    # renderer + bundled main/preload production outputs
 pnpm desktop:package  # unpacked platform application → release/
+pnpm desktop:smoke    # verify the existing unpacked app offline
+pnpm desktop:measure  # smoke + fixed 60-second frame/process sample
 ```
 
 ### All commands
@@ -60,6 +62,8 @@ pnpm desktop:package  # unpacked platform application → release/
 | `pnpm desktop:dev`     | Vite renderer in the sandboxed Electron shell      |
 | `pnpm desktop:build`   | Renderer plus main/preload production bundles      |
 | `pnpm desktop:package` | Unpacked desktop app in `release/`                 |
+| `pnpm desktop:smoke`   | Offline packaged-app quit/relaunch smoke           |
+| `pnpm desktop:measure` | Smoke plus 60-second frame/process sample          |
 
 ---
 
@@ -200,8 +204,9 @@ Only original, procedurally generated, or explicitly redistributable (CC0 / docu
 
 ## Testing
 
-- **Unit tests** (`pnpm test`): 124 Vitest tests covering YouTube parsing, URL-safety validation, gamepad dead-zone/mapping math, time-cycle and weather state machines, seeded landmark scheduling, settings serialization/migration, audio-bus math, safe-position logic, RNG/noise determinism, quality presets, and music theory.
+- **Unit tests** (`pnpm test`): 157 Vitest tests covering renderer security and recovery policy, durable repositories and portable saves, YouTube/URL validation, gamepad math, time/weather, landmarks, settings migration, audio buses, traversal, quality, and music theory.
 - **E2E tests** (`pnpm test:e2e`): Playwright flows for app load, the start screen, opening the Sanctuary menu, applying a time preset, toggling rain, settings persistence across reload, keyboard menu navigation, TV URL acceptance/rejection, and radio URL validation. First run needs the browser binary: `pnpm exec playwright install chromium`. Headless WebGL can be flaky on some machines; the render-independent logic is covered by unit tests regardless.
+- **Packaged desktop smoke** (`pnpm desktop:smoke`): drives the existing unpacked application with DNS disabled, checks the production security boundary and Rapier title scene, changes settings through the UI, quits cleanly, and verifies persistence/autosave after a full relaunch. Run `pnpm desktop:package` first. `pnpm desktop:measure` adds the fixed 60-second sample documented in [docs/performance-baseline.md](docs/performance-baseline.md).
 - **Manual QA**: a full checklist is in [MANUAL_QA.md](MANUAL_QA.md).
 
 ## Deployment
