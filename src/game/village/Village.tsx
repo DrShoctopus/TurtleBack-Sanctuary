@@ -16,7 +16,7 @@ import { terrainHeight } from '../world/shell/shellShape'
 import { registerSurfaceBox } from '../world/shell/shellShape'
 import { Building } from './Building'
 import { BuildPlan } from './kit/geometry'
-import { villageMaterials } from './kit/materials'
+import { exteriorVillageMaterials } from './kit/materials'
 import * as p from './kit/props'
 import { registerInteraction } from '../interaction/InteractionSystem'
 import { sitAt } from '../activities/sitting'
@@ -98,7 +98,7 @@ function collectLampSpots(): Array<[number, number]> {
 
 function OutdoorProps() {
   const { merged, colliders, seats, surfaces } = useMemo(() => buildOutdoor(), [])
-  const mats = villageMaterials()
+  const mats = exteriorVillageMaterials()
 
   // outdoor seat interactions
   useEffect(() => {

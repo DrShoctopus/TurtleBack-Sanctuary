@@ -50,21 +50,26 @@ export interface BuildingExtras {
   interior: { halfX: number; halfZ: number; halfY: number; cy: number }
   flavor: 'home' | 'cafe' | 'greenhouse' | 'bath' | 'observatory' | 'room'
   door: DoorSpec | null
+  /** Open structures use exterior rain-responsive materials for all parts. */
+  openAir?: boolean
 }
 
 export interface BuiltInterior {
   plan: BuildPlan
+  exterior: BuildPlan
   glow: BuildPlan
   extras: BuildingExtras
 }
 
 function fresh(flavor: BuildingExtras['flavor']): {
   plan: BuildPlan
+  exterior: BuildPlan
   glow: BuildPlan
   extras: BuildingExtras
 } {
   return {
     plan: new BuildPlan(),
+    exterior: new BuildPlan(),
     glow: new BuildPlan(),
     extras: {
       interactions: [],
@@ -103,11 +108,11 @@ type InteriorFn = (spec: BuildingSpec) => BuiltInterior
 // ---------------------------------------------------------------------------
 
 const home: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('home')
+  const { plan, exterior, glow, extras } = fresh('home')
   const W = 11.5
   const D = 8.5
   const H = 3.0
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -190,17 +195,17 @@ const home: InteriorFn = () => {
     { pos: [1.6, 2.5, -1], intensity: 14 },
     { pos: [-3.4, 2.5, 1.6], intensity: 9 },
   )
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const cafe: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('cafe')
+  const { plan, exterior, glow, extras } = fresh('cafe')
   const W = 9.5
   const D = 7.5
   const H = 3.2
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -250,17 +255,17 @@ const cafe: InteriorFn = () => {
   }
   extras.interactions.push({ id: 'brew', kind: 'coffee', pos: [-1.5, 1.35, -2.6], radius: 2.6 })
   extras.lights.push({ pos: [0, 2.4, -0.5], intensity: 16, color: '#ffd2a0' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const bookshop: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('room')
+  const { plan, exterior, glow, extras } = fresh('room')
   const W = 8.5
   const D = 7
   const H = 3.4
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -308,17 +313,17 @@ const bookshop: InteriorFn = () => {
     seatSpec('chair', 2.9, 2.3, -2.4, { label: 'Read a while' }),
   )
   extras.lights.push({ pos: [0.5, 2.6, -0.5], intensity: 11, color: '#ffdcb0' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const records: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('room')
+  const { plan, exterior, glow, extras } = fresh('room')
   const W = 8
   const D = 6.5
   const H = 3.0
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -370,17 +375,17 @@ const records: InteriorFn = () => {
     seatSpec('stool', 2.9, -1.2, 0, { label: 'Listen a while', eyeH: 1.3 }),
   )
   extras.lights.push({ pos: [0, 2.3, -0.4], intensity: 10, color: '#ffc9a8' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const plants: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('greenhouse')
+  const { plan, exterior, glow, extras } = fresh('greenhouse')
   const W = 8.5
   const D = 9.5
   const H = 3.2
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -435,17 +440,17 @@ const plants: InteriorFn = () => {
   )
   p.stool(plan, 2.6, 2.9, 0)
   extras.lights.push({ pos: [0, 2.5, -1], intensity: 10, color: '#e8f5d8' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const gallery: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('room')
+  const { plan, exterior, glow, extras } = fresh('room')
   const W = 10.5
   const D = 8
   const H = 3.8
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -497,17 +502,17 @@ const gallery: InteriorFn = () => {
     seatSpec('bench', 0, 1.9, Math.PI, { label: 'Sit with the art' }),
   )
   extras.lights.push({ pos: [0, 3.1, -1.4], intensity: 18, color: '#fff4e2' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const bathhouse: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('bath')
+  const { plan, exterior, glow, extras } = fresh('bath')
   const W = 11
   const D = 9
   const H = 3.4
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -551,17 +556,17 @@ const bathhouse: InteriorFn = () => {
     seatSpec('bench2', 0.8, -3.6, Math.PI, { label: 'Rest by the water' }),
   )
   extras.lights.push({ pos: [0, 2.4, 0], intensity: 9, color: '#ffd9b8' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const observatory: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('observatory')
+  const { plan, exterior, glow, extras } = fresh('observatory')
   const W = 8
   const D = 8
   const H = 3.0
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -578,10 +583,14 @@ const observatory: InteriorFn = () => {
     ],
   })
   // dome (visual only, above roof)
-  plan.cyl('concrete', { pos: [0, H + 0.38, 0], size: [7.7, 0.72, 7.7] }, 32)
-  plan.sphere('metalBrushed', { pos: [0, H + 0.7, 0], size: [7.4, 5.2, 7.4] }, 24)
-  plan.cyl('metalDark', { pos: [0, H + 1.04, 0], size: [7.58, 0.14, 7.58] }, 32)
-  plan.box('paint.night', { pos: [0, H + 2.4, 0], size: [1.1, 3.0, 7.6], rot: [0, 0, 0] })
+  exterior.cyl('concrete', { pos: [0, H + 0.38, 0], size: [7.7, 0.72, 7.7] }, 32)
+  exterior.sphere('metalBrushed', { pos: [0, H + 0.7, 0], size: [7.4, 5.2, 7.4] }, 24)
+  exterior.cyl('metalDark', { pos: [0, H + 1.04, 0], size: [7.58, 0.14, 7.58] }, 32)
+  exterior.box('paint.night', {
+    pos: [0, H + 2.4, 0],
+    size: [1.1, 3.0, 7.6],
+    rot: [0, 0, 0],
+  })
   extras.interior = { halfX: W / 2, halfZ: D / 2, halfY: H / 2 + 0.2, cy: H / 2 }
 
   p.telescopeProp(plan, 0, -0.6, 0.4)
@@ -604,17 +613,17 @@ const observatory: InteriorFn = () => {
     seatSpec('chair', 2.4, 2.4, -2.6, { label: 'Watch the dome' }),
   )
   extras.lights.push({ pos: [0, 2.2, 0], intensity: 7, color: '#c9576a' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const store: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('room')
+  const { plan, exterior, glow, extras } = fresh('room')
   const W = 8.5
   const D = 6.5
   const H = 3.0
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -644,13 +653,14 @@ const store: InteriorFn = () => {
     { id: 'lamp', kind: 'lamp', pos: [2.6, 1.4, -2.5], radius: 2.6, label: 'Dim the lights' },
   )
   extras.lights.push({ pos: [0, 2.3, -0.5], intensity: 11, color: '#ffd9ae' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const pavilion: InteriorFn = () => {
-  const { plan, glow, extras } = fresh('room')
+  const { plan, exterior, glow, extras } = fresh('room')
+  extras.openAir = true
   const W = 10
   const D = 8
   // open structure: slab, columns, roof — no walls
@@ -710,18 +720,18 @@ const pavilion: InteriorFn = () => {
   )
   extras.lampShades.push({ pos: [0, 2.9, 0], r: 0.3 })
   extras.lights.push({ pos: [0, 2.6, 0], intensity: 10, color: '#ffd9a8' })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------
 
 const cottage: InteriorFn = (spec) => {
-  const { plan, glow, extras } = fresh('home')
+  const { plan, exterior, glow, extras } = fresh('home')
   const W = 6.2
   const D = 5.2
   const H = 2.7
   const variant = spec.id.charCodeAt(spec.id.length - 1) % 3
-  extras.door = buildShell(plan, glow, {
+  extras.door = buildShell(exterior, glow, {
     w: W,
     d: D,
     h: H,
@@ -748,7 +758,7 @@ const cottage: InteriorFn = (spec) => {
   p.plantPot(plan, 2.5, 1.9, 's', 5)
   extras.interactions.push({ id: 'lamp', kind: 'lamp', pos: [1.6, 1.2, -2.2], radius: 2.4 })
   extras.lights.push({ pos: [0, 2.1, 0], intensity: 7 })
-  return { plan, glow, extras }
+  return { plan, exterior, glow, extras }
 }
 
 // ---------------------------------------------------------------------------

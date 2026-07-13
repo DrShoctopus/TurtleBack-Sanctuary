@@ -12,13 +12,14 @@ interface Entry {
   darken: number
 }
 
-const entries: Entry[] = []
+const entries = new Map<MeshStandardMaterial, Entry>()
 
 export function registerWetMaterial(
   mat: MeshStandardMaterial,
   opts?: { wetRoughness?: number; darken?: number },
 ): void {
-  entries.push({
+  if (entries.has(mat)) return
+  entries.set(mat, {
     mat,
     dryRoughness: mat.roughness,
     wetRoughness: opts?.wetRoughness ?? Math.max(0.25, mat.roughness * 0.45),
@@ -28,7 +29,7 @@ export function registerWetMaterial(
 }
 
 export function applySimpleWetness(wetness: number): void {
-  for (const e of entries) {
+  for (const e of entries.values()) {
     e.mat.roughness = e.dryRoughness + (e.wetRoughness - e.dryRoughness) * wetness
     e.mat.color.copy(e.baseColor).multiplyScalar(1 - e.darken * wetness)
   }

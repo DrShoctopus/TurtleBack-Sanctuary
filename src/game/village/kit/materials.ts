@@ -5,6 +5,7 @@
  */
 import { Color, DoubleSide, MeshStandardMaterial, Vector2 } from 'three'
 import { getSurfaceDetail, getTexture, type SurfaceDetailName } from '../../world/textures'
+import { registerWetMaterial } from '../../weather/simpleWet'
 
 export type MatKey =
   | 'plasterWarm'
@@ -33,6 +34,7 @@ export type MatKey =
   | 'water'
 
 let cache: Map<MatKey, MeshStandardMaterial> | null = null
+let exteriorCache: Map<MatKey, MeshStandardMaterial> | null = null
 
 export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
   if (cache) return cache
@@ -229,6 +231,50 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
 
   cache = m
   return m
+}
+
+/**
+ * Exterior-only clones share texture memory with the interior palette but own
+ * their color and roughness state, allowing rain response without wetting the
+ * contents of every building.
+ */
+export function exteriorVillageMaterials(): Map<MatKey, MeshStandardMaterial> {
+  if (exteriorCache) return exteriorCache
+  const wettable = new Set<MatKey>([
+    'plasterWarm',
+    'plasterCool',
+    'plasterSage',
+    'woodWarm',
+    'woodDeck',
+    'woodDark',
+    'woodPale',
+    'concrete',
+    'stoneCounter',
+    'metalBrushed',
+    'metalDark',
+    'fabricSand',
+    'fabricTeal',
+    'fabricRust',
+    'ceramicTerracotta',
+    'paint.coral',
+    'paint.night',
+  ])
+  exteriorCache = new Map()
+  for (const [key, source] of villageMaterials()) {
+    const material = source.clone()
+    material.name = `${key}.exterior`
+    exteriorCache.set(key, material)
+    if (!wettable.has(key)) continue
+    const isMetal = key === 'metalBrushed' || key === 'metalDark'
+    const isFabric = key === 'fabricSand' || key === 'fabricTeal' || key === 'fabricRust'
+    registerWetMaterial(material, {
+      wetRoughness: isMetal
+        ? Math.max(0.18, source.roughness * 0.62)
+        : Math.max(0.28, source.roughness * 0.48),
+      darken: isMetal ? 0.1 : isFabric ? 0.18 : 0.24,
+    })
+  }
+  return exteriorCache
 }
 
 /**

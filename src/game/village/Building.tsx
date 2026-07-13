@@ -18,7 +18,7 @@ import { useGame } from '../state/gameStore'
 import { useSettings } from '../state/settingsStore'
 import { registerInteraction, type InteractionDef } from '../interaction/InteractionSystem'
 import { sitAt } from '../activities/sitting'
-import { villageMaterials, makeWindowGlowMaterial } from './kit/materials'
+import { exteriorVillageMaterials, villageMaterials, makeWindowGlowMaterial } from './kit/materials'
 import { INTERIORS, type BuiltInterior, type InteractionSpec } from './buildings/interiors'
 import { registerZone } from './zones'
 import { generateArtwork } from './artworks'
@@ -43,8 +43,10 @@ import type { DecorTheme } from '../state/settingsStore'
 export function Building({ spec }: { spec: BuildingSpec }) {
   const built: BuiltInterior = useMemo(() => INTERIORS[spec.kind](spec), [spec])
   const merged = useMemo(() => built.plan.merge(), [built])
+  const exteriorMerged = useMemo(() => built.exterior.merge(), [built])
   const glowMerged = useMemo(() => built.glow.merge(), [built])
   const mats = villageMaterials()
+  const exteriorMats = exteriorVillageMaterials()
   const glowMat = useMemo(() => makeWindowGlowMaterial(), [])
   const [lampsOn, setLampsOn] = useState<boolean | null>(null) // null → follow night
   const lightRefs = useRef<Array<PointLight | null>>([])
@@ -155,12 +157,29 @@ export function Building({ spec }: { spec: BuildingSpec }) {
             rotation={c.rot ?? [0, c.rotY ?? 0, 0]}
           />
         ))}
+        {built.exterior.colliders.map((c, i) => (
+          <CuboidCollider
+            key={`exterior-${i}`}
+            args={[c.size[0] / 2, c.size[1] / 2, c.size[2] / 2]}
+            position={c.pos}
+            rotation={c.rot ?? [0, c.rotY ?? 0, 0]}
+          />
+        ))}
       </RigidBody>
       {merged.map(({ mat, geometry }) => (
         <mesh
-          key={mat}
+          key={`interior-${mat}`}
           geometry={geometry}
-          material={mats.get(mat)!}
+          material={(built.extras.openAir ? exteriorMats : mats).get(mat)!}
+          castShadow={mat !== 'glass'}
+          receiveShadow
+        />
+      ))}
+      {exteriorMerged.map(({ mat, geometry }) => (
+        <mesh
+          key={`exterior-${mat}`}
+          geometry={geometry}
+          material={exteriorMats.get(mat)!}
           castShadow={mat !== 'glass'}
           receiveShadow
         />
