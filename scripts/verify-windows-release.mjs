@@ -104,7 +104,7 @@ async function findInstaller() {
 
 async function versionInfo(file) {
   const script = [
-    `$info = (Get-Item -LiteralPath '${powerShellQuote(file)}').VersionInfo`,
+    `$info = (Get-Item -LiteralPath '${powerShellQuote(file)}').VersionInfo;`,
     '[pscustomobject]@{',
     'ProductName = $info.ProductName;',
     'FileDescription = $info.FileDescription;',
@@ -118,7 +118,7 @@ async function versionInfo(file) {
 
 async function authenticode(file) {
   const script = [
-    `$signature = Get-AuthenticodeSignature -LiteralPath '${powerShellQuote(file)}'`,
+    `$signature = Get-AuthenticodeSignature -LiteralPath '${powerShellQuote(file)}';`,
     '[pscustomobject]@{',
     'Status = [string]$signature.Status;',
     'StatusMessage = $signature.StatusMessage;',
