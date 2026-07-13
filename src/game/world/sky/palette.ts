@@ -105,13 +105,7 @@ export function hemiIntensityAt(t: number): number {
   return sampleScalarCycle(HEMI_INTENSITY, t)
 }
 
-const scratch = new Color()
-
 export function sampleColor(target: Color, cycle: ColorStop[], t: number): Color {
   const [r, g, b] = sampleCycle(cycle, t)
-  return target.setRGB(r, g, b).copy(convertSRGB(target))
-}
-
-function convertSRGB(c: Color): Color {
-  return scratch.copy(c).convertSRGBToLinear()
+  return target.setRGB(r, g, b)
 }

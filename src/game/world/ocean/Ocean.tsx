@@ -189,6 +189,7 @@ void main() {
   vec3 dayFoam = vec3(0.46, 0.82, 0.76);
   vec3 nightFoam = vec3(0.12, 0.38, 0.4);
   gl_FragColor = vec4(mix(dayFoam, nightFoam, uNight), alpha);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
 `
@@ -368,6 +369,7 @@ void main() {
   col = mix(col, uFogColor, clamp(f, 0.0, 1.0));
 
   gl_FragColor = vec4(col, 1.0);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
 `

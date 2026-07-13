@@ -1,7 +1,7 @@
 import { Suspense, useEffect } from 'react'
 import { Canvas } from '@react-three/fiber'
 import { Physics } from '@react-three/rapier'
-import { ACESFilmicToneMapping, PCFSoftShadowMap } from 'three'
+import { PCFSoftShadowMap } from 'three'
 import { HOME_SPAWN, PLAYER, WORLD } from './config/constants'
 import { EndFrame, FrameDriver } from './core/FrameDriver'
 import { PlayerController } from './player/PlayerController'
@@ -10,6 +10,7 @@ import { useGame } from './state/gameStore'
 import { QUALITY_PROFILES } from './core/quality'
 import { useSettings } from './state/settingsStore'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
+import { configureRendererColor } from './rendering/colorContract'
 
 export function GameCanvas() {
   const autoQuality = useGame((s) => s.autoQuality)
@@ -34,8 +35,7 @@ export function GameCanvas() {
         alpha: false,
       }}
       onCreated={({ gl }) => {
-        gl.toneMapping = ACESFilmicToneMapping
-        gl.toneMappingExposure = 1.05
+        configureRendererColor(gl)
         const canvas = gl.domElement
         canvas.addEventListener('webglcontextlost', (e) => {
           e.preventDefault()

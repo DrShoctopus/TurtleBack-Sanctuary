@@ -212,6 +212,8 @@ const MIST_FRAG = /* glsl */ `
     edge *= smoothstep(0.0, 0.12, vUv.x) * (1.0 - smoothstep(0.88, 1.0, vUv.x));
     float alpha = edge * smoothstep(0.28, 0.82, cloud) * (0.1 + uRain * 0.2 + uNight * 0.035);
     gl_FragColor = vec4(mix(uColor, vec3(0.47,0.61,0.66), uNight * 0.4), alpha);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
   }
 `
 
@@ -238,5 +240,7 @@ const DRIP_FRAG = /* glsl */ `
     vec2 d = gl_PointCoord - vec2(0.5);
     float drop = smoothstep(0.5, 0.08, length(vec2(d.x * 2.2, d.y)));
     gl_FragColor = vec4(0.68, 0.84, 0.92, drop * vAlpha * 0.72);
+    #include <tonemapping_fragment>
+    #include <colorspace_fragment>
   }
 `

@@ -24,7 +24,6 @@ export function Aurora() {
         depthTest: true,
         side: BackSide,
         blending: AdditiveBlending,
-        toneMapped: false,
         fog: false,
         uniforms: {
           uTime: { value: 0 },
@@ -152,6 +151,7 @@ void main() {
   color *= 0.58 + fine * 0.22;
 
   gl_FragColor = vec4(color, clamp(alpha * 0.38, 0.0, 0.34));
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
 `

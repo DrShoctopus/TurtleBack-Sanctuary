@@ -156,6 +156,7 @@ void main() {
   col *= 1.0 - uRain * 0.18;
 
   gl_FragColor = vec4(col, 1.0);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
 `
@@ -226,6 +227,8 @@ function buildStars() {
         vec2 d = gl_PointCoord - 0.5;
         float a = smoothstep(0.5, 0.12, length(d));
         gl_FragColor = vec4(vec3(0.92, 0.95, 1.0), a * uOpacity * vTwinkle);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }
     `,
   })

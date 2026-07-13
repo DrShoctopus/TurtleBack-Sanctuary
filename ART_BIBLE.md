@@ -21,6 +21,7 @@ This is the rendering contract for every environment and asset pass. The goal is
 
 ## Light, color, and atmosphere
 
+- The canonical [rendering color contract](docs/rendering-color-contract.md) defines scene inputs, texture roles, shader output, tone mapping, and screenshot color. Verify that contract before authoring or retuning any palette.
 - Daylight stays soft and coastal: cool sky fill, warm sun, restrained contrast. Night uses moonlight plus localized amber windows and lamps.
 - Emissive surfaces illuminate compositionally but do not clip to white. Bloom is an accent, never a fog layer.
 - Rain deepens roughness/color variation, creates localized runoff, and increases mist near the rim. Protected interiors do not receive player-centred rain.

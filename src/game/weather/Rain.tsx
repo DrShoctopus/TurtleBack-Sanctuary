@@ -116,6 +116,8 @@ function buildRain(count: number) {
         // elongated streak
         float a = smoothstep(0.5, 0.05, abs(d.x) * 3.2) * smoothstep(0.5, 0.2, abs(d.y));
         gl_FragColor = vec4(0.66, 0.77, 0.88, a * vAlpha);
+        #include <tonemapping_fragment>
+        #include <colorspace_fragment>
       }
     `,
   })
@@ -186,6 +188,8 @@ function RippleRings() {
         void main() {
           float fade = 1.0 - smoothstep(0.025, 0.23, vScale);
           gl_FragColor = vec4(0.58, 0.72, 0.82, fade * 0.17 * uRain);
+          #include <tonemapping_fragment>
+          #include <colorspace_fragment>
         }
       `,
     })

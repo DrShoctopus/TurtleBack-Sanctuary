@@ -124,6 +124,7 @@ void main() {
   vec3 col = mix(uShade, uLight, lit * 0.7 + n * 0.3);
   float alpha = cover * horizonFade * 0.82;
   gl_FragColor = vec4(col, alpha);
+  #include <tonemapping_fragment>
   #include <colorspace_fragment>
 }
 `
