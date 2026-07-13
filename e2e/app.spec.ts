@@ -91,3 +91,42 @@ test('keyboard menu navigation moves focus', async ({ page }) => {
   const focused = await page.evaluate(() => document.activeElement?.textContent)
   expect(focused).toBeTruthy()
 })
+
+test('collision-backed bridge and stern stairs accept grounded movement', async ({ page }) => {
+  await page.goto('/')
+  await waitForTitle(page)
+  await enter(page)
+  await page.waitForFunction(() => Boolean((window as any).__turtlebackDebug), null, {
+    timeout: 10_000,
+  })
+
+  // Walk south from the crown of the garden pond bridge.
+  await page.evaluate(() => (window as any).__sanctuary.teleport(-52, 13.9, 83, 0))
+  await page.waitForTimeout(350)
+  await page.keyboard.down('ShiftLeft')
+  await page.keyboard.down('KeyW')
+  await page.waitForTimeout(6_000)
+  await page.keyboard.up('KeyW')
+  await page.keyboard.up('ShiftLeft')
+  const bridge = await page.evaluate(() => ({
+    z: (window as any).__sanctuary.runtime.player.pos.z,
+    grounded: (window as any).__sanctuary.runtime.player.grounded,
+  }))
+  expect(bridge.z).toBeLessThan(82)
+  expect(bridge.grounded).toBe(true)
+
+  // Descend the steep engineered stern route onto its final landing.
+  await page.evaluate(() => (window as any).__sanctuary.teleport(5.2, 14.95, 220, Math.PI))
+  await page.waitForTimeout(350)
+  await page.keyboard.down('ShiftLeft')
+  await page.keyboard.down('KeyW')
+  await page.waitForTimeout(10_000)
+  await page.keyboard.up('KeyW')
+  await page.keyboard.up('ShiftLeft')
+  const stern = await page.evaluate(() => ({
+    z: (window as any).__sanctuary.runtime.player.pos.z,
+    grounded: (window as any).__sanctuary.runtime.player.grounded,
+  }))
+  expect(stern.z).toBeGreaterThan(228)
+  expect(stern.grounded).toBe(true)
+})

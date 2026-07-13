@@ -152,7 +152,7 @@ export function Building({ spec }: { spec: BuildingSpec }) {
             key={i}
             args={[c.size[0] / 2, c.size[1] / 2, c.size[2] / 2]}
             position={c.pos}
-            rotation={[0, c.rotY ?? 0, 0]}
+            rotation={c.rot ?? [0, c.rotY ?? 0, 0]}
           />
         ))}
       </RigidBody>

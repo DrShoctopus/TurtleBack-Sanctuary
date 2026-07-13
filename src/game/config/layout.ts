@@ -51,22 +51,153 @@ export interface DistrictSpec {
   r: number
 }
 
+export interface TraversalSpan {
+  id: string
+  kind: 'bridge' | 'ramp' | 'stairs'
+  ax: number
+  az: number
+  bx: number
+  bz: number
+  width: number
+  material: 'woodDeck' | 'concrete'
+  rails?: boolean
+  /** Extra rise at the middle of a segmented bridge. */
+  arch?: number
+}
+
 export const BUILDINGS: BuildingSpec[] = [
   { id: 'home', name: 'Your House', kind: 'home', x: -62, z: -132, yaw: 1.9, padR: 17, padH: 12.7 },
-  { id: 'cafe', name: 'Driftwood Café', kind: 'cafe', x: 36, z: -52, yaw: -2.2, padR: 13, padH: 15.55 },
-  { id: 'store', name: 'Shorelight Goods', kind: 'store', x: 56, z: -22, yaw: -1.85, padR: 11, padH: 15.2 },
-  { id: 'bookshop', name: 'Tidal Pages', kind: 'bookshop', x: -30, z: -14, yaw: 2.55, padR: 12, padH: 15.55 },
-  { id: 'records', name: 'Shell Records', kind: 'records', x: 80, z: 38, yaw: -1.35, padR: 11, padH: 13.9 },
-  { id: 'gallery', name: 'Gallery Meridian', kind: 'gallery', x: 100, z: 62, yaw: -0.9, padR: 14, padH: 13.75 },
-  { id: 'plants', name: 'The Verdant House', kind: 'plants', x: -66, z: 62, yaw: 2.2, padR: 13, padH: 13.95 },
-  { id: 'bathhouse', name: 'Warm Springs Bathhouse', kind: 'bathhouse', x: -38, z: 120, yaw: 2.75, padR: 15, padH: 13.65 },
-  { id: 'observatory', name: 'Stargazer Dome', kind: 'observatory', x: 12, z: 194, yaw: 3.14, padR: 13, padH: 17.4 },
-  { id: 'pavilion', name: 'The Commons', kind: 'pavilion', x: -6, z: 36, yaw: 0.35, padR: 12, padH: 15.25 },
+  {
+    id: 'cafe',
+    name: 'Driftwood Café',
+    kind: 'cafe',
+    x: 36,
+    z: -52,
+    yaw: -2.2,
+    padR: 13,
+    padH: 15.55,
+  },
+  {
+    id: 'store',
+    name: 'Shorelight Goods',
+    kind: 'store',
+    x: 56,
+    z: -22,
+    yaw: -1.85,
+    padR: 11,
+    padH: 15.2,
+  },
+  {
+    id: 'bookshop',
+    name: 'Tidal Pages',
+    kind: 'bookshop',
+    x: -30,
+    z: -14,
+    yaw: 2.55,
+    padR: 12,
+    padH: 15.55,
+  },
+  {
+    id: 'records',
+    name: 'Shell Records',
+    kind: 'records',
+    x: 80,
+    z: 38,
+    yaw: -1.35,
+    padR: 11,
+    padH: 13.9,
+  },
+  {
+    id: 'gallery',
+    name: 'Gallery Meridian',
+    kind: 'gallery',
+    x: 100,
+    z: 62,
+    yaw: -0.9,
+    padR: 14,
+    padH: 13.75,
+  },
+  {
+    id: 'plants',
+    name: 'The Verdant House',
+    kind: 'plants',
+    x: -66,
+    z: 62,
+    yaw: 2.2,
+    padR: 13,
+    padH: 13.95,
+  },
+  {
+    id: 'bathhouse',
+    name: 'Warm Springs Bathhouse',
+    kind: 'bathhouse',
+    x: -38,
+    z: 120,
+    yaw: 2.75,
+    padR: 15,
+    padH: 13.65,
+  },
+  {
+    id: 'observatory',
+    name: 'Stargazer Dome',
+    kind: 'observatory',
+    x: 12,
+    z: 194,
+    yaw: 3.14,
+    padR: 13,
+    padH: 17.4,
+  },
+  {
+    id: 'pavilion',
+    name: 'The Commons',
+    kind: 'pavilion',
+    x: -6,
+    z: 36,
+    yaw: 0.35,
+    padR: 12,
+    padH: 15.25,
+  },
   // smaller residences along the quiet path
-  { id: 'cottage1', name: 'Reed Cottage', kind: 'cottage', x: -94, z: -46, yaw: 1.35, padR: 9, padH: 13.3 },
-  { id: 'cottage2', name: 'Foam Cottage', kind: 'cottage', x: -100, z: -6, yaw: 1.65, padR: 9, padH: 13.25 },
-  { id: 'cottage3', name: 'Kelp Cottage', kind: 'cottage', x: -90, z: 28, yaw: 2.05, padR: 9, padH: 13.3 },
-  { id: 'cottage4', name: 'Dune Cottage', kind: 'cottage', x: 62, z: -84, yaw: -2.6, padR: 9, padH: 14.55 },
+  {
+    id: 'cottage1',
+    name: 'Reed Cottage',
+    kind: 'cottage',
+    x: -94,
+    z: -46,
+    yaw: 1.35,
+    padR: 9,
+    padH: 13.3,
+  },
+  {
+    id: 'cottage2',
+    name: 'Foam Cottage',
+    kind: 'cottage',
+    x: -100,
+    z: -6,
+    yaw: 1.65,
+    padR: 9,
+    padH: 13.25,
+  },
+  {
+    id: 'cottage3',
+    name: 'Kelp Cottage',
+    kind: 'cottage',
+    x: -90,
+    z: 28,
+    yaw: 2.05,
+    padR: 9,
+    padH: 13.3,
+  },
+  {
+    id: 'cottage4',
+    name: 'Dune Cottage',
+    kind: 'cottage',
+    x: 62,
+    z: -84,
+    yaw: -2.6,
+    padR: 9,
+    padH: 14.55,
+  },
 ]
 
 export const PLAZA = { x: 0, z: -40, r: 26, h: 15.8 }
@@ -148,10 +279,14 @@ export const PATHS: PathNode[][] = [
   // gardens → bathhouse → observatory
   [
     { x: -62, z: 60 },
+    { x: -56, z: 70 },
+    { x: -52, z: 74 },
+    { x: -52, z: 86 },
     { x: -54, z: 94 },
     { x: -40, z: 116 },
     { x: -16, z: 140 },
-    { x: 2, z: 160 },
+    { x: 0, z: 154 },
+    { x: 0, z: 178 },
     { x: 10, z: 190 },
   ],
   // plaza → arts → gallery
@@ -193,6 +328,99 @@ export const PATHS: PathNode[][] = [
     { x: -20, z: -200 },
     { x: 0, z: -218 },
   ],
+]
+
+/** Authored collision-backed route structures. Endpoints also align with PATHS. */
+export const TRAVERSAL_SPANS: TraversalSpan[] = [
+  {
+    id: 'garden-pond-bridge',
+    kind: 'bridge',
+    ax: -52,
+    az: 74,
+    bx: -52,
+    bz: 86,
+    width: 2.6,
+    material: 'woodDeck',
+    rails: true,
+    arch: 0.52,
+  },
+  {
+    id: 'observatory-ramp',
+    kind: 'ramp',
+    ax: 0,
+    az: 154,
+    bx: 0,
+    bz: 178,
+    width: 2.35,
+    material: 'woodDeck',
+    rails: true,
+  },
+  {
+    id: 'observatory-stairs',
+    kind: 'stairs',
+    ax: 4.4,
+    az: 169.6,
+    bx: 6,
+    bz: 176,
+    width: 2.5,
+    material: 'concrete',
+    rails: true,
+  },
+  {
+    id: 'stern-descent',
+    kind: 'stairs',
+    ax: 5.2,
+    az: 220,
+    bx: 3.6,
+    bz: 228,
+    width: 2.55,
+    material: 'woodDeck',
+    rails: true,
+  },
+  {
+    id: 'stern-landing',
+    kind: 'ramp',
+    ax: 3.6,
+    az: 228,
+    bx: 2,
+    bz: 236,
+    width: 2.55,
+    material: 'woodDeck',
+    rails: true,
+  },
+  {
+    id: 'west-deck-gangway',
+    kind: 'ramp',
+    ax: -130.4,
+    az: -30,
+    bx: -146,
+    bz: -24,
+    width: 2.45,
+    material: 'woodDeck',
+    rails: true,
+  },
+  {
+    id: 'east-deck-gangway',
+    kind: 'ramp',
+    ax: 126,
+    az: 60,
+    bx: 148,
+    bz: 58,
+    width: 2.45,
+    material: 'woodDeck',
+    rails: true,
+  },
+  {
+    id: 'bow-deck-gangway',
+    kind: 'ramp',
+    ax: 0,
+    az: -205,
+    bx: 0,
+    bz: -224,
+    width: 2.55,
+    material: 'woodDeck',
+    rails: true,
+  },
 ]
 
 /** Garden pond + plaza fountain + bath pools (visual water discs). */

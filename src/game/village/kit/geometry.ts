@@ -117,6 +117,9 @@ export function sphereGeo(detail = 14): BufferGeometry {
 export interface ColliderSpec {
   pos: [number, number, number]
   size: [number, number, number]
+  /** Full collider rotation, matching the visual part. */
+  rot?: [number, number, number]
+  /** Legacy yaw-only form used by wall and window helpers. */
   rotY?: number
 }
 
@@ -168,7 +171,7 @@ export class BuildPlan {
 
   solid(mat: MatKey, t: PartTransform & { size: [number, number, number] }, collide = true): void {
     this.box(mat, t)
-    if (collide) this.colliders.push({ pos: t.pos, size: t.size, rotY: t.rot?.[1] })
+    if (collide) this.colliders.push({ pos: t.pos, size: t.size, rot: t.rot })
   }
 
   collider(spec: ColliderSpec): void {

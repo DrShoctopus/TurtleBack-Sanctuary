@@ -22,6 +22,7 @@ import { registerInteraction } from '../interaction/InteractionSystem'
 import { sitAt } from '../activities/sitting'
 import { ringChime } from '../activities/handlers'
 import { mulberry32 } from '../core/rng'
+import { buildTraversalArchitecture, type TraversalSurface } from './traversal'
 
 export function Village() {
   return (
@@ -55,6 +56,17 @@ const DECKS: Array<{ x: number; z: number; h: number }> = [
 ]
 
 const lampSpots: Array<[number, number]> = []
+const traversalLampSpots: Array<[number, number]> = [
+  [-55, 73],
+  [-55, 87],
+  [-2.8, 155],
+  [-2.8, 177],
+  [7.4, 220],
+  [6, 228],
+  [-132, -32],
+  [126, 63],
+  [2.8, -205],
+]
 
 function collectLampSpots(): Array<[number, number]> {
   if (lampSpots.length) return lampSpots
@@ -80,11 +92,12 @@ function collectLampSpots(): Array<[number, number]> {
       acc = t - len
     }
   }
+  lampSpots.push(...traversalLampSpots)
   return lampSpots
 }
 
 function OutdoorProps() {
-  const { merged, colliders, seats } = useMemo(() => buildOutdoor(), [])
+  const { merged, colliders, seats, surfaces } = useMemo(() => buildOutdoor(), [])
   const mats = villageMaterials()
 
   // outdoor seat interactions
@@ -116,20 +129,9 @@ function OutdoorProps() {
         onUse: ringChime,
       }),
     )
-    // deck surface tags (wood footsteps)
-    for (const d of DECKS) {
-      unsubs.push(
-        registerSurfaceBox({
-          minX: d.x - 5,
-          maxX: d.x + 5,
-          minZ: d.z - 5,
-          maxZ: d.z + 5,
-          surface: 'wood',
-        }),
-      )
-    }
+    for (const surface of surfaces) unsubs.push(registerSurfaceBox(surface))
     return () => unsubs.forEach((fn) => fn())
-  }, [seats])
+  }, [seats, surfaces])
 
   return (
     <group>
@@ -139,7 +141,7 @@ function OutdoorProps() {
             key={i}
             args={[c.size[0] / 2, c.size[1] / 2, c.size[2] / 2]}
             position={c.pos}
-            rotation={[0, c.rotY ?? 0, 0]}
+            rotation={c.rot ?? [0, c.rotY ?? 0, 0]}
           />
         ))}
       </RigidBody>
@@ -153,6 +155,7 @@ function OutdoorProps() {
 function buildOutdoor() {
   const plan = new BuildPlan()
   const seats: OutdoorSeat[] = []
+  const surfaces: TraversalSurface[] = []
   const H = terrainHeight
 
   // --- plaza ---
@@ -219,6 +222,13 @@ function buildOutdoor() {
     const bz = d.z - 0 * sin + 1.4 * cos
     p.benchOutdoor(plan, bx, bz, -yaw + Math.PI, d.h + 0.24)
     seats.push({ x: bx, y: d.h + 0.24, z: bz, yaw: yaw, label: 'Listen to the sea', listen: true })
+    surfaces.push({
+      minX: d.x - 5,
+      maxX: d.x + 5,
+      minZ: d.z - 5,
+      maxZ: d.z + 5,
+      surface: 'wood',
+    })
   }
 
   // --- garden pond rim + chime post ---
@@ -240,6 +250,8 @@ function buildOutdoor() {
   plan.box('woodDark', { pos: [-58, 2.9 + H(-58, 56), 56], size: [0.6, 0.06, 0.06] })
   p.windChime(plan, -58, 2.72 + H(-58, 56), 56.35)
 
+  surfaces.push(...buildTraversalArchitecture(plan, H))
+
   // --- benches along scenic path spots ---
   const scenic: Array<[number, number, number, string]> = [
     [-4, -160, 0.15, 'Rest on the walk'],
@@ -259,7 +271,7 @@ function buildOutdoor() {
     p.lampPostBase(plan, lx, lz, H(lx, lz))
   }
 
-  return { merged: plan.merge(), colliders: plan.colliders, seats }
+  return { merged: plan.merge(), colliders: plan.colliders, seats, surfaces }
 }
 
 function buildDistrictDressing(

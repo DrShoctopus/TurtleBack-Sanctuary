@@ -44,7 +44,13 @@ export function WorldSystems() {
       } satisfies TurtlebackDebug
       const onBenchmarkKey = (event: KeyboardEvent) => {
         if (!event.altKey) return
-        if (event.code === 'Digit1') teleport(0, -238, 0, -0.25)
+        if (event.shiftKey && event.code === 'Digit1') teleport(0, -202, 0, -0.08)
+        else if (event.shiftKey && event.code === 'Digit2') teleport(123, 60, -Math.PI / 2, -0.08)
+        else if (event.shiftKey && event.code === 'Digit3') teleport(5.2, 219, Math.PI, -0.12)
+        else if (event.shiftKey && event.code === 'Digit4') teleport(-127, -31, Math.PI / 2, -0.08)
+        else if (event.shiftKey && event.code === 'Digit7') teleport(-52, 91, 0, -0.1)
+        else if (event.shiftKey && event.code === 'Digit9') teleport(0, 151, Math.PI, -0.08)
+        else if (event.code === 'Digit1') teleport(0, -238, 0, -0.25)
         else if (event.code === 'Digit2') teleport(166, 58, -Math.PI / 2, -0.55)
         else if (event.code === 'Digit3') teleport(2, 232, Math.PI, -0.18)
         else if (event.code === 'Digit4') teleport(-166, -24, Math.PI / 2, -0.55)
