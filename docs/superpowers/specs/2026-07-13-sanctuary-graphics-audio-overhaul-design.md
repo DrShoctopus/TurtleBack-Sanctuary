@@ -1,8 +1,12 @@
 # Turtleback Sanctuary Graphics and Audio Overhaul Design
 
 **Date:** 2026-07-13
-**Status:** Approved for implementation planning
+**Status:** Superseded on 2026-07-14
 **Approach:** Hybrid authored-asset and procedural-system rebuild
+
+> Do not execute this near-photorealistic direction. It is retained as historical context only.
+> The current source of truth is
+> `docs/superpowers/plans/2026-07-14-stylized-sanctuary-reset.md`.
 
 ## 1. Purpose
 

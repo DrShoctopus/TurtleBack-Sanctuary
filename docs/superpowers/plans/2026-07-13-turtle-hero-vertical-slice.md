@@ -1,5 +1,7 @@
 # Turtle Hero Vertical Slice Implementation Plan
 
+**Status:** Superseded on 2026-07-14. Do not execute; use `2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Replace the assembled-primitive turtle with a monumental authored world-bearer and ship one final-quality Crownwood-to-Galecrest bow corridor that proves the complete graphics, wildlife, ambience, music, collision, accessibility, fallback, and Low-through-Ultra performance contract.

@@ -1,5 +1,7 @@
 # Biome and World Composition Implementation Plan
 
+**Status:** Superseded on 2026-07-14. Do not execute; use `2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Recompose the 500-metre shell into six continuous, richly authored biome families and cell-streamed village districts while preserving analytic shell physics, every route and interaction contract, deterministic world behavior, accessibility, and Low-through-Ultra identity.

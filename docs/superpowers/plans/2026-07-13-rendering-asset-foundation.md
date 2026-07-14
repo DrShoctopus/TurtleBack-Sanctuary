@@ -1,5 +1,7 @@
 # Rendering and Asset Foundation Implementation Plan
 
+**Status:** Superseded on 2026-07-14. Implemented foundation work remains valid, but do not execute unchecked tasks from this plan; use `2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver Phase A of the approved graphics overhaul: correct color handling, four explicit quality tiers, a validated authored-asset pipeline, glTF/KTX2/Meshopt loading with fallbacks and disposal, 50-metre spatial cells, chunked current vegetation, deterministic scene probes, and expanded benchmark tooling.

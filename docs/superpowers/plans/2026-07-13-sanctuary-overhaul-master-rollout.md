@@ -1,5 +1,11 @@
 # Sanctuary Graphics and Audio Overhaul Master Rollout Implementation Plan
 
+**Status:** Superseded on 2026-07-14
+
+> Do not continue this near-photorealistic rollout. It is retained as historical context only.
+> The current source of truth is
+> `docs/superpowers/plans/2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver the approved near-photorealistic sanctuary overhaul as six independently verifiable phases without regressing traversal, accessibility, browser delivery, or the secure Electron application.

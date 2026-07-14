@@ -1,5 +1,7 @@
 # Atmosphere and Release Polish Implementation Plan
 
+**Status:** Superseded on 2026-07-14. Do not execute; use `2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver Phase F of the approved graphics overhaul: continuously blended time/weather grading, cached sky-derived image-based lighting, restrained contact grounding, height-aware fog and local mist, finished rain and wet response, turtle-scale water effects, interior/wildlife rendering polish, final quality tuning, memory stabilization, asset-license closeout, benchmark evidence, and packaged release verification.

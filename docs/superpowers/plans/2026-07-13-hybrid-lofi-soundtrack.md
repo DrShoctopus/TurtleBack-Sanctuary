@@ -1,5 +1,7 @@
 # Hybrid Lo-fi Soundtrack Implementation Plan
 
+**Status:** Superseded on 2026-07-14. Do not execute; use `2026-07-14-stylized-sanctuary-reset.md`.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Deliver a calm, deterministic hybrid soundtrack with twelve licensed produced lo-fi tracks, repaired and expanded procedural arrangements, biome-specific ambient beds, and spatial wildlife/turtle audio that falls back cleanly, preserves every existing audio bus and media feature, and remains stable through browser and packaged Electron soak tests.
