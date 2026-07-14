@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "recordedAt": "2026-07-13T12:23:30Z",
+  "sourceCommit": "32a0ab05277f315ece45ff184c006d99163e8f4e",
+  "proofClass": "unsigned platform proof",
+  "macosAppleSilicon": {
+    "priority": "primary",
+    "target": "macOS 12+ arm64",
+    "runner": "macos-14",
+    "workflowRunId": 29249401768,
+    "workflowUrl": "https://github.com/DrShoctopus/TurtleBack-Sanctuary/actions/runs/29249401768",
+    "conclusion": "success",
+    "checks": [
+      "157 unit tests",
+      "lint",
+      "arm64 package build",
+      "bundle metadata, deployment floor, icon, architecture, and deep ad-hoc signature",
+      "offline packaged first launch and relaunch",
+      "persistence and coordinated-shutdown autosave",
+      "second-instance handoff",
+      "synthetic suspend and resume",
+      "post-event renderer responsiveness"
+    ],
+    "artifact": {
+      "name": "turtleback-macos-arm64-unsigned-proof",
+      "sizeBytes": 429,
+      "contents": "macos-arm64-verification.json"
+    }
+  },
+  "windowsX64": {
+    "priority": "secondary",
+    "target": "Windows x64",
+    "runner": "windows-latest",
+    "workflowRunId": 29249401665,
+    "workflowUrl": "https://github.com/DrShoctopus/TurtleBack-Sanctuary/actions/runs/29249401665",
+    "conclusion": "success",
+    "checks": [
+      "157 unit tests",
+      "lint",
+      "x64 NSIS installer build with implicit publishing disabled",
+      "AMD64 payload and native Windows version-resource verification",
+      "silent per-user install",
+      "offline installed-app first launch and relaunch",
+      "persistence and coordinated-shutdown autosave",
+      "second-instance handoff",
+      "synthetic suspend and resume",
+      "Desktop and Start Menu shortcuts",
+      "silent uninstall and shortcut cleanup"
+    ],
+    "artifact": {
+      "name": "turtleback-windows-x64-unsigned-proof",
+      "sizeBytes": 100611912,
+      "contents": "NSIS installer, build log, verification JSON, installed smoke JSON, install proof JSON"
+    }
+  },
+  "openReleaseGates": [
+    "Developer ID Application signing, notarization, stapling, and Gatekeeper proof",
+    "Windows Authenticode signing and timestamp proof",
+    "physical Apple silicon audio, controller, sleep-wake, fullscreen, and uninstall checklist",
+    "physical Windows 10 and 11 audio, controller, display-scaling, install, and uninstall checklist"
+  ]
+}

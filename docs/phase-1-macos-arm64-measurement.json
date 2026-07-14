@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "measuredAt": "2026-07-13T11:20:39.808Z",
+  "sourceCommit": "ba74f47fea7d4af58e022ba66e22f5148fed7951",
+  "artifact": "release/mac-arm64/Turtleback Sanctuary.app/Contents/MacOS/Turtleback Sanctuary",
+  "package": {
+    "unpackedAppKiB": 286832,
+    "appAsarBytes": 4458467,
+    "signed": false,
+    "icon": "Electron default"
+  },
+  "offlineMode": "Chromium host resolver maps all DNS names to NOTFOUND",
+  "host": {
+    "platform": "darwin",
+    "macOSVersion": "26.5.1",
+    "macOSBuild": "25F80",
+    "architecture": "arm64",
+    "kernelRelease": "25.5.0",
+    "cpu": "Apple M5",
+    "logicalCpuCount": 10,
+    "gpuCoreCount": 10,
+    "totalMemoryBytes": 17179869184,
+    "electronVersion": "43.1.0",
+    "chromiumVersion": "150.0.7871.47"
+  },
+  "conditions": {
+    "scene": "Arrival Overlook",
+    "graphicsPreset": "High",
+    "warmupSeconds": 5,
+    "viewport": {
+      "width": 1280,
+      "height": 688,
+      "devicePixelRatio": 2
+    }
+  },
+  "firstLaunch": {
+    "electronAttachedMs": 182.5,
+    "windowCreatedMs": 182.5,
+    "titleAndRapierReadyMs": 1775.8,
+    "controllableFrameMs": 1888.7,
+    "enterTransitionMs": 108.2,
+    "rendererFirstContentfulPaintMs": 144,
+    "rendererDomContentLoadedMs": 96.1,
+    "url": "app://turtleback/index.html",
+    "bridgeAvailable": true,
+    "requireType": "undefined",
+    "processType": "undefined"
+  },
+  "relaunch": {
+    "titleAndRapierReadyMs": 1779.7,
+    "persistedFov": 83,
+    "persistedQuality": "high",
+    "mediaRepositoryAvailable": true,
+    "saveSlots": ["autosave"]
+  },
+  "frameSample": {
+    "requestedDurationMs": 60000,
+    "elapsedMs": 60006.6,
+    "frameCount": 7201,
+    "averageFps": 120.0035,
+    "medianFrameMs": 8.3,
+    "p95FrameMs": 9.5,
+    "p99FrameMs": 10,
+    "maxFrameMs": 10.4,
+    "framesOver25Ms": 0,
+    "framesOver50Ms": 0
+  },
+  "aggregateWorkingSetKiB": {
+    "title": 764272,
+    "gameplayStart": 825504,
+    "gameplayEnd": 859184
+  },
+  "processMetricsAtGameplayEnd": [
+    {
+      "type": "Browser",
+      "cpuPercent": 0.0536,
+      "workingSetKiB": 179008,
+      "peakWorkingSetKiB": 189360
+    },
+    {
+      "type": "GPU",
+      "cpuPercent": 3.6603,
+      "workingSetKiB": 161952,
+      "peakWorkingSetKiB": 167152
+    },
+    {
+      "type": "Utility",
+      "cpuPercent": 0.0001,
+      "workingSetKiB": 45840,
+      "peakWorkingSetKiB": 45840
+    },
+    {
+      "type": "Tab",
+      "cpuPercent": 3.264,
+      "workingSetKiB": 426256,
+      "peakWorkingSetKiB": 426256
+    },
+    {
+      "type": "Utility",
+      "cpuPercent": 0.0498,
+      "workingSetKiB": 46128,
+      "peakWorkingSetKiB": 46128
+    }
+  ]
+}

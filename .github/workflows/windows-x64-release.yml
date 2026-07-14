@@ -1,0 +1,102 @@
+name: Windows x64 release proof
+
+on:
+  push:
+    branches:
+      - work
+    paths:
+      - '.github/workflows/windows-x64-release.yml'
+      - 'build/**'
+      - 'electron-builder*.yml'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'scripts/**'
+      - 'src/**'
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Build an unsigned proof or a credentialed release candidate
+        required: true
+        default: unsigned-proof
+        type: choice
+        options:
+          - unsigned-proof
+          - signed-release
+
+permissions:
+  contents: read
+
+env:
+  RELEASE_MODE: ${{ inputs.mode || 'unsigned-proof' }}
+
+jobs:
+  windows-x64:
+    runs-on: windows-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+      - name: Enable pinned pnpm
+        shell: pwsh
+        run: |
+          corepack enable
+          corepack prepare pnpm@11.12.0 --activate
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+      - run: pnpm lint
+      - name: Build unsigned Windows x64 proof installer
+        if: env.RELEASE_MODE == 'unsigned-proof'
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path release | Out-Null
+          pnpm desktop:installer:win 2>&1 | Tee-Object -FilePath release/windows-build.log
+          $buildExitCode = $LASTEXITCODE
+          if ($buildExitCode -ne 0) {
+            $tail = (Get-Content -LiteralPath release/windows-build.log -Tail 40) -join "`n"
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows packaging failed::$escaped"
+            exit $buildExitCode
+          }
+      - name: Build signed Windows x64 release installer
+        if: env.RELEASE_MODE == 'signed-release'
+        env:
+          WIN_CSC_LINK: ${{ secrets.WINDOWS_CSC_LINK }}
+          WIN_CSC_KEY_PASSWORD: ${{ secrets.WINDOWS_CSC_KEY_PASSWORD }}
+        run: pnpm desktop:release:win
+      - name: Verify unsigned Windows x64 artifacts
+        if: env.RELEASE_MODE == 'unsigned-proof'
+        shell: pwsh
+        run: |
+          node scripts/verify-windows-release.mjs --mode=proof 2>&1 | Tee-Object -FilePath release/windows-x64-verification.json
+          $verifyExitCode = $LASTEXITCODE
+          if ($verifyExitCode -ne 0) {
+            $tail = (Get-Content -LiteralPath release/windows-x64-verification.json -Tail 40) -join "`n"
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows verification failed::$escaped"
+            exit $verifyExitCode
+          }
+      - name: Verify signed Windows x64 artifacts
+        if: env.RELEASE_MODE == 'signed-release'
+        shell: pwsh
+        run: |
+          node scripts/verify-windows-release.mjs --mode=release 2>&1 | Tee-Object -FilePath release/windows-x64-verification.json
+          $verifyExitCode = $LASTEXITCODE
+          if ($verifyExitCode -ne 0) {
+            $tail = (Get-Content -LiteralPath release/windows-x64-verification.json -Tail 40) -join "`n"
+            $escaped = $tail.Replace('%', '%25').Replace("`r", '%0D').Replace("`n", '%0A')
+            Write-Output "::error title=Windows verification failed::$escaped"
+            exit $verifyExitCode
+          }
+      - name: Install, smoke, and uninstall
+        shell: pwsh
+        run: ./scripts/windows-installer-proof.ps1
+      - uses: actions/upload-artifact@v4
+        with:
+          name: turtleback-windows-x64-${{ env.RELEASE_MODE }}
+          path: |
+            release/*-win-x64.exe
+            release/windows-*.json
+            release/windows-build.log
+          if-no-files-found: error

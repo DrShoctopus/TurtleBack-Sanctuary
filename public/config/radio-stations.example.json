@@ -1,0 +1,13 @@
+{
+  "$comment": "Example internet-radio presets. Copy to radio-stations.json and edit, or add stations in-game via the music player's Radio tab. Only https:// direct audio-stream URLs work in the browser. Do NOT commit stations you don't have the right to redistribute; these placeholders are intentionally empty of real endpoints. Some stations block cross-origin browser playback — that is a station limitation, not a bug.",
+  "stations": [
+    {
+      "name": "Example Ambient Stream",
+      "url": "https://example.com/your-station/stream.mp3"
+    },
+    {
+      "name": "Example Lo-Fi Stream",
+      "url": "https://example.org/lofi/live.aac"
+    }
+  ]
+}

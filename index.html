@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="color-scheme" content="dark" />
+    <meta
+      name="description"
+      content="Turtleback Sanctuary — a calm first-person exploration game set in a village on the back of a colossal sea turtle."
+    />
+    <link rel="icon" type="image/svg+xml" href="./icons/favicon.svg" />
+    <title>Turtleback Sanctuary</title>
+    <style>
+      /* Pre-bundle splash so the very first paint is calm, never a white flash. */
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        background: #0b1620;
+        height: 100%;
+        overflow: hidden;
+      }
+      #root {
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

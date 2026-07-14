@@ -1,0 +1,10 @@
+node_modules/
+.pnpm-store/
+dist/
+dist-desktop/
+release/
+playwright-report/
+test-results/
+.DS_Store
+*.local
+.vite/
