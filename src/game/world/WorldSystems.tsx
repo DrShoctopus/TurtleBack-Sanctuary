@@ -156,6 +156,14 @@ export function WorldSystems() {
       const unregisterVegetation = registerProbeSection('world', 'vegetation', () => ({
         vegetationInstances,
       }))
+      const unregisterTurtle = registerProbeSection('turtle', 'hero', () => ({
+        model: 'turtle.hero.monumental',
+        fallback: false,
+        lod: runtime.turtle.lod,
+        wakeStrength: runtime.turtle.wakeStrength,
+        resonanceStrength: runtime.turtle.resonanceStrength,
+        activeEvent: runtime.turtle.activeEvent?.kind ?? null,
+      }))
       const teleport = (x: number, z: number, yaw = 0, pitch = 0) => {
         fixedCamera.current = null
         events.emit('teleport', {
@@ -215,13 +223,14 @@ export function WorldSystems() {
         setBenchmarkVariant: setGraphicsBenchmarkVariant,
       } satisfies TurtlebackDebug
       const onBenchmarkKey = (event: KeyboardEvent) => {
-        if (!event.altKey) return
+        const functionKey = event.code === 'F6' || event.code === 'F7' || event.code === 'F8'
+        if (!event.altKey && !functionKey) return
         if (event.code === 'Digit0' && !event.shiftKey) {
           fixedCamera.current = null
           event.preventDefault()
           return
         }
-        const shortcut = `${event.shiftKey ? 'Shift+' : ''}${event.code}`
+        const shortcut = functionKey ? event.code : `${event.shiftKey ? 'Shift+' : ''}${event.code}`
         const id = BENCHMARK_SHORTCUTS[shortcut]
         if (!id) return
         benchmark(id)
@@ -229,6 +238,7 @@ export function WorldSystems() {
       }
       window.addEventListener('keydown', onBenchmarkKey)
       return () => {
+        unregisterTurtle()
         unregisterVegetation()
         unregisterSpatial()
         unregisterAssets()

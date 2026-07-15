@@ -80,7 +80,7 @@ const low = [
   scenario('arrival-bridge', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('garden-pond', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('east-edge', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
-  scenario('turtle-portrait', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
+  scenario('galecrest-turtle-reveal', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('forest-interior', 'low', { timeName: 'noon', weather: 'clear' }, [
     'dense-forest',
     'traversal',
@@ -98,7 +98,18 @@ const ultra = [
     'wetland',
   ]),
   scenario('plaza', 'ultra', { timeName: 'noon', weather: 'clear' }, ['hero', 'village']),
-  scenario('turtle-portrait', 'ultra', { timeName: 'noon', weather: 'clear' }, ['hero', 'ocean']),
+  scenario('galecrest-turtle-reveal', 'ultra', { timeName: 'noon', weather: 'clear' }, [
+    'hero',
+    'turtle',
+  ]),
+  scenario('turtle-eye-encounter', 'ultra', { timeName: 'noon', weather: 'clear' }, [
+    'hero',
+    'turtle',
+  ]),
+  scenario('turtle-distant-silhouette', 'ultra', { timeName: 'noon', weather: 'clear' }, [
+    'hero',
+    'ocean',
+  ]),
 ]
 
 export const BENCHMARK_SCENARIOS: readonly BenchmarkScenario[] = Object.freeze([

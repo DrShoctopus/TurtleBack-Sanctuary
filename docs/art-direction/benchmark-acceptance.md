@@ -10,11 +10,12 @@ This scorecard converts the Slice 1 frames into in-engine acceptance. Style fram
 | --- | --- | --- |
 | `arrival-bridge` | `style-frames/arrival-overlook.jpg` | first-impression and navigation composition |
 | `forest-interior` | `style-frames/crownwood-interior.jpg` | forest density and depth |
-| future `galecrest-turtle-reveal` | `style-frames/galecrest-turtle-reveal.jpg` | normal-play monumental turtle reveal |
+| `galecrest-turtle-reveal` | `style-frames/galecrest-turtle-reveal.jpg` | normal-play monumental turtle reveal |
 | `turtle-material-close` | `style-frames/turtle-material-close.jpg` | anatomy/material diagnostic only |
-| legacy `turtle-portrait` | pre-reset baseline | rejection reference until Slice 3 replaces its acceptance role |
+| `turtle-eye-encounter` | `style-frames/turtle-material-close.jpg` | normal-player scale and eye encounter |
+| `turtle-distant-silhouette` | `style-frames/galecrest-turtle-reveal.jpg` | diagnostic complete-island silhouette |
 
-The future Galecrest view is added in Slice 3. Until then, no fixed camera is allowed to stand in for its normal-traversal composition.
+Slice 3 replaced the frontal fixed portrait. Galecrest and the eye encounter use the normal player camera; only the distant silhouette and material close remain fixed diagnostics.
 
 ## Hard failures
 

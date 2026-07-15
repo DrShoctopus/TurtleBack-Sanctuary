@@ -48,11 +48,17 @@ export const BENCHMARKS = {
   'wildlife-grouping': { mode: 'teleport', x: -52, z: 91, yaw: 0.25, pitch: -0.12 },
   'waterfall-rim': { mode: 'teleport', x: -34.2, z: 110.8, yaw: 2.75, pitch: -0.22 },
   'flipper-scale': { mode: 'teleport', x: 150, z: -80, yaw: -Math.PI / 2, pitch: -0.46 },
-  'turtle-material-close': { mode: 'teleport', x: 0, z: -232, yaw: 0, pitch: -0.42 },
-  'turtle-portrait': {
+  'galecrest-turtle-reveal': { mode: 'teleport', x: 80, z: -210, yaw: 0.7, pitch: -0.035 },
+  'turtle-eye-encounter': { mode: 'teleport', x: 20, z: -245, yaw: 0.29, pitch: 0.035 },
+  'turtle-material-close': {
     mode: 'fixed',
-    position: [0, 7.5, -336],
-    lookAt: [0, 4.5, -295],
+    position: [56, 17, -286],
+    lookAt: [0, 4, -314],
+  },
+  'turtle-distant-silhouette': {
+    mode: 'fixed',
+    position: [480, 38, -150],
+    lookAt: [0, -2, -65],
   },
 } as const satisfies Record<string, BenchmarkView>
 
@@ -73,11 +79,14 @@ export const BENCHMARK_SHORTCUTS: Record<string, BenchmarkId> = {
   Digit2: 'east-edge',
   Digit3: 'stern-edge',
   Digit4: 'west-edge',
-  Digit5: 'turtle-portrait',
-  Digit6: 'plaza',
-  Digit7: 'garden-pond',
-  Digit8: 'landmarks',
-  Digit9: 'cottages',
+  Digit5: 'galecrest-turtle-reveal',
+  Digit6: 'turtle-eye-encounter',
+  Digit7: 'turtle-distant-silhouette',
+  Digit8: 'turtle-material-close',
+  Digit9: 'plaza',
+  F6: 'turtle-eye-encounter',
+  F7: 'turtle-distant-silhouette',
+  F8: 'turtle-material-close',
 }
 
 export function isBenchmarkId(value: string): value is BenchmarkId {

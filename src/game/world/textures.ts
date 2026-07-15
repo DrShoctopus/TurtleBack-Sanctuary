@@ -94,6 +94,7 @@ interface SurfaceConfig {
   normalStrength: number
   roughness: number
   roughnessVariance: number
+  size?: 128 | 256
 }
 
 const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
@@ -152,6 +153,7 @@ const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
     normalStrength: 4.6,
     roughness: 0.8,
     roughnessVariance: 0.15,
+    size: 256,
   },
 }
 
@@ -159,7 +161,7 @@ function generateSurfaceDetail(config: SurfaceConfig): {
   normalMap: CanvasTexture
   roughnessMap: CanvasTexture
 } {
-  const size = 128
+  const size = config.size ?? 128
   const rng = mulberry32(config.seed)
   const waves = Array.from({ length: 7 }, (_, i) => ({
     fx: 1 + Math.floor(rng() * (5 + i * 2)),
@@ -307,7 +309,7 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
   },
 
   turtleSkin: () => {
-    const size = 256
+    const size = 512
     const { c, ctx } = makeCanvas(size)
     const rng = mulberry32(313)
     ctx.fillStyle = '#77826d'
@@ -316,7 +318,7 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
       ctx,
       rng,
       size,
-      1100,
+      3600,
       0.7,
       4.5,
       ['#87927b', '#606b59', '#929b86', '#536052', '#76816b'],
@@ -324,7 +326,36 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
     )
     // Soft irregular scale rosettes. Repeated wrapped copies at the edges keep
     // the procedural texture seamless on the head and neck.
-    for (let i = 0; i < 58; i++) {
+    // Broad leathery scutes establish form before the smaller grain. Wrapped
+    // copies preserve continuity around the head and long neck.
+    for (let i = 0; i < 34; i++) {
+      const cx = rng() * size
+      const cy = rng() * size
+      const radius = 22 + rng() * 46
+      const sides = 5 + Math.floor(rng() * 3)
+      ctx.strokeStyle = rng() < 0.55 ? 'rgba(37,49,38,0.32)' : 'rgba(181,188,155,0.2)'
+      ctx.lineWidth = 2 + rng() * 2.6
+      for (const [ox, oy] of [
+        [0, 0],
+        [-size, 0],
+        [size, 0],
+        [0, -size],
+        [0, size],
+      ]) {
+        ctx.beginPath()
+        for (let side = 0; side <= sides; side += 1) {
+          const theta = (side / sides) * Math.PI * 2 + rng() * 0.035
+          const radial = radius * (0.82 + rng() * 0.22)
+          const px = cx + ox + Math.cos(theta) * radial
+          const py = cy + oy + Math.sin(theta) * radial * (0.62 + rng() * 0.12)
+          if (side === 0) ctx.moveTo(px, py)
+          else ctx.lineTo(px, py)
+        }
+        ctx.closePath()
+        ctx.stroke()
+      }
+    }
+    for (let i = 0; i < 110; i++) {
       const cx = rng() * size
       const cy = rng() * size
       const rx = 5 + rng() * 12
@@ -342,6 +373,23 @@ const GENERATORS: Record<string, () => CanvasTexture> = {
         ctx.ellipse(cx + ox, cy + oy, rx, ry, rng() * Math.PI, 0, Math.PI * 2)
         ctx.stroke()
       }
+    }
+    for (let i = 0; i < 42; i++) {
+      const x = rng() * size
+      const y = rng() * size
+      ctx.strokeStyle = rng() < 0.6 ? 'rgba(37,46,35,0.24)' : 'rgba(171,179,148,0.17)'
+      ctx.lineWidth = 0.8 + rng() * 1.4
+      ctx.beginPath()
+      ctx.moveTo(x, y)
+      ctx.bezierCurveTo(
+        x + (rng() - 0.5) * 34,
+        y + 12 + rng() * 32,
+        x + (rng() - 0.5) * 56,
+        y + 30 + rng() * 56,
+        x + (rng() - 0.5) * 72,
+        y + 62 + rng() * 82,
+      )
+      ctx.stroke()
     }
     return finish(c)
   },

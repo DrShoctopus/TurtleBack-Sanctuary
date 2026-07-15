@@ -10,7 +10,8 @@ const FOUNDATION_CAMERA_IDS = [
   'wildlife-grouping',
   'waterfall-rim',
   'flipper-scale',
-  'turtle-material-close',
+  'galecrest-turtle-reveal',
+  'turtle-eye-encounter',
 ] as const
 
 describe('visual benchmark registry', () => {
@@ -30,7 +31,7 @@ describe('visual benchmark registry', () => {
     for (const id of Object.values(BENCHMARK_SHORTCUTS)) expect(isBenchmarkId(id)).toBe(true)
   })
 
-  it('provides the six foundation cameras at safe current-shell positions', () => {
+  it('provides foundation and hero cameras at safe current-shell positions', () => {
     for (const id of FOUNDATION_CAMERA_IDS) {
       const camera = BENCHMARKS[id]
       expect(camera.mode).toBe('teleport')
@@ -76,7 +77,7 @@ describe('visual benchmark registry', () => {
       'arrival-bridge',
       'garden-pond',
       'east-edge',
-      'turtle-portrait',
+      'galecrest-turtle-reveal',
       'forest-interior',
     ])
     expect(low.some((scenario) => scenario.tags.includes('smoke'))).toBe(true)

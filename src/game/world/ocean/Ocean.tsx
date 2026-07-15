@@ -51,6 +51,8 @@ export function Ocean() {
       uDetail: { value: 1 },
       uMotion: { value: 1 },
       uReflections: { value: 1 },
+      uTurtleWake: { value: 0.15 },
+      uTurtleStroke: { value: 0.2 },
     }),
     [],
   )
@@ -80,6 +82,8 @@ export function Ocean() {
     live.uDetail.value = quality.oceanDetail
     live.uMotion.value = 1
     live.uReflections.value = quality.reflections
+    live.uTurtleWake.value = runtime.turtle.wakeStrength
+    live.uTurtleStroke.value = runtime.turtle.stroke
   })
 
   return (
@@ -199,6 +203,8 @@ uniform float uTime;
 uniform float uTravel;
 uniform vec3 uOffset;
 uniform float uMotion;
+uniform float uTurtleWake;
+uniform float uTurtleStroke;
 varying vec3 vWorldPos;
 varying vec3 vNormal;
 varying float vCrest;
@@ -238,6 +244,14 @@ void main() {
   float dTurtle = length(vec2(base.x / 210.0, base.z / 290.0));
   float calm = smoothstep(0.85, 1.35, dTurtle);
   disp *= mix(0.14, 1.0, calm);
+  // The world-bearer's bow and front flippers move a field much broader than
+  // surface foam. This stays gentle at rest and swells during a scale event.
+  float bowDistance = length(vec2(base.x / 118.0, (base.z + 310.0) / 142.0));
+  float bowDisplacement = exp(-bowDistance * 2.15) *
+    sin(bowDistance * 10.0 - uTime * 0.82 * uMotion) * uTurtleWake * 1.45;
+  float leftStroke = exp(-length(vec2((base.x + 195.0) / 72.0, (base.z + 92.0) / 96.0)) * 2.4);
+  float rightStroke = exp(-length(vec2((base.x - 195.0) / 72.0, (base.z + 92.0) / 96.0)) * 2.4);
+  disp.y += bowDisplacement + (leftStroke + rightStroke) * uTurtleStroke * 0.72;
   vec3 pos = vec3(base.x + disp.x, disp.y, base.z + disp.z);
   vWorldPos = pos;
   vNormal = normalize(cross(binormal, tangent));
@@ -265,6 +279,7 @@ uniform float uTravel;
 uniform float uDetail;
 uniform float uMotion;
 uniform float uReflections;
+uniform float uTurtleWake;
 
 float hash(vec2 p) { return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453); }
 float vnoise(vec2 p) {
@@ -365,7 +380,7 @@ void main() {
          shoreline * (0.028 + lapBreak * 0.025);
   // bow push at the head (head sits toward -z)
   float bow = exp(-length(vec2(vWorldPos.x * 0.02, (vWorldPos.z + 300.0) * 0.012)));
-  wake += bow * vnoise(flow * 0.8 + uTime * 0.35) * 0.9;
+  wake += bow * vnoise(flow * 0.8 + uTime * 0.35) * (0.55 + uTurtleWake * 1.2);
   float foam = clamp(crestFoam + wake, 0.0, 1.0);
   vec3 foamCol = mix(vec3(0.82, 0.94, 0.91), vec3(0.25, 0.32, 0.42), uNight);
   col = mix(col, foamCol, foam * 0.82);

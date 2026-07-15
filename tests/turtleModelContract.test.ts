@@ -7,6 +7,7 @@ import {
   type TurtleModelContractIssue,
   type TurtleLod,
 } from '../src/game/world/turtle/modelContract'
+import { MONUMENTAL_TURTLE_CONTRACT } from '../src/game/world/turtle/heroContract'
 
 const VALID_CONTRACT: TurtleModelContract = {
   metreScale: 1,
@@ -42,6 +43,11 @@ function replaceLod(
 }
 
 describe('authored turtle model contract', () => {
+  it('accepts the shipped monumental hero and all three measured LODs', () => {
+    expect(validateTurtleModelContract(MONUMENTAL_TURTLE_CONTRACT)).toEqual([])
+    expect(MONUMENTAL_TURTLE_CONTRACT.lods.map((lod) => lod.level)).toEqual([0, 1, 2])
+  })
+
   it('publishes the exact required rig nodes and animation clips', () => {
     expect(TURTLE_REQUIRED_NODES).toEqual([
       'WorldRoot',

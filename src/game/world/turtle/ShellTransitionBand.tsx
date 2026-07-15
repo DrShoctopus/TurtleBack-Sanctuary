@@ -69,12 +69,17 @@ function buildTransitionBand(): TransitionBandResources {
   const dummy = new Object3D()
   const tint = new Color()
   for (const anchor of anchors) {
+    const bowReveal = Math.max(0, Math.min(1, (-anchor.z - 145) / 95))
     const inset = 0.979 + rng() * 0.012
     const x = anchor.x * inset
     const z = anchor.z * inset
     dummy.position.set(x, terrainHeight(x, z) + 0.1 + rng() * 0.18, z)
     dummy.rotation.set((rng() - 0.5) * 0.18, -anchor.theta + (rng() - 0.5) * 0.12, 0)
-    dummy.scale.set(2.1 + rng() * 2.4, 0.34 + rng() * 0.65, 2.8 + rng() * 4.4)
+    dummy.scale.set(
+      (2.1 + rng() * 2.4) * (1 - bowReveal * 0.92),
+      (0.34 + rng() * 0.65) * (1 - bowReveal * 0.86),
+      (2.8 + rng() * 4.4) * (1 - bowReveal * 0.94),
+    )
     dummy.updateMatrix()
     plates.setMatrixAt(anchor.index, dummy.matrix)
     tint.setRGB(0.69 + rng() * 0.14, 0.72 + rng() * 0.12, 0.66 + rng() * 0.13)

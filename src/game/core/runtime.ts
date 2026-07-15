@@ -7,6 +7,8 @@ import {
   type SpatialRuntimeState,
 } from '../world/spatial/types'
 import { QUALITY_PROFILES, type QualityProfile } from './quality'
+import type { TurtleScaleEvent } from '../world/turtle/types'
+import type { TurtleLod } from '../world/turtle/modelContract'
 
 const INITIAL_QUALITY = QUALITY_PROFILES.medium
 const INITIAL_SPATIAL_CENTER = Object.freeze(
@@ -60,6 +62,16 @@ export interface Runtime {
   /** Discrete 10 Hz cell residency for imperative systems and diagnostics. */
   spatial: SpatialRuntimeState
   reducedMotion: boolean
+  turtle: {
+    lod: TurtleLod
+    breath: number
+    stroke: number
+    wakeStrength: number
+    foliageImpulse: number
+    resonanceStrength: number
+    sprayStrength: number
+    activeEvent: TurtleScaleEvent | null
+  }
   /** true while menus/tv pause gameplay simulation of input (world keeps breathing) */
   uiCaptured: boolean
   perf: { fps: number; p95FrameMs: number }
@@ -82,6 +94,16 @@ export const runtime: Runtime = {
   quality: INITIAL_QUALITY,
   spatial: INITIAL_SPATIAL,
   reducedMotion: false,
+  turtle: {
+    lod: 2,
+    breath: 0.62,
+    stroke: 0.2,
+    wakeStrength: 0.16,
+    foliageImpulse: 0,
+    resonanceStrength: 0.07,
+    sprayStrength: 0,
+    activeEvent: null,
+  },
   uiCaptured: true,
   perf: { fps: 60, p95FrameMs: 0 },
 }

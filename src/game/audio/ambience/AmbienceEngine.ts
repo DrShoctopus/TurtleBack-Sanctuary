@@ -31,6 +31,7 @@ export class AmbienceEngine {
   private rainFilter!: BiquadFilterNode
   private masterFilter!: BiquadFilterNode
   private interiorTone!: GainNode
+  private turtleResonanceGain!: GainNode
 
   private birdTimer: number | null = null
   private started = false
@@ -124,6 +125,29 @@ export class AmbienceEngine {
     this.interiorTone.connect(this.out)
     toneOsc.start()
 
+    // A barely tonal sub-bass pair makes a deep breath feel island-sized. It
+    // is mixed as ambience and remains restrained by Quiet Mode and proximity.
+    const turtleFundamental = ctx.createOscillator()
+    turtleFundamental.type = 'sine'
+    turtleFundamental.frequency.value = 34
+    const turtlePartial = ctx.createOscillator()
+    turtlePartial.type = 'sine'
+    turtlePartial.frequency.value = 51
+    const turtlePartialGain = ctx.createGain()
+    turtlePartialGain.gain.value = 0.24
+    const turtleFilter = ctx.createBiquadFilter()
+    turtleFilter.type = 'lowpass'
+    turtleFilter.frequency.value = 92
+    this.turtleResonanceGain = ctx.createGain()
+    this.turtleResonanceGain.gain.value = 0
+    turtleFundamental.connect(turtleFilter)
+    turtlePartial.connect(turtlePartialGain)
+    turtlePartialGain.connect(turtleFilter)
+    turtleFilter.connect(this.turtleResonanceGain)
+    this.turtleResonanceGain.connect(this.masterFilter)
+    turtleFundamental.start()
+    turtlePartial.start()
+
     this.scheduleBird()
   }
 
@@ -155,6 +179,14 @@ export class AmbienceEngine {
     this.rainFilter.frequency.setTargetAtTime(indoors ? 500 : 1400, t, 0.5)
 
     this.interiorTone.gain.setTargetAtTime(indoors ? 0.015 : 0, t, 0.6)
+    const turtleDistance = Math.hypot(runtime.player.pos.x, runtime.player.pos.z + 238)
+    const turtleProximity = 1 - Math.min(1, Math.max(0, (turtleDistance - 30) / 360))
+    const turtleTarget =
+      runtime.turtle.resonanceStrength *
+      (0.003 + turtleProximity * 0.017) *
+      quietLevel *
+      (indoors ? 0.35 : 1)
+    this.turtleResonanceGain.gain.setTargetAtTime(turtleTarget, t, 0.32)
 
     // subtitle cue when rain begins
     if (rain > 0.25 && this.lastRainAnnounced < 0.25) publishAudioCue('🌧 Rain begins to fall')

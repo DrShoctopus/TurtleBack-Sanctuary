@@ -1,4 +1,6 @@
 import type { CellKey } from '../world/spatial/types'
+import type { TurtleLod } from '../world/turtle/modelContract'
+import type { TurtleScaleEventKind } from '../world/turtle/types'
 
 export interface SceneProbeSnapshot {
   activeCells: readonly CellKey[]
@@ -21,6 +23,12 @@ export interface SceneProbeSnapshot {
 
 export interface TurtleProbeSection {
   readonly __sectionBrand?: 'turtle'
+  model?: string
+  fallback?: boolean
+  lod?: TurtleLod
+  wakeStrength?: number
+  resonanceStrength?: number
+  activeEvent?: TurtleScaleEventKind | null
 }
 
 export interface WildlifeProbeSection {

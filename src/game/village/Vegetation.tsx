@@ -29,6 +29,7 @@ interface MutableUniform {
 export class VegetationResourceOwner {
   readonly resources: VegetationRenderResources
   private readonly windUniform: MutableUniform = { value: 0.5 }
+  private readonly turtleImpulseUniform: MutableUniform = { value: 0 }
   private readonly swayTimeUniforms = new Set<MutableUniform>()
   private readonly geometries: readonly BufferGeometry[]
   private readonly materials: readonly MeshStandardMaterial[]
@@ -185,10 +186,11 @@ export class VegetationResourceOwner {
     ]
   }
 
-  update(motionTime: number, wind: number): void {
+  update(motionTime: number, wind: number, turtleImpulse = 0): void {
     if (this.disposed) return
     for (const uniform of this.swayTimeUniforms) uniform.value = motionTime
     this.windUniform.value = 0.35 + wind * 0.8
+    this.turtleImpulseUniform.value = Math.max(0, Math.min(1, turtleImpulse))
   }
 
   dispose(): void {
@@ -210,13 +212,15 @@ export class VegetationResourceOwner {
       this.swayTimeUniforms.add(compiledTimeUniform)
       shader.uniforms.uTime = compiledTimeUniform
       shader.uniforms.uWind = this.windUniform
+      shader.uniforms.uTurtleImpulse = this.turtleImpulseUniform
       shader.vertexShader = shader.vertexShader
         .replace(
           '#include <common>',
           `#include <common>
           attribute float aWindWeight;
           uniform float uTime;
-          uniform float uWind;`,
+          uniform float uWind;
+          uniform float uTurtleImpulse;`,
         )
         .replace(
           '#include <begin_vertex>',
@@ -228,6 +232,13 @@ export class VegetationResourceOwner {
               float ph = 0.0;
             #endif
             float sway = sin(uTime * 1.4 + ph) * ${strength.toFixed(3)} * uWind * aWindWeight;
+            #ifdef USE_INSTANCING
+              float galecrestDistance = length(instanceMatrix[3].xz - vec2(0.0, -218.0));
+              float turtleInfluence = 1.0 - smoothstep(65.0, 235.0, galecrestDistance);
+              sway += sin(uTime * 0.82 + ph * 0.53) * ${(
+                strength * 2.8
+              ).toFixed(3)} * uTurtleImpulse * turtleInfluence * aWindWeight;
+            #endif
             transformed.x += sway;
             transformed.z += sway * 0.6;
           }`,
@@ -280,7 +291,7 @@ export function Vegetation() {
 
   useFrame((_, delta) => {
     const motionTime = motionClock.current.advance(delta, runtime.reducedMotion)
-    owner.update(motionTime, runtime.weather.wind)
+    owner.update(motionTime, runtime.weather.wind, runtime.turtle.foliageImpulse)
   })
 
   return spatial.retained.map((key) => {

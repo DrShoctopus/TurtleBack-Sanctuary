@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–2 complete; Slice 3 not started
+**Status:** Slices 1–3 complete; Slice 4 not started
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -221,6 +221,8 @@ Runtime asset budget: 4 MiB.
 Suggested commit: `feat: establish painterly rendering language`
 
 ### Slice 3 — Massive turtle hero vertical slice
+
+**Implementation record:** completed on 2026-07-14. Live High/Ultra/Low and Reduced Motion evidence is recorded in `docs/art-direction/runtime-evidence/slice-3/`.
 
 **Goal:** make the turtle breathtaking before it is hidden beneath world expansion.
 
