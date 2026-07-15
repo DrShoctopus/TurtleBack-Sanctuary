@@ -141,6 +141,7 @@ Look sensitivity, stick deadzone, invert-Y, and (where supported) subtle vibrati
 ## Features
 
 - A **450–550 m × 300–380 m** walkable turtle shell with ridges, valleys, gardens, stairs, bridges, ponds, and shell-edge viewing decks. It takes several minutes to cross.
+- Six continuously blended habitat regions — Crownwood, Blossomshade, Lumenfen, Fernfall, Galecrest, and Hearth Commons — with distinct canopy, understory, geology, atmosphere, and discovery silhouettes.
 - A living, animated **giant turtle** — head, neck, blinking eyes, stroking flippers, foam and wake — with an endless-travel illusion that never moves the physics world.
 - **Ten+ enterable buildings**, each with a distinct exterior, interior, furniture, lighting, and at least one calming interaction, plus a fully designed **player home**.
 - Continuous **day/night cycle** (24-minute default) and **clear ↔ gentle rain** weather, both fully player-controllable with smooth 6–10 s crossfades.

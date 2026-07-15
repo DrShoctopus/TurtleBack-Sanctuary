@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Approved; Slices 2–7 implemented
+**Status:** Approved; Slices 2–7 and Slice 8A implemented
 
 ## Decision
 

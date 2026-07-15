@@ -20,6 +20,7 @@
     "capture:graphics": "playwright test -c playwright.visual.config.ts",
     "capture:village-life": "playwright test -c playwright.village-life.config.ts",
     "capture:wildlife": "playwright test -c playwright.wildlife.config.ts",
+    "capture:biomes": "playwright test -c playwright.biomes.config.ts",
     "benchmark:graphics": "tsx scripts/benchmark-graphics.ts",
     "validate:assets": "tsx scripts/validate-assets.ts",
     "validate:assets:rendering": "tsx scripts/validate-assets.ts --slice=rendering",

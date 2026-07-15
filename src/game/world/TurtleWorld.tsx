@@ -16,6 +16,7 @@ import { InteractionSystem } from '../interaction/InteractionSystem'
 import { WorldSystems } from './WorldSystems'
 import { SpatialCellProvider } from './spatial/SpatialCellProvider'
 import { WildlifeWorld } from './wildlife/WildlifeWorld'
+import { BiomeMosaic } from './biomes/BiomeMosaic'
 
 /** Root of everything outside the player: sky, sea, shell, turtle, village. */
 export function TurtleWorld() {
@@ -34,6 +35,7 @@ export function TurtleWorld() {
       <WildlifeWorld />
       <Village />
       <CrownwoodForest />
+      <BiomeMosaic />
       <Vegetation />
       <Rain />
       <AtmosphereDetails />

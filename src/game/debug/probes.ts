@@ -84,6 +84,10 @@ export interface WorldProbeSection {
   villageStoryClusters: number
   villageDistricts: number
   villagePropFamilies: number
+  biomeCount: number
+  biomeInstances: number
+  biomeLayers: Readonly<Record<string, Readonly<Record<string, number>>>>
+  biomeClusterFamilies: Readonly<Record<string, readonly string[]>>
 }
 
 export interface ProbeSectionMap {
