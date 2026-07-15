@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Current implementation plan; implementation has not started
+**Status:** Slice 1 candidate direction complete; owner approval pending before Slice 2
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -168,6 +168,8 @@ Only after this corridor passes owner visual review may the kit expand to the re
 Every slice ends with targeted tests, an in-engine review artifact, a size report, one focused commit, and a successful push. No work begins on the next slice until the remote commit is confirmed.
 
 ### Slice 1 — Concept and style-frame gate
+
+**Implementation record:** completed on 2026-07-14 in `docs/art-direction/`; the owner approval checkbox remains open.
 
 **Goal:** prove the new direction cheaply before building assets.
 
