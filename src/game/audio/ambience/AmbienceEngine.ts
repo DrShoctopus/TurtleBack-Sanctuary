@@ -1,12 +1,14 @@
 /**
- * Procedural ambient soundscape: ocean surf, wind, rain, and sparse bird/insect
- * details — all synthesized. An audio-zone low-pass muffles the outdoor bed
+ * Procedural ambient soundscape: ocean surf, wind, rain, and represented
+ * wildlife calls. An audio-zone low-pass muffles the outdoor bed
  * when the player is inside, and rain gets its own indoor/outdoor balance.
  */
 import { mulberry32 } from '../../core/rng'
 import { runtime } from '../../core/runtime'
 import { publishAudioCue } from '../cues'
 import { useSettings } from '../../state/settingsStore'
+import { events } from '../../core/events'
+import type { WildlifeCallEvent } from '../../world/wildlife/types'
 
 export interface AmbienceInputs {
   rain: number
@@ -33,7 +35,7 @@ export class AmbienceEngine {
   private interiorTone!: GainNode
   private turtleResonanceGain!: GainNode
 
-  private birdTimer: number | null = null
+  private unsubscribeWildlife: (() => void) | null = null
   private started = false
   private lastRainAnnounced = 0
 
@@ -148,7 +150,7 @@ export class AmbienceEngine {
     turtleFundamental.start()
     turtlePartial.start()
 
-    this.scheduleBird()
+    this.unsubscribeWildlife = events.on('wildlifeCall', (call) => this.wildlifeCall(call))
   }
 
   /** Called ~10×/sec from the audio update. */
@@ -195,61 +197,42 @@ export class AmbienceEngine {
     void night
   }
 
-  private scheduleBird(): void {
-    if (!this.started) return
-    const night = runtime.time.celest.nightFactor
-    const rain = runtime.weather.rain
-    const indoors = runtime.player.indoors
-    const quiet = useSettings.getState().quietMode
-    // birds by day, crickets by night; quieter in rain / indoors
-    const chance = quiet ? 0 : (night > 0.5 ? 0.5 : 0.6) * (1 - rain * 0.7) * (indoors ? 0.3 : 1)
-    if (Math.random() < chance) {
-      if (night > 0.5) this.chirp('cricket')
-      else this.chirp('bird')
-    }
-    const delay = 1500 + Math.random() * 4500
-    this.birdTimer = window.setTimeout(() => this.scheduleBird(), delay)
-  }
-
-  private chirp(kind: 'bird' | 'cricket'): void {
+  /** A call can only arrive from a represented wildlife emitter ID. */
+  private wildlifeCall(call: WildlifeCallEvent): void {
+    if (!this.started || runtime.player.indoors) return
     const ctx = this.ctx
     const t = ctx.currentTime + 0.05
-    const rng = mulberry32((Math.random() * 1e9) | 0)
-    if (kind === 'bird') {
-      const notes = 2 + Math.floor(rng() * 3)
-      const baseF = 1800 + rng() * 1400
-      for (let i = 0; i < notes; i++) {
-        const nt = t + i * (0.08 + rng() * 0.06)
-        const osc = ctx.createOscillator()
-        osc.type = 'sine'
-        const f = baseF * (0.9 + rng() * 0.4)
-        osc.frequency.setValueAtTime(f, nt)
-        osc.frequency.exponentialRampToValueAtTime(f * 1.3, nt + 0.05)
-        const env = ctx.createGain()
-        env.gain.setValueAtTime(0.0001, nt)
-        env.gain.exponentialRampToValueAtTime(0.03, nt + 0.01)
-        env.gain.exponentialRampToValueAtTime(0.0001, nt + 0.09)
-        osc.connect(env)
-        env.connect(this.masterFilter)
-        osc.start(nt)
-        osc.stop(nt + 0.12)
-      }
-    } else {
-      // cricket: short buzzy pulses
-      for (let i = 0; i < 3; i++) {
-        const nt = t + i * 0.09
-        const osc = ctx.createOscillator()
-        osc.type = 'square'
-        osc.frequency.value = 2400 + rng() * 300
-        const env = ctx.createGain()
-        env.gain.setValueAtTime(0.0001, nt)
-        env.gain.exponentialRampToValueAtTime(0.012, nt + 0.005)
-        env.gain.exponentialRampToValueAtTime(0.0001, nt + 0.03)
-        osc.connect(env)
-        env.connect(this.masterFilter)
-        osc.start(nt)
-        osc.stop(nt + 0.04)
-      }
+    const rng = mulberry32(this.seed ^ call.tick ^ call.variant * 0x9e37)
+    const panner = ctx.createPanner()
+    panner.panningModel = 'HRTF'
+    panner.distanceModel = 'inverse'
+    panner.refDistance = 9
+    panner.maxDistance = call.speciesId === 'galecrest-seabird' ? 520 : 150
+    panner.rolloffFactor = 0.72
+    panner.positionX.value = call.position[0]
+    panner.positionY.value = call.position[1]
+    panner.positionZ.value = call.position[2]
+    panner.connect(this.masterFilter)
+    const notes = call.speciesId === 'galecrest-seabird' ? 2 : 3 + (call.variant % 2)
+    const base = call.speciesId === 'galecrest-seabird' ? 980 : 2050 + call.variant * 190
+    for (let i = 0; i < notes; i++) {
+      const nt = t + i * (0.1 + rng() * 0.035)
+      const oscillator = ctx.createOscillator()
+      oscillator.type = call.speciesId === 'galecrest-seabird' ? 'triangle' : 'sine'
+      const frequency = base * (0.9 + rng() * 0.28)
+      oscillator.frequency.setValueAtTime(frequency, nt)
+      oscillator.frequency.exponentialRampToValueAtTime(
+        frequency * (call.speciesId === 'galecrest-seabird' ? 0.78 : 1.24),
+        nt + 0.075,
+      )
+      const envelope = ctx.createGain()
+      envelope.gain.setValueAtTime(0.0001, nt)
+      envelope.gain.exponentialRampToValueAtTime(0.026 * call.gain, nt + 0.012)
+      envelope.gain.exponentialRampToValueAtTime(0.0001, nt + 0.12)
+      oscillator.connect(envelope)
+      envelope.connect(panner)
+      oscillator.start(nt)
+      oscillator.stop(nt + 0.14)
     }
   }
 
@@ -270,7 +253,8 @@ export class AmbienceEngine {
 
   dispose(): void {
     this.started = false
-    if (this.birdTimer !== null) clearTimeout(this.birdTimer)
+    this.unsubscribeWildlife?.()
+    this.unsubscribeWildlife = null
     this.out.disconnect()
   }
 }

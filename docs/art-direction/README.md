@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Approved; Slices 2–5 implemented
+**Status:** Approved; Slices 2–6 implemented
 
 ## Decision
 
@@ -96,3 +96,9 @@ The target is achievable through a small authored kit, instanced/clustered place
 - [x] Owner approved this visual direction for Slice 2 implementation on 2026-07-14.
 
 Generation provenance and prompt records are in [generation-record.md](generation-record.md).
+
+## Slice 6 runtime translation
+
+The first wildlife wave now uses the approved board in the live scene: grouped Crownwood songbirds, paired shell hares, butterflies/dragonflies/fireflies, Galecrest seabirds, and ocean rays share the same faceted painterly material language as the forest and turtle. Stable habitat anchors keep discoveries beside routes and outside traversal/building hazards; the fixed-tick director owns weather, time, Quiet Mode, Reduced Motion, pooling, Low-tier coverage, and visible-emitter calls.
+
+The seven-condition visual record and probe contract are in [runtime-evidence/slice-6/](runtime-evidence/slice-6/).

@@ -49,6 +49,10 @@ export const BENCHMARKS = {
   'forest-interior': { mode: 'teleport', x: -128, z: -31, yaw: -1.28, pitch: -0.08 },
   'biome-threshold': { mode: 'teleport', x: 70, z: 43, yaw: -2.18, pitch: -0.08 },
   'wildlife-grouping': { mode: 'teleport', x: -52, z: 91, yaw: 0.25, pitch: -0.12 },
+  'crownwood-songbirds': { mode: 'teleport', x: -10, z: -180, yaw: 0.66, pitch: 0.3 },
+  'shell-hare-meadow': { mode: 'fixed', position: [-108, 17, -74], lookAt: [-118, 13, -74] },
+  'galecrest-wildlife': { mode: 'teleport', x: 80, z: -205, yaw: -1.48, pitch: 0.18 },
+  'ocean-wildlife': { mode: 'fixed', position: [136, 28, -150], lookAt: [195, 2.4, -180] },
   'waterfall-rim': { mode: 'teleport', x: -34.2, z: 110.8, yaw: 2.75, pitch: -0.22 },
   'flipper-scale': { mode: 'teleport', x: 150, z: -80, yaw: -Math.PI / 2, pitch: -0.46 },
   'galecrest-turtle-reveal': { mode: 'teleport', x: 80, z: -210, yaw: 0.7, pitch: -0.035 },
@@ -90,6 +94,10 @@ export const BENCHMARK_SHORTCUTS: Record<string, BenchmarkId> = {
   F6: 'turtle-eye-encounter',
   F7: 'turtle-distant-silhouette',
   F8: 'turtle-material-close',
+  F9: 'crownwood-songbirds',
+  F10: 'shell-hare-meadow',
+  F11: 'galecrest-wildlife',
+  F12: 'ocean-wildlife',
 }
 
 export function isBenchmarkId(value: string): value is BenchmarkId {

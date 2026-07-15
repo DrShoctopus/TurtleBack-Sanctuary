@@ -10,6 +10,9 @@ export default defineConfig({
   timeout: 60_000,
   expect: { timeout: 10_000 },
   fullyParallel: false,
+  // Six scene-heavy specs can otherwise start five SwiftShader worlds at
+  // once, starving unrelated title/media tests during initial compilation.
+  workers: 3,
   retries: 0,
   reporter: [['list']],
   use: {

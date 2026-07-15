@@ -357,7 +357,7 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
   await page.keyboard.down('ShiftLeft')
   await page.keyboard.down('KeyW')
   await page.waitForFunction(
-    () => (window as any).__sanctuary.runtime.player.pos.z < 82,
+    () => (window as any).__sanctuary.runtime.player.pos.z < 80,
     null,
     { timeout: 15_000 },
   )
@@ -370,7 +370,7 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
     z: (window as any).__sanctuary.runtime.player.pos.z,
     grounded: (window as any).__sanctuary.runtime.player.grounded,
   }))
-  expect(bridge.z).toBeLessThan(82)
+  expect(bridge.z).toBeLessThan(80)
   expect(bridge.grounded).toBe(true)
 
   // Descend the steep engineered stern route onto its final landing.

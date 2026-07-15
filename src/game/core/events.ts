@@ -1,6 +1,7 @@
 /** Tiny typed event bus for one-shot cross-system signals (kept out of React state). */
 
 import type { TurtleScaleEvent } from '../world/turtle/types'
+import type { WildlifeCallEvent } from '../world/wildlife/types'
 
 export type GameEvents = {
   footstep: { surface: 'grass' | 'stone' | 'wood' | 'shell' | 'interior'; jog: boolean }
@@ -19,6 +20,7 @@ export type GameEvents = {
   respawnSplash: undefined
   padRumble: { strength: number; ms: number }
   turtleScaleEvent: TurtleScaleEvent
+  wildlifeCall: WildlifeCallEvent
 }
 
 type Handler<T> = (payload: T) => void

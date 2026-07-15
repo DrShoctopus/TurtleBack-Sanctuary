@@ -239,7 +239,7 @@ export function WorldSystems() {
         setBenchmarkVariant: setGraphicsBenchmarkVariant,
       } satisfies TurtlebackDebug
       const onBenchmarkKey = (event: KeyboardEvent) => {
-        const functionKey = event.code === 'F6' || event.code === 'F7' || event.code === 'F8'
+        const functionKey = ['F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(event.code)
         if (!event.altKey && !functionKey) return
         if (event.code === 'Digit0' && !event.shiftKey) {
           fixedCamera.current = null

@@ -33,10 +33,29 @@ export interface TurtleProbeSection {
 
 export interface WildlifeProbeSection {
   readonly __sectionBrand?: 'wildlife'
+  tick?: number
+  pooledAgents?: number
+  activeAgents?: number
+  nearAgents?: number
+  distantGroups?: number
+  categories?: readonly string[]
+  habitats?: readonly string[]
+  species?: readonly string[]
+  behaviors?: readonly string[]
+  representedEmitters?: number
+  ownedCalls?: number
+  orphanCalls?: number
+  quietMode?: boolean
+  rainResponse?: 'sheltering' | 'clear-weather'
+  timeResponse?: 'night' | 'day'
+  lowHabitatCoverage?: boolean
 }
 
 export interface AudioProbeSection {
   readonly __sectionBrand?: 'audio'
+  wildlifeOwnedCalls?: number
+  wildlifeOrphanCalls?: number
+  wildlifeEmitterCount?: number
 }
 
 export interface AtmosphereProbeSection {

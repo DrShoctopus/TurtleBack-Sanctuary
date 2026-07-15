@@ -5,6 +5,15 @@ export type QualityLevel = 'low' | 'medium' | 'high' | 'ultra'
 export type AutoQualityLevel = Exclude<QualityLevel, 'ultra'>
 export type TextureTier = '512' | '1k' | '2k' | '4k'
 
+export interface WildlifeQualityBudget {
+  maxNearAgents: number
+  maxDistantGroups: number
+  updateHz: number
+  animationLodBias: 0 | 1 | 2
+  shadowRadius: number
+  maxAudioVoices: number
+}
+
 export interface QualityProfile {
   level: QualityLevel
   dprMax: number
@@ -18,6 +27,7 @@ export interface QualityProfile {
   cellRetainRadius: number
   vegetationDensity: number
   wildlifeDensity: number
+  wildlife: WildlifeQualityBudget
   atmosphereDetail: 0 | 1 | 2 | 3
   ssaoAllowed: boolean
   iblResolution: 0 | 64 | 128 | 256
@@ -54,6 +64,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     cellRetainRadius: 2,
     vegetationDensity: 0.45,
     wildlifeDensity: 0.35,
+    wildlife: { maxNearAgents: 10, maxDistantGroups: 8, updateHz: 8, animationLodBias: 2, shadowRadius: 0, maxAudioVoices: 4 },
     atmosphereDetail: 0,
     ssaoAllowed: false,
     iblResolution: 0,
@@ -81,6 +92,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     cellRetainRadius: 3,
     vegetationDensity: 0.75,
     wildlifeDensity: 0.65,
+    wildlife: { maxNearAgents: 18, maxDistantGroups: 12, updateHz: 12, animationLodBias: 1, shadowRadius: 12, maxAudioVoices: 6 },
     atmosphereDetail: 1,
     ssaoAllowed: false,
     iblResolution: 64,
@@ -108,6 +120,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     cellRetainRadius: 4,
     vegetationDensity: 1,
     wildlifeDensity: 1,
+    wildlife: { maxNearAgents: 32, maxDistantGroups: 20, updateHz: 20, animationLodBias: 0, shadowRadius: 28, maxAudioVoices: 10 },
     atmosphereDetail: 2,
     ssaoAllowed: true,
     iblResolution: 128,
@@ -135,6 +148,7 @@ export const QUALITY_PROFILES: Record<QualityLevel, QualityProfile> = {
     cellRetainRadius: 5,
     vegetationDensity: 1.3,
     wildlifeDensity: 1.35,
+    wildlife: { maxNearAgents: 48, maxDistantGroups: 28, updateHz: 30, animationLodBias: 0, shadowRadius: 42, maxAudioVoices: 12 },
     atmosphereDetail: 3,
     ssaoAllowed: true,
     iblResolution: 256,

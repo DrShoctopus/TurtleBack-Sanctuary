@@ -103,6 +103,12 @@ describe('QUALITY_PROFILES', () => {
     expect(profiles.map((profile) => profile.cellLoadRadius)).toEqual([1, 2, 3, 4])
     expect(profiles.map((profile) => profile.cellRetainRadius)).toEqual([2, 3, 4, 5])
     expect(profiles.map((profile) => profile.wildlifeDensity)).toEqual([0.35, 0.65, 1, 1.35])
+    expect(profiles.map((profile) => profile.wildlife)).toEqual([
+      { maxNearAgents: 10, maxDistantGroups: 8, updateHz: 8, animationLodBias: 2, shadowRadius: 0, maxAudioVoices: 4 },
+      { maxNearAgents: 18, maxDistantGroups: 12, updateHz: 12, animationLodBias: 1, shadowRadius: 12, maxAudioVoices: 6 },
+      { maxNearAgents: 32, maxDistantGroups: 20, updateHz: 20, animationLodBias: 0, shadowRadius: 28, maxAudioVoices: 10 },
+      { maxNearAgents: 48, maxDistantGroups: 28, updateHz: 30, animationLodBias: 0, shadowRadius: 42, maxAudioVoices: 12 },
+    ])
     expect(profiles.map((profile) => profile.iblResolution)).toEqual([0, 64, 128, 256])
     expect(profiles.map((profile) => profile.updateHz)).toEqual([15, 30, 45, 60])
     expect(profiles.map((profile) => profile.ssaoAllowed)).toEqual([false, false, true, true])

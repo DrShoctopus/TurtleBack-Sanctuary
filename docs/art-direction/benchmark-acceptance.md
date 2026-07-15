@@ -17,12 +17,18 @@ This scorecard converts the Slice 1 frames into in-engine acceptance. Style fram
 | `village-threshold`         | `style-frames/arrival-overlook.jpg`           | inhabited transition and route framing          |
 | `market-lane`               | `style-frames/environment-shape-language.jpg` | trade-story cluster and district identity       |
 | `garden-workyard`           | `style-frames/crownwood-interior.jpg`         | forest-to-village overlap and productive detail |
+| `crownwood-songbirds`       | `style-frames/wildlife-turtle-shape-language.jpg` | canopy flock/perch shape and discovery scale |
+| `shell-hare-meadow`         | `style-frames/wildlife-turtle-shape-language.jpg` | safe ground-animal silhouette diagnostic |
+| `galecrest-wildlife`        | `style-frames/wildlife-turtle-shape-language.jpg` | coastal flock and turtle-scale repetition |
+| `ocean-wildlife`            | `style-frames/wildlife-turtle-shape-language.jpg` | distant ocean-group silhouette diagnostic |
 
 Slice 3 replaced the frontal fixed portrait. Galecrest and the eye encounter use the normal player camera; only the distant silhouette and material close remain fixed diagnostics.
 
 Slice 4 turned `arrival-bridge` toward the village route and moved `forest-interior` onto Crownwood's west trail. Both remain normal-player teleport views; the deterministic High/Low and Reduced Motion evidence is in `runtime-evidence/slice-4/`.
 
 Slice 5 added normal-player threshold, market, and garden-workyard reviews. Its High/Low, night, and rain evidence is in `runtime-evidence/slice-5/`; probes require 21 anchors, 28 story clusters, 21 prop families, and all seven showcase districts.
+
+Slice 6 replaced the primitive gull loop and random unowned chirps with five represented habitat categories. Its High/Low, Quiet/night, and rain evidence is in `runtime-evidence/slice-6/`; probes require five categories, five habitats, 22 pooled schedule owners, zero orphan calls, and Low habitat coverage.
 
 ## Hard failures
 
@@ -90,6 +96,15 @@ Slice 4 runtime probes additionally require `forestLod` 0/1/2 on High-or-Ultra/M
 - Heavy brow, small eye, hooked beak, jaw, neck folds, and asymmetric material zones are readable.
 - Overlook rail, waterfall, trees/structures, birds, ocean animals, wake, fog, and motion provide multiple scale repetitions.
 - The turtle remains calm and ancient; no threat or mascot expression.
+
+### Wildlife habitats
+
+- Canopy birds, ground animals, insects, coastal birds, and ocean groups remain readable by movement and silhouette rather than labels.
+- The canonical five-minute schedule exposes all five categories on High without a camera-triggered spawn.
+- Hares remain outside paths, buildings, water features, story-cluster clearances, and unsafe shell edges.
+- Rain shelters birds and rests ground animals; night preserves habitat representation and introduces firefly glow.
+- Quiet Mode reduces owned calls without deleting a habitat, and every call emitter exists in the represented frame.
+- Low retains all five habitats through bounded near agents and distant groups.
 
 ### Turtle material close
 

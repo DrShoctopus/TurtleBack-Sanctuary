@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–5 complete; Slice 6 not started
+**Status:** Slices 1–6 complete; Slice 7 not started
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -321,6 +321,8 @@ Acceptance:
 Runtime asset budget: 10 MiB.
 
 Suggested commit: `feat: bring showcase habitats to life`
+
+**Completed 2026-07-15:** a fixed-tick, quality-budgeted director now presents five categories across five habitats through 22 pooled schedule owners and grouped render representations. Crownwood songbirds perch/take off/flock, paired shell hares forage/rest/flee, pooled pollinators/dragonflies/fireflies react to day and rain, Galecrest carries seabird flocks, and distant rays surface beyond the rim. The old unowned random chirp timer and primitive gull pass were removed; synthesized calls now carry a represented emitter ID and spatial position. Unit proof runs the unforced showcase schedule for 300 seconds, browser probes verify High/Low/Quiet/rain/night behavior, and the seven-frame evidence set is recorded under `docs/art-direction/runtime-evidence/slice-6/`.
 
 ### Slice 7 — Lo-fi soundtrack variation
 

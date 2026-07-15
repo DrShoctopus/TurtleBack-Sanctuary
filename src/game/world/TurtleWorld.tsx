@@ -6,7 +6,7 @@ import { Clouds } from './sky/Clouds'
 import { TimeLighting } from './sky/TimeLighting'
 import { Ocean } from './ocean/Ocean'
 import { Turtle } from './turtle/Turtle'
-import { AmbientLife, Landmarks } from './landmarks/Landmarks'
+import { Landmarks } from './landmarks/Landmarks'
 import { Village } from '../village/Village'
 import { Vegetation } from '../village/Vegetation'
 import { CrownwoodForest } from '../village/forest/CrownwoodForest'
@@ -15,6 +15,7 @@ import { AtmosphereDetails } from '../weather/AtmosphereDetails'
 import { InteractionSystem } from '../interaction/InteractionSystem'
 import { WorldSystems } from './WorldSystems'
 import { SpatialCellProvider } from './spatial/SpatialCellProvider'
+import { WildlifeWorld } from './wildlife/WildlifeWorld'
 
 /** Root of everything outside the player: sky, sea, shell, turtle, village. */
 export function TurtleWorld() {
@@ -30,7 +31,7 @@ export function TurtleWorld() {
       <BiolumSeams />
       <Turtle />
       <Landmarks />
-      <AmbientLife />
+      <WildlifeWorld />
       <Village />
       <CrownwoodForest />
       <Vegetation />
