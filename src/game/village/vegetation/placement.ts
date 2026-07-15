@@ -7,6 +7,7 @@ import {
   terrainHeight,
 } from '../../world/shell/shellShape'
 import type { VegetationLayer, VegetationPopulation, VegetationTransform } from './types'
+import { crownwoodInfluence } from '../forest/layout'
 
 export const VEGETATION_PLACEMENT_MARGINS: Readonly<Record<VegetationLayer, number>> = {
   grass: 1.6,
@@ -217,6 +218,12 @@ export function buildCellVegetationPopulation(input: {
       : buildVegetationPopulation({ seed: input.seed, density: 1 }).layers.trees
   return {
     ...details,
-    layers: { ...details.layers, trees: canonicalTrees },
+    // Crownwood has its own nine-form streamed tree system. Keep the legacy
+    // meadow trees only beyond that biome so toy-scale crowns do not leak into
+    // the showcase corridor while other districts retain their sparse accents.
+    layers: {
+      ...details.layers,
+      trees: canonicalTrees.filter((tree) => crownwoodInfluence(tree.x, tree.z) < 0.24),
+    },
   }
 }

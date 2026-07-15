@@ -16,7 +16,7 @@ export type BenchmarkView = TeleportBenchmark | FixedBenchmark
 
 /** Stable art-review cameras. IDs are public through window.__turtlebackDebug. */
 export const BENCHMARKS = {
-  'arrival-bridge': { mode: 'teleport', x: 0, z: -202, yaw: 0, pitch: -0.08 },
+  'arrival-bridge': { mode: 'teleport', x: 0, z: -202, yaw: Math.PI, pitch: -0.08 },
   'east-deck': { mode: 'teleport', x: 123, z: 60, yaw: -Math.PI / 2, pitch: -0.08 },
   'stern-deck': { mode: 'teleport', x: 5.2, z: 219, yaw: Math.PI, pitch: -0.12 },
   'west-deck': { mode: 'teleport', x: -127, z: -31, yaw: Math.PI / 2, pitch: -0.08 },
@@ -43,7 +43,7 @@ export const BENCHMARKS = {
   plaza: { mode: 'teleport', x: 0, z: -60, yaw: Math.PI, pitch: -0.04 },
   landmarks: { mode: 'teleport', x: 70, z: 43, yaw: -2.18, pitch: -0.04 },
   cottages: { mode: 'teleport', x: -110, z: -38, yaw: -2.77, pitch: -0.04 },
-  'forest-interior': { mode: 'teleport', x: -110, z: -38, yaw: -0.42, pitch: -0.1 },
+  'forest-interior': { mode: 'teleport', x: -128, z: -31, yaw: -1.28, pitch: -0.08 },
   'biome-threshold': { mode: 'teleport', x: 70, z: 43, yaw: -2.18, pitch: -0.08 },
   'wildlife-grouping': { mode: 'teleport', x: -52, z: 91, yaw: 0.25, pitch: -0.12 },
   'waterfall-rim': { mode: 'teleport', x: -34.2, z: 110.8, yaw: 2.75, pitch: -0.22 },

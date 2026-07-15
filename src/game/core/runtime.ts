@@ -72,6 +72,13 @@ export interface Runtime {
     sprayStrength: number
     activeEvent: TurtleScaleEvent | null
   }
+  forest: {
+    lod: 0 | 1 | 2
+    nearInstances: number
+    horizonInstances: number
+    discoveries: number
+    layers: Readonly<Record<string, number>>
+  }
   /** true while menus/tv pause gameplay simulation of input (world keeps breathing) */
   uiCaptured: boolean
   perf: { fps: number; p95FrameMs: number }
@@ -103,6 +110,13 @@ export const runtime: Runtime = {
     resonanceStrength: 0.07,
     sprayStrength: 0,
     activeEvent: null,
+  },
+  forest: {
+    lod: 1,
+    nearInstances: 0,
+    horizonInstances: 0,
+    discoveries: 0,
+    layers: {},
   },
   uiCaptured: true,
   perf: { fps: 60, p95FrameMs: 0 },

@@ -9,6 +9,7 @@ import { Turtle } from './turtle/Turtle'
 import { AmbientLife, Landmarks } from './landmarks/Landmarks'
 import { Village } from '../village/Village'
 import { Vegetation } from '../village/Vegetation'
+import { CrownwoodForest } from '../village/forest/CrownwoodForest'
 import { Rain } from '../weather/Rain'
 import { AtmosphereDetails } from '../weather/AtmosphereDetails'
 import { InteractionSystem } from '../interaction/InteractionSystem'
@@ -31,6 +32,7 @@ export function TurtleWorld() {
       <Landmarks />
       <AmbientLife />
       <Village />
+      <CrownwoodForest />
       <Vegetation />
       <Rain />
       <AtmosphereDetails />

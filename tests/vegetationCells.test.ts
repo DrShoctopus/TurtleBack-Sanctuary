@@ -18,6 +18,7 @@ import {
   type VegetationPopulation,
   type VegetationTransform,
 } from '../src/game/village/vegetation/types'
+import { crownwoodInfluence } from '../src/game/village/forest/layout'
 
 const GOLDEN_SEED = 20260712
 const GOLDEN_DENSITY_ONE_SHA256 = '59f22b5779e2a9c39a66cf4ee174daec31148dbdc0def82b42927705bdcf898f'
@@ -100,6 +101,7 @@ describe('vegetation placement', () => {
     const low = buildCellVegetationPopulation({ seed: GOLDEN_SEED, density: 0.45 })
     const ultra = buildCellVegetationPopulation({ seed: GOLDEN_SEED, density: 1.3 })
     expect(low.layers.trees).toEqual(ultra.layers.trees)
+    expect(low.layers.trees.every((tree) => crownwoodInfluence(tree.x, tree.z) < 0.24)).toBe(true)
     expect(low.layers.grass.length).toBeLessThan(ultra.layers.grass.length)
   })
 })

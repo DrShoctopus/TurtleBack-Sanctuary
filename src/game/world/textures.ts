@@ -18,6 +18,7 @@ export type SurfaceDetailName =
   | 'brushedMetal'
   | 'ground'
   | 'turtleSkin'
+  | 'forestBark'
 
 function makeCanvas(size: number): { c: HTMLCanvasElement; ctx: CanvasRenderingContext2D } {
   const c = document.createElement('canvas')
@@ -90,7 +91,7 @@ export function getSurfaceDetail(name: SurfaceDetailName): {
 
 interface SurfaceConfig {
   seed: number
-  kind: 'mineral' | 'wood' | 'weave' | 'brushed'
+  kind: 'mineral' | 'wood' | 'bark' | 'weave' | 'brushed'
   normalStrength: number
   roughness: number
   roughnessVariance: number
@@ -155,6 +156,14 @@ const SURFACE_CONFIG: Record<SurfaceDetailName, SurfaceConfig> = {
     roughnessVariance: 0.15,
     size: 256,
   },
+  forestBark: {
+    seed: 2217,
+    kind: 'bark',
+    normalStrength: 4.2,
+    roughness: 0.94,
+    roughnessVariance: 0.13,
+    size: 256,
+  },
 }
 
 function generateSurfaceDetail(config: SurfaceConfig): {
@@ -183,6 +192,11 @@ function generateSurfaceDetail(config: SurfaceConfig): {
       if (config.kind === 'wood') {
         h += Math.sin(Math.PI * 2 * (v * 18 + Math.sin(u * Math.PI * 4) * 0.16)) * 0.72
         h += Math.sin(Math.PI * 2 * v * 37) * 0.18
+      } else if (config.kind === 'bark') {
+        const verticalWarp = Math.sin(v * Math.PI * 5 + wavePhase(waves)) * 0.12
+        h += Math.sin(Math.PI * 2 * (u * 13 + verticalWarp)) * 0.78
+        h += Math.sin(Math.PI * 2 * (u * 29 - v * 0.42)) * 0.24
+        h += Math.sin(Math.PI * 2 * (u * 5 + v * 1.7)) * 0.18
       } else if (config.kind === 'weave') {
         h += Math.sin(Math.PI * 2 * u * 32) * 0.52 + Math.sin(Math.PI * 2 * v * 32) * 0.52
       } else if (config.kind === 'brushed') {
@@ -226,6 +240,10 @@ function generateSurfaceDetail(config: SurfaceConfig): {
     normalMap: finish(normalCanvas.c, false),
     roughnessMap: finish(roughCanvas.c, false),
   }
+}
+
+function wavePhase(waves: readonly { phase: number }[]): number {
+  return waves[0]?.phase ?? 0
 }
 
 const GENERATORS: Record<string, () => CanvasTexture> = {

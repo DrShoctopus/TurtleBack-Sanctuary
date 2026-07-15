@@ -19,6 +19,12 @@ import { mergeGeometries } from './kit/merge'
 import { buildCellVegetationPopulation } from './vegetation/placement'
 import { partitionVegetationByCell } from './vegetation/partition'
 import { VegetationCell, type VegetationRenderResources } from './vegetation/VegetationCell'
+import {
+  VEGETATION_LAYERS,
+  type VegetationCellPopulation,
+  type VegetationLayer,
+  type VegetationTransform,
+} from './vegetation/types'
 import { createPainterlyMaterial } from '../rendering/painterlyMaterials'
 
 interface MutableUniform {
@@ -288,18 +294,63 @@ export function Vegetation() {
     [population],
   )
   const active = useMemo(() => new Set(spatial.active), [spatial.active])
+  const aggregate = useMemo(() => {
+    const emptyLayers = (): Record<VegetationLayer, VegetationTransform[]> => ({
+      grass: [],
+      flowers: [],
+      bushes: [],
+      rocks: [],
+      trees: [],
+    })
+    const near = emptyLayers()
+    const horizonTrees: VegetationTransform[] = []
+    const colliderTrees: VegetationTransform[] = []
+    for (const key of spatial.retained) {
+      const cell = cells.get(key)
+      if (!cell) continue
+      colliderTrees.push(...cell.near.trees)
+      if (active.has(key)) {
+        for (const layer of VEGETATION_LAYERS) near[layer].push(...cell.near[layer])
+      } else {
+        horizonTrees.push(...cell.horizonTrees)
+      }
+    }
+    const nearCell: VegetationCellPopulation = {
+      cellId: '0:0',
+      near,
+      horizonTrees: [],
+    }
+    const horizonCell: VegetationCellPopulation = {
+      cellId: '0:0',
+      near: emptyLayers(),
+      horizonTrees,
+    }
+    return { nearCell, horizonCell, colliderTrees }
+  }, [active, cells, spatial.retained])
 
   useFrame((_, delta) => {
     const motionTime = motionClock.current.advance(delta, runtime.reducedMotion)
     owner.update(motionTime, runtime.weather.wind, runtime.turtle.foliageImpulse)
   })
 
-  return spatial.retained.map((key) => {
-    const cell = cells.get(key)
-    return cell ? (
-      <VegetationCell key={key} cell={cell} active={active.has(key)} resources={owner.resources} />
-    ) : null
-  })
+  return (
+    <>
+      <VegetationCell
+        cell={aggregate.nearCell}
+        active
+        resources={owner.resources}
+        colliderTrees={aggregate.colliderTrees}
+        name="vegetation-aggregate:near"
+      />
+      <VegetationCell
+        cell={aggregate.horizonCell}
+        active={false}
+        resources={owner.resources}
+        colliderTrees={[]}
+        name="vegetation-aggregate:horizon"
+      />
+    </>
+  )
 }
 
 function mergeAndDispose(geometries: BufferGeometry[]): BufferGeometry {

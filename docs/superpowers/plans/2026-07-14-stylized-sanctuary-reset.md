@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–3 complete; Slice 4 not started
+**Status:** Slices 1–4 complete; Slice 5 not started
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -247,6 +247,8 @@ Runtime asset budget: 12 MiB.
 Suggested commit: `feat: deliver monumental world-turtle hero`
 
 ### Slice 4 — Crownwood forest and Arrival corridor
+
+**Implementation record:** completed on 2026-07-15. Live High/Low and Reduced Motion evidence is recorded in `docs/art-direction/runtime-evidence/slice-4/`.
 
 **Goal:** replace sparse scatter with a professional forest system and complete the first half of the showcase route.
 

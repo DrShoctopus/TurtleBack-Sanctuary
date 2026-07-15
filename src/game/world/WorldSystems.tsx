@@ -85,11 +85,16 @@ interface VegetationInstanceCounts {
   horizon: number
 }
 
-function vegetationCellId(object: Object3D): string | null {
+function vegetationResidency(
+  object: Object3D,
+  active: ReadonlySet<string>,
+): 'near' | 'horizon' | null {
   let current: Object3D | null = object
   while (current) {
+    if (current.name === 'vegetation-aggregate:near') return 'near'
+    if (current.name === 'vegetation-aggregate:horizon') return 'horizon'
     if (current.name.startsWith('vegetation-cell:')) {
-      return current.name.slice('vegetation-cell:'.length)
+      return active.has(current.name.slice('vegetation-cell:'.length)) ? 'near' : 'horizon'
     }
     current = current.parent
   }
@@ -102,12 +107,11 @@ export function countVegetationInstances(scene: Object3D): VegetationInstanceCou
   scene.traverse((object) => {
     const candidate = object as Object3D & { readonly isInstancedMesh?: boolean; count?: number }
     if (!candidate.isInstancedMesh) return
-    const cell = vegetationCellId(candidate)
-    if (!cell) return
+    const residency = vegetationResidency(candidate, active)
+    if (!residency) return
     const count = candidate.count ?? 0
     counts.total += count
-    if (active.has(cell)) counts.near += count
-    else counts.horizon += count
+    counts[residency] += count
   })
   return counts
 }
@@ -155,6 +159,10 @@ export function WorldSystems() {
       }))
       const unregisterVegetation = registerProbeSection('world', 'vegetation', () => ({
         vegetationInstances,
+        forestInstances: runtime.forest.nearInstances + runtime.forest.horizonInstances,
+        forestLod: runtime.forest.lod,
+        forestDiscoveries: runtime.forest.discoveries,
+        forestLayers: runtime.forest.layers,
       }))
       const unregisterTurtle = registerProbeSection('turtle', 'hero', () => ({
         model: 'turtle.hero.monumental',
@@ -188,8 +196,16 @@ export function WorldSystems() {
         return collectSceneProbe({
           activeCells: runtime.spatial.active,
           retainedCells: runtime.spatial.retained,
-          instancesByFamily: { vegetation: vegetation.total },
+          instancesByFamily: {
+            forest: runtime.forest.nearInstances + runtime.forest.horizonInstances,
+            vegetation: vegetation.total,
+          },
           lodsByFamily: {
+            forest: {
+              horizon: runtime.forest.horizonInstances,
+              near: runtime.forest.nearInstances,
+              [`lod${runtime.forest.lod}`]: runtime.forest.nearInstances,
+            },
             vegetation: { horizon: vegetation.horizon, near: vegetation.near },
           },
           loadedAssetIds: [],

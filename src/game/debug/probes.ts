@@ -48,6 +48,10 @@ export interface WorldProbeSection {
   activeCellCount: number
   retainedCellCount: number
   vegetationInstances: number
+  forestInstances: number
+  forestLod: 0 | 1 | 2
+  forestDiscoveries: number
+  forestLayers: Readonly<Record<string, number>>
 }
 
 export interface ProbeSectionMap {

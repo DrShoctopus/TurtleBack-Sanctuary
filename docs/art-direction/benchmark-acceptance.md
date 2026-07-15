@@ -17,6 +17,8 @@ This scorecard converts the Slice 1 frames into in-engine acceptance. Style fram
 
 Slice 3 replaced the frontal fixed portrait. Galecrest and the eye encounter use the normal player camera; only the distant silhouette and material close remain fixed diagnostics.
 
+Slice 4 turned `arrival-bridge` toward the village route and moved `forest-interior` onto Crownwood's west trail. Both remain normal-player teleport views; the deterministic High/Low and Reduced Motion evidence is in `runtime-evidence/slice-4/`.
+
 ## Hard failures
 
 Any one of these rejects the capture:
@@ -64,6 +66,8 @@ Score every category `0` (fails), `1` (partial), or `2` (matches target). A hero
 - Path bends toward a brighter middle-distance anchor.
 - Root/log/boulder clusters are grounded and traversal-safe.
 - At least one plausible wildlife discovery can occur without being guaranteed in the exact screenshot.
+
+Slice 4 runtime probes additionally require `forestLod` 0/1/2 on High-or-Ultra/Medium/Low, all seven `forestLayers` above zero, retained-cell horizon trees, and zero fallback or page errors.
 
 ### Galecrest turtle reveal
 

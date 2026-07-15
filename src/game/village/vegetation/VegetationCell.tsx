@@ -141,15 +141,19 @@ export function VegetationCell({
   cell,
   active,
   resources,
+  colliderTrees = cell.near.trees,
+  name = `vegetation-cell:${cell.cellId}`,
 }: {
   cell: VegetationCellPopulation
   active: boolean
   resources: VegetationRenderResources
+  colliderTrees?: readonly VegetationTransform[]
+  name?: string
 }) {
-  const colliders = useMemo(() => buildTreeColliderDescriptors(cell.near.trees), [cell.near.trees])
+  const colliders = useMemo(() => buildTreeColliderDescriptors(colliderTrees), [colliderTrees])
 
   return (
-    <group name={`vegetation-cell:${cell.cellId}`}>
+    <group name={name}>
       {active ? (
         <>
           <Instances transforms={cell.near.grass} resource={resources.grass} />
