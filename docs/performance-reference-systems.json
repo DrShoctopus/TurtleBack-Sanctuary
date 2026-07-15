@@ -1,0 +1,30 @@
+{
+  "schemaVersion": 1,
+  "updatedAt": "2026-07-15",
+  "slots": {
+    "high-dedicated": {
+      "target": {
+        "viewport": [1920, 1080],
+        "maxP95FrameMs": 16.7,
+        "gpuClass": "dedicated"
+      },
+      "registeredSystem": null,
+      "status": "external-hardware-gate"
+    },
+    "low-integrated": {
+      "target": {
+        "viewport": [1920, 1080],
+        "maxP95FrameMs": 33.3,
+        "gpuClass": "integrated"
+      },
+      "registeredSystem": null,
+      "status": "external-hardware-gate"
+    }
+  },
+  "developmentBaseline": {
+    "system": "Apple M5, 16 GiB, macOS 26.5.1",
+    "role": "local packaged stability and visual proof only",
+    "eligibleReferenceSlots": [],
+    "reason": "No named release reference slot has been fingerprinted and approved on this host."
+  }
+}

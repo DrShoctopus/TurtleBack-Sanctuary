@@ -157,7 +157,7 @@ interface OwnedDetails {
   readonly materials: readonly Material[]
 }
 
-function buildDetails(plan: HabitatSignaturePlan): OwnedDetails {
+function buildDetails(plan: HabitatSignaturePlan, shadows: boolean): OwnedDetails {
   const group = new Group()
   group.name = 'biomes:signature-details'
   const geometries: BufferGeometry[] = []
@@ -186,8 +186,9 @@ function buildDetails(plan: HabitatSignaturePlan): OwnedDetails {
           )
     const mesh = new InstancedMesh(geometry, material, features.length)
     mesh.name = `habitat-detail:${kind}`
-    mesh.castShadow = kind !== 'glow-bulb' && kind !== 'lily' && kind !== 'reed'
-    mesh.receiveShadow = kind === 'fall-stone' || kind === 'saltstone' || kind === 'civic-planter'
+    mesh.castShadow = shadows && kind !== 'glow-bulb' && kind !== 'lily' && kind !== 'reed'
+    mesh.receiveShadow =
+      shadows && (kind === 'fall-stone' || kind === 'saltstone' || kind === 'civic-planter')
     for (let index = 0; index < features.length; index++) {
       const feature = features[index]
       mesh.setMatrixAt(index, matrixFor(feature))
@@ -208,7 +209,10 @@ export function HabitatDetails() {
   const quality = useQualityProfile()
   const density = Math.max(0.4, quality.vegetationDensity)
   const plan = useMemo(() => buildHabitatSignaturePlan(seed, density), [density, seed])
-  const owned = useMemo(() => buildDetails(plan), [plan])
+  const owned = useMemo(
+    () => buildDetails(plan, quality.shadowsEnabled),
+    [plan, quality.shadowsEnabled],
+  )
 
   useEffect(() => {
     const unregister = registerProbeSection('world', 'habitat-signatures', () => ({

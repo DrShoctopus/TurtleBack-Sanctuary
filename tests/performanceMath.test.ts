@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import {
+  analyzeMemoryPlateau,
   estimateRendererMemory,
   estimateTextureBytes,
   frameTimePercentiles,
   rendererCounters,
 } from '@/game/debug/performanceMath'
 import type { AssetRecord, AssetVariant } from '@/game/assets/schema'
+import { GRAPHICS_PERFORMANCE_CONTRACT } from '@/game/debug/performanceContract'
 
 const SHA = 'a'.repeat(64)
 
@@ -91,6 +93,19 @@ const records: readonly AssetRecord[] = [
 ]
 
 describe('performance math', () => {
+  it('keeps the named frame-time and traversal release thresholds explicit', () => {
+    expect(GRAPHICS_PERFORMANCE_CONTRACT).toMatchObject({
+      high: { referenceId: 'high-dedicated', maxP95FrameMs: 16.7 },
+      low: { referenceId: 'low-integrated', maxP95FrameMs: 33.3 },
+      soak: {
+        durationMs: 30 * 60_000,
+        finalWindowMs: 20 * 60_000,
+        maxMemoryGrowthPercent: 10,
+        maxCellTransitionsPerMinute: 18,
+      },
+    })
+  })
+
   it('reports p50, p95, and p99 through the canonical nearest-rank percentile helper', () => {
     const samples = Array.from({ length: 100 }, (_, index) => 100 - index)
 
@@ -147,5 +162,50 @@ describe('performance math', () => {
       },
       estimatedTextureBytes: 1_200,
     })
+  })
+
+  it('measures final-window memory growth from bounded median buckets', () => {
+    const samples = Array.from({ length: 31 }, (_, minute) => ({
+      elapsedMs: minute * 60_000,
+      workingSetBytes: minute < 10 ? 900 + minute * 10 : 1_000 + (minute - 10) * 3,
+      rendererGeometries: 240 + (minute % 2),
+      rendererTextures: 44,
+    }))
+
+    const report = analyzeMemoryPlateau(samples, {
+      finalWindowMs: 20 * 60_000,
+      maxGrowthPercent: 10,
+    })
+    expect(report.sampleCount).toBe(31)
+    expect(report.finalWindowSampleCount).toBe(21)
+    expect(report.startWorkingSetBytes).toBe(1006)
+    expect(report.endWorkingSetBytes).toBe(1051)
+    expect(report.growthPercent).toBeCloseTo(4.4732, 4)
+    expect(report.maxRendererGeometries).toBe(241)
+    expect(report.finalRendererTextures).toBe(44)
+    expect(report.passed).toBe(true)
+  })
+
+  it('rejects growing, unordered, and under-duration memory traces', () => {
+    const growing = [
+      { elapsedMs: 0, workingSetBytes: 100, rendererGeometries: 1, rendererTextures: 1 },
+      { elapsedMs: 10, workingSetBytes: 120, rendererGeometries: 1, rendererTextures: 1 },
+      { elapsedMs: 20, workingSetBytes: 130, rendererGeometries: 1, rendererTextures: 1 },
+    ]
+    expect(analyzeMemoryPlateau(growing, { finalWindowMs: 20, maxGrowthPercent: 10 }).passed).toBe(
+      false,
+    )
+    expect(() =>
+      analyzeMemoryPlateau([growing[1], growing[0]], {
+        finalWindowMs: 10,
+        maxGrowthPercent: 10,
+      }),
+    ).toThrow(/strictly increasing/i)
+    expect(() =>
+      analyzeMemoryPlateau(growing.slice(0, 2), {
+        finalWindowMs: 20,
+        maxGrowthPercent: 10,
+      }),
+    ).toThrow(/do not cover/i)
   })
 })

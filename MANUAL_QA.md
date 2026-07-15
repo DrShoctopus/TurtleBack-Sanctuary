@@ -202,6 +202,21 @@ your release notes; a SwiftShader capture does not count as a hardware pass.
       density/LOD, but the seeded horizon-tree identity and broad silhouette do
       not reshuffle, vanish, or pop into a different forest.
 
+### Stylized overhaul final owner walk
+
+Automated Slice 10 evidence covers the condition matrix, fallback injection,
+packaged offline loading, a 30-minute diagnostic traversal, and the pure
+two-hour audio plan. It does not replace this final normal-play approval.
+
+- [ ] Walk Arrival Bridge → Crownwood → Lumenfen → Hearth → Galecrest without a debug camera; approve the enclosure/threshold/reveal rhythm.
+- [ ] Confirm the turtle reads as colossal and ancient from ordinary routes, not only the hero vista.
+- [ ] Repeat representative forest, village, and turtle views at noon, sunset, night, and settled rain; reject crushed paths, white fog, neon seams, fluorescent wetness, or bloom washout.
+- [ ] Compare High, Medium, and Low at the same views; approve identity retention and the intended density reduction.
+- [ ] Enable Reduced Motion and Quiet Mode separately; confirm the sanctuary stays alive, readable, and calm.
+- [ ] Listen for at least 20 minutes across forest, village, edge, rain, and night; approve musical variety, transition pacing, and loudness on headphones and speakers.
+- [ ] Record the named High-dedicated and Low-integrated hardware fingerprints and p95 results in `docs/performance-reference-systems.json`.
+- [ ] Sign off the final showcase walk before changing release status from engineering-complete to release-approved.
+
 ## Accessibility & comfort
 
 - [ ] Reduced Motion disables head-bob, sway, and large screen motion; turtle

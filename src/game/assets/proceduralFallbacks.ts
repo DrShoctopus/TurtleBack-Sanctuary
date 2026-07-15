@@ -37,4 +37,7 @@ export const proceduralFallbacks = {
 export const PROCEDURAL_FALLBACK_KEYS: ReadonlySet<string> = new Set([
   ...Object.keys(proceduralFallbacks.models),
   ...Object.keys(proceduralFallbacks.textures),
+  // Buffered audio consumers treat this key as an intentional no-op rather
+  // than substituting an unrelated sound when an optional cue cannot decode.
+  'procedural.silence',
 ])

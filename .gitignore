@@ -3,6 +3,7 @@ node_modules/
 dist/
 dist-desktop/
 release/
+release-diagnostics/
 playwright-report/
 test-results/
 .DS_Store

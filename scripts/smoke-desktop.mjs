@@ -1,6 +1,6 @@
-import { access, mkdtemp, readFile, rm } from 'node:fs/promises'
+import { access, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises'
 import { tmpdir, arch, cpus, platform, release, totalmem } from 'node:os'
-import { join, resolve, sep } from 'node:path'
+import { dirname, join, resolve, sep } from 'node:path'
 import { execFile } from 'node:child_process'
 import { promisify } from 'node:util'
 import { performance } from 'node:perf_hooks'
@@ -9,6 +9,7 @@ import { _electron as electron } from '@playwright/test'
 const execFileAsync = promisify(execFile)
 const root = resolve(import.meta.dirname, '..')
 const measurementSeconds = parseMeasurementSeconds(process.argv)
+const outputPath = parseOutputPath(process.argv)
 const profile = await mkdtemp(join(tmpdir(), 'turtleback-desktop-smoke-'))
 const executablePath = await findPackagedExecutable()
 const authoredPipelineMark = 'turtleback:asset-pipeline-authored'
@@ -142,6 +143,7 @@ try {
     await ensureClosed(second)
   }
 
+  if (outputPath) await writeReport(outputPath, report)
   console.info(JSON.stringify(report, null, 2))
 } finally {
   await rm(profile, { recursive: true, force: true })
@@ -587,6 +589,21 @@ function parseMeasurementSeconds(args) {
     throw new Error('--measure-seconds must be between 1 and 600')
   }
   return seconds
+}
+
+function parseOutputPath(args) {
+  return (
+    args.find((argument) => argument.startsWith('--output='))?.slice('--output='.length) ?? null
+  )
+}
+
+async function writeReport(path, value) {
+  const absolute = resolve(root, path)
+  if (absolute !== root && !absolute.startsWith(`${root}${sep}`)) {
+    throw new Error(`desktop smoke output must stay inside the repository: ${path}`)
+  }
+  await mkdir(dirname(absolute), { recursive: true })
+  await writeFile(absolute, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
 }
 
 async function findPackagedExecutable() {

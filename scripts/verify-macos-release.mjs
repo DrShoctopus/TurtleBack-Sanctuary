@@ -1,12 +1,13 @@
-import { access, readdir, stat } from 'node:fs/promises'
+import { access, mkdir, readdir, stat, writeFile } from 'node:fs/promises'
 import { execFile } from 'node:child_process'
 import { platform } from 'node:os'
-import { join, resolve } from 'node:path'
+import { dirname, join, resolve, sep } from 'node:path'
 import { promisify } from 'node:util'
 
 const execFileAsync = promisify(execFile)
 const root = resolve(import.meta.dirname, '..')
 const mode = parseMode(process.argv)
+const outputPath = parseOutputPath(process.argv)
 
 assert(platform() === 'darwin', 'macOS release verification must run on macOS')
 
@@ -17,7 +18,11 @@ const executablePath = join(contentsPath, 'MacOS', 'Turtleback Sanctuary')
 const bundleIdentifier = await plistValue(infoPlist, 'CFBundleIdentifier')
 const minimumSystemVersion = await plistValue(infoPlist, 'LSMinimumSystemVersion')
 const iconName = await plistValue(infoPlist, 'CFBundleIconFile')
-const iconPath = join(contentsPath, 'Resources', iconName.endsWith('.icns') ? iconName : `${iconName}.icns`)
+const iconPath = join(
+  contentsPath,
+  'Resources',
+  iconName.endsWith('.icns') ? iconName : `${iconName}.icns`,
+)
 const iconSizeBytes = (await stat(iconPath)).size
 const architectures = (await run('lipo', ['-archs', executablePath])).stdout.trim().split(/\s+/)
 
@@ -56,7 +61,10 @@ if (mode === 'release') {
     signatureDetails.includes('Authority=Developer ID Application:'),
     'application is not signed with a Developer ID Application certificate',
   )
-  assert(/flags=.*runtime/.test(signatureDetails), 'hardened runtime is not present in the signature')
+  assert(
+    /flags=.*runtime/.test(signatureDetails),
+    'hardened runtime is not present in the signature',
+  )
   const gatekeeper = await run('spctl', ['--assess', '--type', 'execute', '--verbose=2', appPath])
   const stapler = await run('xcrun', ['stapler', 'validate', appPath])
   const diskImage = await findDiskImage()
@@ -81,6 +89,7 @@ if (mode === 'release') {
   assert(signatureDetails.includes('Signature=adhoc'), 'local proof is not ad-hoc signed')
 }
 
+if (outputPath) await writeReport(outputPath, report)
 console.info(JSON.stringify(report, null, 2))
 
 async function plistValue(plist, key) {
@@ -127,6 +136,21 @@ function parseMode(args) {
   const value = args.find((argument) => argument.startsWith('--mode='))?.slice('--mode='.length)
   assert(value === 'local' || value === 'release', '--mode must be local or release')
   return value
+}
+
+function parseOutputPath(args) {
+  return (
+    args.find((argument) => argument.startsWith('--output='))?.slice('--output='.length) ?? null
+  )
+}
+
+async function writeReport(path, value) {
+  const absolute = resolve(root, path)
+  if (absolute !== root && !absolute.startsWith(`${root}${sep}`)) {
+    throw new Error(`macOS verification output must stay inside the repository: ${path}`)
+  }
+  await mkdir(dirname(absolute), { recursive: true })
+  await writeFile(absolute, `${JSON.stringify(value, null, 2)}\n`, 'utf8')
 }
 
 function assert(condition, message) {

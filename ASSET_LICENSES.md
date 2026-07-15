@@ -12,21 +12,26 @@ third-party content retain their provenance, license, and attribution here.
 | --- | --- | --- | --- | --- | --- |
 | `model.pipeline-smoke` | model | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
 | `texture.pipeline-smoke` | texture | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
+| `turtle.sound.breath-deep` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
+| `turtle.sound.breath-loop` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
+| `turtle.sound.shell-resonance` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
+| `turtle.sound.stroke-front` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
+| `turtle.sound.stroke-rear` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
 <!-- END GENERATED ASSET LICENSES -->
 
 ## Procedural content sources
 
-| Asset category | How it's produced | File(s) |
-| --- | --- | --- |
-| Ground / architecture / fabric / wood / stone / plaster textures | Procedural `<canvas>` drawing from seeded noise | `src/game/world/textures.ts` |
-| Wall / gallery / home artworks | Seeded generative `<canvas>` compositions | `src/game/village/artworks.ts` |
-| Sky, ocean, clouds, stars, bioluminescence | Original GLSL shaders | `src/game/world/**` |
-| Buildings, furniture, props, turtle, landmarks, vegetation | Procedural/modular Three.js geometry | `src/game/village/**`, `src/game/world/**` |
-| Music (dawn / day / rain / night) | Original real-time Web Audio synthesis | `src/game/audio/proceduralMusic/**` |
-| Ambient soundscape (ocean, wind, rain, birds, crickets) | Original Web Audio synthesis | `src/game/audio/ambience/**` |
-| Footsteps, interaction & UI sounds | Original Web Audio synthesis | `src/game/audio/SfxEngine.ts` |
-| Fonts | System UI fonts only (`ui-rounded`, `system-ui`, …); none bundled | `src/styles/global.css` |
-| Favicon | Original inline SVG | `public/icons/favicon.svg` |
+| Asset category                                                   | How it's produced                                                 | File(s)                                    |
+| ---------------------------------------------------------------- | ----------------------------------------------------------------- | ------------------------------------------ |
+| Ground / architecture / fabric / wood / stone / plaster textures | Procedural `<canvas>` drawing from seeded noise                   | `src/game/world/textures.ts`               |
+| Wall / gallery / home artworks                                   | Seeded generative `<canvas>` compositions                         | `src/game/village/artworks.ts`             |
+| Sky, ocean, clouds, stars, bioluminescence                       | Original GLSL shaders                                             | `src/game/world/**`                        |
+| Buildings, furniture, props, turtle, landmarks, vegetation       | Procedural/modular Three.js geometry                              | `src/game/village/**`, `src/game/world/**` |
+| Music (dawn / day / rain / night)                                | Original real-time Web Audio synthesis                            | `src/game/audio/proceduralMusic/**`        |
+| Ambient soundscape (ocean, wind, rain, birds, crickets)          | Original Web Audio synthesis                                      | `src/game/audio/ambience/**`               |
+| Footsteps, interaction & UI sounds                               | Original Web Audio synthesis                                      | `src/game/audio/SfxEngine.ts`              |
+| Fonts                                                            | System UI fonts only (`ui-rounded`, `system-ui`, …); none bundled | `src/styles/global.css`                    |
+| Favicon                                                          | Original inline SVG                                               | `public/icons/favicon.svg`                 |
 
 ## User-provided content (not shipped)
 
@@ -49,23 +54,23 @@ license and required attribution notice are shipped at
 `public/assets/decoders/basis/LICENSE.txt` and
 `public/assets/decoders/basis/NOTICE.txt`.
 
-| Package | License |
-| --- | --- |
-| react, react-dom | MIT |
-| three | MIT |
-| @react-three/fiber, @react-three/drei, @react-three/rapier | MIT |
-| @react-three/postprocessing, postprocessing | MIT / Zlib |
-| @dimforge/rapier3d-compat | Apache-2.0 |
+| Package                                                    | License                                                                                           |
+| ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| react, react-dom                                           | MIT                                                                                               |
+| three                                                      | MIT                                                                                               |
+| @react-three/fiber, @react-three/drei, @react-three/rapier | MIT                                                                                               |
+| @react-three/postprocessing, postprocessing                | MIT / Zlib                                                                                        |
+| @dimforge/rapier3d-compat                                  | Apache-2.0                                                                                        |
 | Basis Universal transcoder (bundled JS/WASM), Binomial LLC | Apache-2.0; `public/assets/decoders/basis/LICENSE.txt`, `public/assets/decoders/basis/NOTICE.txt` |
-| three-stdlib | MIT |
-| meshoptimizer | MIT |
-| zustand | MIT |
-| vite, @vitejs/plugin-react | MIT |
-| vite-plugin-static-copy | MIT |
-| tsx | MIT |
-| typescript, typescript-eslint, eslint | MIT / Apache-2.0 |
-| vitest, @playwright/test | MIT / Apache-2.0 |
-| prettier | MIT |
+| three-stdlib                                               | MIT                                                                                               |
+| meshoptimizer                                              | MIT                                                                                               |
+| zustand                                                    | MIT                                                                                               |
+| vite, @vitejs/plugin-react                                 | MIT                                                                                               |
+| vite-plugin-static-copy                                    | MIT                                                                                               |
+| tsx                                                        | MIT                                                                                               |
+| typescript, typescript-eslint, eslint                      | MIT / Apache-2.0                                                                                  |
+| vitest, @playwright/test                                   | MIT / Apache-2.0                                                                                  |
+| prettier                                                   | MIT                                                                                               |
 
 Refer to each package's own license text in `node_modules/<pkg>/LICENSE` and the
 bundled Basis license and notice above for the authoritative terms.
