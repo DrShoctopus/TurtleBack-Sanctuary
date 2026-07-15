@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
-import { Color, DirectionalLight, FogExp2, HemisphereLight, Object3D, Vector3 } from 'three'
+import {
+  AmbientLight,
+  Color,
+  DirectionalLight,
+  FogExp2,
+  HemisphereLight,
+  Object3D,
+  Vector3,
+} from 'three'
 import { runtime } from '../../core/runtime'
 import { SUN_COLOR, hemiIntensityAt, sampleColor, sunIntensityAt } from './palette'
 import { useQualityProfile } from '../../core/useQualityProfile'
@@ -10,6 +18,11 @@ import {
   samplePainterlyEnvironment,
 } from '../../rendering/painterlyPalette'
 import { updatePainterlyMaterialEnvironment } from '../../rendering/painterlyMaterials'
+import {
+  ambientIntensityAt,
+  coolFillIntensityAt,
+  moonIntensityAt,
+} from '../../weather/atmosphereArtDirection'
 
 /**
  * Sun + moon + hemisphere lighting and scene fog, all driven per-frame from
@@ -24,7 +37,9 @@ export function TimeLighting() {
   )
   const sunRef = useRef<DirectionalLight>(null)
   const moonRef = useRef<DirectionalLight>(null)
+  const fillRef = useRef<DirectionalLight>(null)
   const hemiRef = useRef<HemisphereLight>(null)
+  const ambientRef = useRef<AmbientLight>(null)
   const target = useMemo(() => new Object3D(), [])
   const moonTarget = useMemo(() => new Object3D(), [])
   const scene = useThree((s) => s.scene)
@@ -56,7 +71,9 @@ export function TimeLighting() {
     const q = quality
     const sun = sunRef.current
     const moon = moonRef.current
+    const fill = fillRef.current
     const hemi = hemiRef.current
+    const ambient = ambientRef.current
     const p = runtime.player.pos
     const rain = runtime.weather.rain
     samplePainterlyEnvironment(atmosphere, c.t, rain, c.sunDir)
@@ -100,13 +117,25 @@ export function TimeLighting() {
         Math.max(8, c.moonDir[1] * 180),
         p.z + c.moonDir[2] * 180,
       )
-      moon.intensity = 0.3 * c.moonPhaseVisible * c.nightFactor * (1 - rain * 0.5)
+      moon.intensity = moonIntensityAt(c.nightFactor, c.moonPhaseVisible, rain)
+    }
+
+    if (fill) {
+      fill.target = target
+      fill.position.set(p.x - c.sunDir[0] * 120, 74 + c.nightFactor * 32, p.z - c.sunDir[2] * 120)
+      fill.color.copy(atmosphere.skyFill)
+      fill.intensity = coolFillIntensityAt(c.duskFactor, c.nightFactor, rain)
     }
 
     if (hemi) {
-      hemi.intensity = hemiIntensityAt(c.t) * (1 - rain * 0.25)
+      hemi.intensity = hemiIntensityAt(c.t) * (1 - rain * 0.12)
       hemi.color.copy(atmosphere.skyFill)
       hemi.groundColor.copy(atmosphere.groundFill)
+    }
+
+    if (ambient) {
+      ambient.intensity = ambientIntensityAt(c.t, rain)
+      ambient.color.copy(atmosphere.skyFill).lerp(atmosphere.highlightTint, 0.24)
     }
 
     fog.color.copy(atmosphere.fogMid)
@@ -118,9 +147,10 @@ export function TimeLighting() {
     <>
       <directionalLight ref={sunRef} castShadow intensity={3} />
       <directionalLight ref={moonRef} intensity={0} color="#8ea7b3" />
+      <directionalLight ref={fillRef} intensity={0.22} color="#8fa9ad" />
       <hemisphereLight ref={hemiRef} intensity={0.8} />
-      {/* faint constant fill so nothing ever reads as pure black */}
-      <ambientLight intensity={0.06} color="#77939d" />
+      {/* Authored bounce floor: silhouettes stay colored without flattening the key light. */}
+      <ambientLight ref={ambientRef} intensity={0.22} color="#77939d" />
     </>
   )
 }

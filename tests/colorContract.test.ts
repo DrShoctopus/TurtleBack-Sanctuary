@@ -25,7 +25,7 @@ describe('renderer color contract', () => {
 
     expect(renderer.outputColorSpace).toBe(SRGBColorSpace)
     expect(renderer.toneMapping).toBe(ACESFilmicToneMapping)
-    expect(renderer.toneMappingExposure).toBe(1.05)
+    expect(renderer.toneMappingExposure).toBe(1.1)
   })
 
   it('marks color and data textures differently while preserving identity', () => {

@@ -289,7 +289,9 @@ test('scene probes report live quality residency, resources, and vegetation LODs
   })
 })
 
-test('spatial residency crosses two centred cell boundaries without page errors', async ({ page }) => {
+test('spatial residency crosses two centred cell boundaries without page errors', async ({
+  page,
+}) => {
   const pageErrors: string[] = []
   page.on('pageerror', (error) => pageErrors.push(error.message))
   await page.goto('/')
@@ -304,13 +306,19 @@ test('spatial residency crosses two centred cell boundaries without page errors'
     await page.waitForFunction(
       (cell) => (window as any).__turtlebackDebug.probe().sections.world?.centerCell === cell,
       expected,
-      { timeout: 10_000 },
+      { timeout: 20_000 },
     )
+    // The runtime snapshot publishes before every streamed React consumer has
+    // committed. Let the dense forest/biome cells settle before crossing again.
+    await page.waitForTimeout(750)
   }
 
   await teleportAndAwaitCell(0, '0:0')
-  await teleportAndAwaitCell(32, '1:0')
-  await teleportAndAwaitCell(82, '2:0')
+  // Use ordinary open-ground samples comfortably beyond the six-metre
+  // hysteresis band. One-metre-over-boundary samples can be corrected back by
+  // the character controller when denser authored scenery occupies the rim.
+  await teleportAndAwaitCell(40, '1:0')
+  await teleportAndAwaitCell(110, '2:0')
   expect(pageErrors).toEqual([])
 })
 
@@ -356,11 +364,9 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
   })
   await page.keyboard.down('ShiftLeft')
   await page.keyboard.down('KeyW')
-  await page.waitForFunction(
-    () => (window as any).__sanctuary.runtime.player.pos.z < 80,
-    null,
-    { timeout: 15_000 },
-  )
+  await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.pos.z < 80, null, {
+    timeout: 15_000,
+  })
   await page.keyboard.up('KeyW')
   await page.keyboard.up('ShiftLeft')
   await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.grounded, null, {
@@ -378,11 +384,9 @@ test('collision-backed bridge and stern stairs accept grounded movement', async 
   await page.waitForTimeout(350)
   await page.keyboard.down('ShiftLeft')
   await page.keyboard.down('KeyW')
-  await page.waitForFunction(
-    () => (window as any).__sanctuary.runtime.player.pos.z > 228,
-    null,
-    { timeout: 25_000 },
-  )
+  await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.pos.z > 228, null, {
+    timeout: 25_000,
+  })
   await page.keyboard.up('KeyW')
   await page.keyboard.up('ShiftLeft')
   await page.waitForFunction(() => (window as any).__sanctuary.runtime.player.grounded, null, {

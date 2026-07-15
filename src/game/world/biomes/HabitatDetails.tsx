@@ -165,12 +165,25 @@ function buildDetails(plan: HabitatSignaturePlan): OwnedDetails {
   for (const kind of FEATURE_KINDS) {
     const features = plan.features.filter((feature) => feature.kind === kind)
     const geometry = geometryFor(kind)
-    const material = kind === 'glow-bulb'
-      ? new MeshBasicMaterial({ color: '#ffffff', vertexColors: true, transparent: true, opacity: 0.78, depthWrite: false, toneMapped: false })
-      : createPainterlyMaterial(kind === 'fall-stone' || kind === 'saltstone' ? 'rock' : kind === 'root-arch' ? 'bark' : 'foliage', {
-          color: '#ffffff',
-          vertexColors: true,
-        })
+    const material =
+      kind === 'glow-bulb'
+        ? new MeshBasicMaterial({
+            color: '#ffffff',
+            transparent: true,
+            opacity: 0.78,
+            depthWrite: false,
+            toneMapped: false,
+          })
+        : createPainterlyMaterial(
+            kind === 'fall-stone' || kind === 'saltstone'
+              ? 'rock'
+              : kind === 'root-arch'
+                ? 'bark'
+                : 'foliage',
+            {
+              color: '#ffffff',
+            },
+          )
     const mesh = new InstancedMesh(geometry, material, features.length)
     mesh.name = `habitat-detail:${kind}`
     mesh.castShadow = kind !== 'glow-bulb' && kind !== 'lily' && kind !== 'reed'

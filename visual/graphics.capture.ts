@@ -3,7 +3,7 @@ import type {
   BenchmarkScenario,
   GraphicsBenchmarkVariant,
 } from '../src/game/config/benchmarkScenarios'
-import { GRAPHICS_CAPTURE_MATRIX } from './graphics.matrix'
+import { graphicsCapturePartition, type GraphicsCapturePartition } from './graphics.matrix'
 
 interface GraphicsDebugWindow extends Window {
   __turtlebackDebug?: {
@@ -96,7 +96,18 @@ async function captureMatrix(page: Page, testInfo: TestInfo): Promise<void> {
   page.on('pageerror', (error) => pageErrors.push(error.stack ?? error.message))
   await bootSanctuary(page)
   if (pageErrors.length > 0) throw new Error(`Page error during capture boot: ${pageErrors[0]}`)
-  for (const entry of GRAPHICS_CAPTURE_MATRIX) {
+  const requestedPartition = process.env.TURTLEBACK_GRAPHICS_PART ?? 'all'
+  const validPartitions: readonly GraphicsCapturePartition[] = [
+    'all',
+    'clear-primary',
+    'clear-secondary',
+    'rain',
+  ]
+  if (!validPartitions.includes(requestedPartition as GraphicsCapturePartition)) {
+    throw new Error(`Unknown graphics capture partition: ${requestedPartition}`)
+  }
+  const entries = graphicsCapturePartition(requestedPartition as GraphicsCapturePartition)
+  for (const entry of entries) {
     const errorCountBefore = pageErrors.length
     await applyScenario(page, entry.scenario, 'default')
     await page.screenshot({ path: testInfo.outputPath(entry.outputPath) })

@@ -71,13 +71,7 @@ function mergeParts(parts: BufferGeometry[]): BufferGeometry {
   return merged
 }
 
-function lobe(
-  radius: number,
-  x: number,
-  y: number,
-  z: number,
-  scaleY = 0.7,
-): BufferGeometry {
+function lobe(radius: number, x: number, y: number, z: number, scaleY = 0.7): BufferGeometry {
   const geometry = new IcosahedronGeometry(radius, 1)
   geometry.scale(1, scaleY, 0.94)
   geometry.translate(x, y, z)
@@ -172,11 +166,7 @@ function scaleFor(transform: BiomeTransform): readonly [number, number, number] 
 function instanceMatrix(transform: BiomeTransform, yOffset = 0): Matrix4 {
   const helper = new Object3D()
   const scale = scaleFor(transform)
-  helper.position.set(
-    transform.x,
-    transform.y + yOffset,
-    transform.z,
-  )
+  helper.position.set(transform.x, transform.y + yOffset, transform.z)
   helper.rotation.y = transform.yaw
   helper.scale.set(...scale)
   helper.updateMatrix()
@@ -223,11 +213,9 @@ function buildBiomeGroup(plan: BiomeMosaicPlan, shadows: boolean): OwnedBiomeGro
         const crownGeometry = canopyGeometryForBiome(definition.id)
         const trunkMaterial = createPainterlyMaterial('bark', {
           color: '#ffffff',
-          vertexColors: true,
         })
         const crownMaterial = createPainterlyMaterial('foliage', {
           color: '#ffffff',
-          vertexColors: true,
         })
         geometries.push(trunkGeometry, crownGeometry)
         materials.push(trunkMaterial, crownMaterial)
@@ -255,10 +243,9 @@ function buildBiomeGroup(plan: BiomeMosaicPlan, shadows: boolean): OwnedBiomeGro
       const geometry = layerGeometry(layer)
       const atmosphere = layer === 'atmosphere'
       const material = atmosphere
-        ? new MeshBasicMaterial({ vertexColors: true, transparent: true, opacity: 0.58, depthWrite: false })
+        ? new MeshBasicMaterial({ transparent: true, opacity: 0.58, depthWrite: false })
         : createPainterlyMaterial(layer === 'geology' ? 'rock' : 'foliage', {
             color: '#ffffff',
-            vertexColors: true,
           })
       geometries.push(geometry)
       materials.push(material)

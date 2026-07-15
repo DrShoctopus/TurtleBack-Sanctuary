@@ -2,7 +2,11 @@ import { describe, expect, it } from 'vitest'
 import { BENCHMARKS, BENCHMARK_SHORTCUTS, isBenchmarkId } from '../src/game/config/benchmarks'
 import { BENCHMARK_SCENARIOS } from '../src/game/config/benchmarkScenarios'
 import { isInsideShell } from '../src/game/world/shell/shellShape'
-import { GRAPHICS_CAPTURE_MATRIX, scenarioCapturePath } from '../visual/graphics.matrix'
+import {
+  GRAPHICS_CAPTURE_MATRIX,
+  graphicsCapturePartition,
+  scenarioCapturePath,
+} from '../visual/graphics.matrix'
 
 const FOUNDATION_CAMERA_IDS = [
   'forest-interior',
@@ -129,5 +133,22 @@ describe('visual benchmark registry', () => {
         `${entry.scenario.quality}/${entry.condition}/${entry.scenario.view}.png`,
       )
     }
+  })
+
+  it('splits the exhaustive graphics capture into complete deterministic partitions', () => {
+    const partitions = [
+      graphicsCapturePartition('clear-primary'),
+      graphicsCapturePartition('clear-secondary'),
+      graphicsCapturePartition('rain'),
+    ]
+    expect(partitions.map((partition) => partition.length)).toEqual([159, 120, 53])
+
+    const partitionPaths = partitions.flatMap((partition) =>
+      partition.map((entry) => entry.outputPath),
+    )
+    expect(new Set(partitionPaths).size).toBe(GRAPHICS_CAPTURE_MATRIX.length)
+    expect(new Set(partitionPaths)).toEqual(
+      new Set(GRAPHICS_CAPTURE_MATRIX.map((entry) => entry.outputPath)),
+    )
   })
 })

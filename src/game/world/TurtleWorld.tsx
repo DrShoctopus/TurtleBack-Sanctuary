@@ -18,6 +18,7 @@ import { SpatialCellProvider } from './spatial/SpatialCellProvider'
 import { WildlifeWorld } from './wildlife/WildlifeWorld'
 import { BiomeMosaic } from './biomes/BiomeMosaic'
 import { HabitatDetails } from './biomes/HabitatDetails'
+import { TurtleRouteScaleCues } from './turtle/TurtleRouteScaleCues'
 
 /** Root of everything outside the player: sky, sea, shell, turtle, village. */
 export function TurtleWorld() {
@@ -32,6 +33,7 @@ export function TurtleWorld() {
       <ShellTerrain />
       <BiolumSeams />
       <Turtle />
+      <TurtleRouteScaleCues />
       <Landmarks />
       <WildlifeWorld />
       <Village />

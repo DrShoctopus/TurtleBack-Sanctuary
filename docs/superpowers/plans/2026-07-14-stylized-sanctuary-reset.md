@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–8 complete; Slice 9 next
+**Status:** Slices 1–9 complete; Slice 10 next
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -402,6 +402,8 @@ Acceptance:
 Runtime asset budget: 4 MiB.
 
 Suggested commit: `feat: art direct sanctuary time and weather`
+
+**Slice 9 completed 2026-07-15:** noon, sunset, blue-hour, night, and rain now use authored value and color response with a cool fill, colored mist, restrained light rays, controlled wetness/puddles/runoff, and readable window/ocean accents. Six human-scale route cues reveal the colossal turtle through normal traversal, while the HUD contrast pass remains legible across the condition set. Eight curated High captures and three independently terminating matrix partitions cover all 332 scenarios; the 2.92 MiB evidence ledger is under `docs/art-direction/runtime-evidence/slice-9/`.
 
 ### Slice 10 — Performance, packaging, and release proof
 

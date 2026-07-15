@@ -103,10 +103,10 @@ function buildRain(count: number) {
         pos.x += uWind * y * 0.14;
         pos.y = y - 4.0;
         // fade drops in only while the rain amount covers this seed; fade at ground
-        vAlpha = step(aSeed, uRain) * 0.34 * smoothstep(0.0, 2.2, y - 0.8);
+        vAlpha = step(aSeed, uRain) * 0.24 * smoothstep(0.0, 2.2, y - 0.8);
         vec4 mv = modelViewMatrix * vec4(pos, 1.0);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (0.85 + aSeed * 1.05) * (140.0 / max(1.0, -mv.z));
+        gl_PointSize = clamp((0.72 + aSeed * 0.82) * (105.0 / max(1.0, -mv.z)), 0.7, 4.2);
       }
     `,
     fragmentShader: /* glsl */ `
@@ -115,7 +115,7 @@ function buildRain(count: number) {
         vec2 d = gl_PointCoord - vec2(0.5);
         // elongated streak
         float a = smoothstep(0.5, 0.05, abs(d.x) * 3.2) * smoothstep(0.5, 0.2, abs(d.y));
-        gl_FragColor = vec4(0.66, 0.77, 0.88, a * vAlpha);
+        gl_FragColor = vec4(0.48, 0.62, 0.68, a * vAlpha);
         #include <tonemapping_fragment>
         #include <colorspace_fragment>
       }
@@ -187,7 +187,7 @@ function RippleRings() {
         uniform float uRain;
         void main() {
           float fade = 1.0 - smoothstep(0.025, 0.23, vScale);
-          gl_FragColor = vec4(0.58, 0.72, 0.82, fade * 0.17 * uRain);
+          gl_FragColor = vec4(0.42, 0.61, 0.65, fade * 0.14 * uRain);
           #include <tonemapping_fragment>
           #include <colorspace_fragment>
         }

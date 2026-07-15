@@ -10,11 +10,11 @@ function stops(list: Array<[number, string]>): ColorStop[] {
 }
 
 const FOG_NEAR = stops([
-  [0, '#1b2b27'],
-  [0.27, '#6f665d'],
-  [0.5, '#6f8984'],
-  [0.77, '#725c55'],
-  [0.94, '#22343a'],
+  [0, '#263a3a'],
+  [0.27, '#776d64'],
+  [0.5, '#7f9891'],
+  [0.77, '#756a65'],
+  [0.94, '#2b4147'],
 ])
 
 const FOG_MID = stops([
@@ -42,11 +42,11 @@ const FOG_SUN = stops([
 ])
 
 const SHADOW = stops([
-  [0, '#101c25'],
-  [0.27, '#293743'],
-  [0.5, '#294044'],
-  [0.77, '#293743'],
-  [0.94, '#101c25'],
+  [0, '#263844'],
+  [0.27, '#40515a'],
+  [0.5, '#3d5552'],
+  [0.77, '#4b4d50'],
+  [0.94, '#263844'],
 ])
 
 const HIGHLIGHT = stops([
@@ -58,19 +58,19 @@ const HIGHLIGHT = stops([
 ])
 
 const SKY_FILL = stops([
-  [0, '#1a2c3d'],
-  [0.27, '#7d9295'],
+  [0, '#324b5a'],
+  [0.27, '#91a3a3'],
   [0.5, '#b8d1d8'],
-  [0.77, '#a67d70'],
-  [0.94, '#1a2c3d'],
+  [0.77, '#ad8e82'],
+  [0.94, '#324b5a'],
 ])
 
 const GROUND_FILL = stops([
-  [0, '#101c25'],
-  [0.27, '#3d433b'],
-  [0.5, '#30483a'],
-  [0.77, '#443b38'],
-  [0.94, '#101c25'],
+  [0, '#293d43'],
+  [0.27, '#536057'],
+  [0.5, '#526b57'],
+  [0.77, '#625852'],
+  [0.94, '#293d43'],
 ])
 
 const FOG_DENSITY: Array<[number, number]> = [
@@ -82,37 +82,37 @@ const FOG_DENSITY: Array<[number, number]> = [
 ]
 
 const BRIGHTNESS: Array<[number, number]> = [
-  [0, 0.008],
-  [0.27, -0.008],
-  [0.5, -0.012],
-  [0.77, -0.018],
-  [0.94, 0.008],
+  [0, 0.028],
+  [0.27, 0.022],
+  [0.5, 0.018],
+  [0.77, 0.026],
+  [0.94, 0.03],
 ]
 
 const CONTRAST: Array<[number, number]> = [
-  [0, 0.035],
-  [0.27, 0.06],
-  [0.5, 0.055],
-  [0.77, 0.075],
-  [0.94, 0.04],
+  [0, 0.018],
+  [0.27, 0.028],
+  [0.5, 0.024],
+  [0.77, 0.032],
+  [0.94, 0.02],
 ]
 
 const SATURATION: Array<[number, number]> = [
   [0, -0.018],
   [0.27, 0.045],
   [0.5, 0.035],
-  [0.77, 0.075],
+  [0.77, 0.052],
   [0.94, -0.012],
 ]
 
-const RAIN_FOG_NEAR = new Color('#526c69')
-const RAIN_FOG_MID = new Color('#82989a')
-const RAIN_FOG_FAR = new Color('#92a6aa')
+const RAIN_FOG_NEAR = new Color('#496762')
+const RAIN_FOG_MID = new Color('#6f8989')
+const RAIN_FOG_FAR = new Color('#81979a')
 const RAIN_FOG_SUN = new Color('#c39261')
 const RAIN_SHADOW = new Color('#263a3b')
 const RAIN_HIGHLIGHT = new Color('#c39261')
-const RAIN_SKY_FILL = new Color('#92a6aa')
-const RAIN_GROUND_FILL = new Color('#293f38')
+const RAIN_SKY_FILL = new Color('#7f989c')
+const RAIN_GROUND_FILL = new Color('#405c51')
 const WHITE = new Color(1, 1, 1)
 
 export interface PainterlyEnvironmentSample {
@@ -171,8 +171,8 @@ export function samplePainterlyEnvironment(
   target.shadowTint.lerp(WHITE, 0.6)
   target.highlightTint.lerp(WHITE, 0.78)
 
-  target.fogDensity = sampleScalarCycle(FOG_DENSITY, time) + wet * 0.00172
-  target.brightness = sampleScalarCycle(BRIGHTNESS, time) * (1 - wet) - wet * 0.008
+  target.fogDensity = sampleScalarCycle(FOG_DENSITY, time) + wet * 0.00128
+  target.brightness = sampleScalarCycle(BRIGHTNESS, time) * (1 - wet * 0.35) + wet * 0.012
   target.contrast = sampleScalarCycle(CONTRAST, time) * (1 - wet * 0.72) + wet * 0.018
   target.saturation = sampleScalarCycle(SATURATION, time) * (1 - wet) - wet * 0.028
   if (sunDirection) target.sunDirection.set(...sunDirection).normalize()

@@ -125,9 +125,9 @@ export function Building({ spec }: { spec: BuildingSpec }) {
     const warmth = spec.id === 'home' ? useSettings.getState().home.warmth : 0.55
 
     // window glow: opacity + emissive rise only at night/when lit (invisible by day)
-    const glowTarget = lampsResolved ? 0.85 : 0
+    const glowTarget = lampsResolved ? 0.72 : 0
     glowMat.opacity += (glowTarget - glowMat.opacity) * 0.05
-    const emTarget = lampsResolved ? 1.4 + night * 1.4 : 0
+    const emTarget = lampsResolved ? 1.25 + night * 1.05 : 0
     glowMat.emissiveIntensity += (emTarget - glowMat.emissiveIntensity) * 0.05
     glowMat.emissive.setHSL(0.075 + warmth * 0.035, 0.72, 0.55 + warmth * 0.12)
 

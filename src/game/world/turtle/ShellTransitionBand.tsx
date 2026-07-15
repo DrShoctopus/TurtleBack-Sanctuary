@@ -38,7 +38,6 @@ function buildTransitionBand(): TransitionBandResources {
     color: '#586058',
     roughness: 0.92,
     metalness: 0,
-    vertexColors: true,
   })
   const rootMaterial = new MeshStandardMaterial({
     color: '#313b2e',
@@ -49,7 +48,6 @@ function buildTransitionBand(): TransitionBandResources {
     color: '#304b36',
     roughness: 0.98,
     metalness: 0,
-    vertexColors: true,
   })
   const seamMaterial = new MeshStandardMaterial({
     color: '#13251f',
@@ -122,7 +120,7 @@ function buildTransitionBand(): TransitionBandResources {
     const z = anchor.z * inset
     dummy.position.set(x, terrainHeight(x, z) + 0.16, z)
     dummy.rotation.set(0, anchor.theta + rng(), 0)
-    dummy.scale.set(1.2 + rng() * 2.4, 0.08 + rng() * 0.12, 1.8 + rng() * 4.2)
+    dummy.scale.set(0.8 + rng() * 1.4, 0.05 + rng() * 0.08, 1.35 + rng() * 2.25)
     dummy.updateMatrix()
     algae.setMatrixAt(index, dummy.matrix)
     tint.setRGB(0.5 + rng() * 0.16, 0.66 + rng() * 0.18, 0.48 + rng() * 0.12)

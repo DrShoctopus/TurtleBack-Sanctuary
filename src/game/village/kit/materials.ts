@@ -348,7 +348,7 @@ export function exteriorVillageMaterials(): Map<MatKey, MeshStandardMaterial> {
       wetRoughness: isMetal
         ? Math.max(0.18, source.roughness * 0.62)
         : Math.max(0.28, source.roughness * 0.48),
-      darken: isMetal ? 0.1 : isFabric ? 0.18 : 0.24,
+      darken: isMetal ? 0.08 : isFabric ? 0.12 : 0.16,
     })
   }
   return exteriorCache

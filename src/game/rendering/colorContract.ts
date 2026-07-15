@@ -15,7 +15,7 @@ export interface RendererColorTarget {
 export const RENDERER_COLOR_CONTRACT = {
   outputColorSpace: SRGBColorSpace,
   toneMapping: ACESFilmicToneMapping,
-  exposure: 1.05,
+  exposure: 1.1,
 } as const
 
 export function configureRendererColor(renderer: RendererColorTarget): void {

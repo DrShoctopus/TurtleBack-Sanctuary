@@ -72,6 +72,17 @@ export interface AudioProbeSection {
 
 export interface AtmosphereProbeSection {
   readonly __sectionBrand?: 'atmosphere'
+  condition?: 'noon' | 'sunset' | 'blue-hour' | 'night' | 'rain'
+  cloudLayers?: number
+  mistLayers?: number
+  lightRayCount?: number
+  puddleCount?: number
+  wetness?: number
+  puddleOpacity?: number
+  windowLightResponse?: 'day-dusk-night'
+  oceanResponse?: 'clear-rain-turtle-wake'
+  turtleRouteScaleCues?: number
+  turtleRouteFeatures?: readonly string[]
 }
 
 export interface WorldProbeSection {

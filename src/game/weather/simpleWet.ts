@@ -24,7 +24,7 @@ export function registerWetMaterial(
     dryRoughness: mat.roughness,
     wetRoughness: opts?.wetRoughness ?? Math.max(0.25, mat.roughness * 0.45),
     baseColor: mat.color.clone(),
-    darken: opts?.darken ?? 0.22,
+    darken: opts?.darken ?? 0.16,
   })
 }
 

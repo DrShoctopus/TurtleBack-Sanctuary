@@ -3,7 +3,7 @@
   --ui-scale: 1;
   --c-text: #eaf3f2;
   --c-text-dim: #9db4b6;
-  --c-panel: rgba(13, 24, 32, 0.82);
+  --c-panel: rgba(9, 20, 28, 0.88);
   --c-panel-solid: #101d27;
   --c-line: rgba(148, 190, 187, 0.22);
   --c-accent: #7fd4c1;
@@ -386,6 +386,8 @@ select:focus-visible {
   padding: 0.45em 1em 0.45em 0.55em;
   font-size: 0.95rem;
   backdrop-filter: blur(8px);
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.34);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.78);
 }
 .prompt.high-contrast {
   background: #04090d;
@@ -423,6 +425,8 @@ select:focus-visible {
   font-size: 0.92rem;
   animation: toast-in 0.35s ease;
   backdrop-filter: blur(8px);
+  box-shadow: 0 3px 18px rgba(0, 0, 0, 0.3);
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.72);
 }
 @keyframes toast-in {
   from {

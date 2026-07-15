@@ -13,6 +13,8 @@ export interface GraphicsCaptureEntry {
   readonly outputPath: string
 }
 
+export type GraphicsCapturePartition = 'all' | 'clear-primary' | 'clear-secondary' | 'rain'
+
 export function benchmarkTimeName(time: number): BenchmarkTimeName {
   for (const [name, value] of Object.entries(BENCHMARK_TIMES) as Array<
     [BenchmarkTimeName, number]
@@ -49,3 +51,19 @@ export function buildGraphicsCaptureMatrix(
 }
 
 export const GRAPHICS_CAPTURE_MATRIX = buildGraphicsCaptureMatrix()
+
+export function graphicsCapturePartition(
+  partition: GraphicsCapturePartition,
+  matrix: readonly GraphicsCaptureEntry[] = GRAPHICS_CAPTURE_MATRIX,
+): readonly GraphicsCaptureEntry[] {
+  if (partition === 'all') return matrix
+  if (partition === 'rain') return matrix.filter(({ scenario }) => scenario.weather === 'rain')
+  if (partition === 'clear-primary') {
+    return matrix.filter(
+      ({ scenario }) => scenario.weather === 'clear' && scenario.quality === 'high',
+    )
+  }
+  return matrix.filter(
+    ({ scenario }) => scenario.weather === 'clear' && scenario.quality !== 'high',
+  )
+}

@@ -33,7 +33,7 @@ export function BiolumSeams() {
     lines.push(rim)
     return lines.map((pts, i) => {
       const curve = new CatmullRomCurve3(pts, i === 3)
-      return new TubeGeometry(curve, pts.length * 2, 0.055, 5, i === 3)
+      return new TubeGeometry(curve, pts.length * 2, 0.026, 5, i === 3)
     })
   }, [])
 
@@ -43,7 +43,7 @@ export function BiolumSeams() {
         color: new Color('#000000'),
         toneMapped: false,
         transparent: true,
-        opacity: 0.85,
+        opacity: 0.54,
       }),
     [],
   )
@@ -51,8 +51,8 @@ export function BiolumSeams() {
   useFrame((state) => {
     const night = runtime.time.celest.nightFactor
     const pulse = 0.7 + Math.sin(state.clock.elapsedTime * 0.45) * 0.3
-    const v = night * pulse * 0.62
-    material.color.setRGB(0.28 * v, 0.85 * v, 0.72 * v)
+    const v = night * pulse * 0.38
+    material.color.setRGB(0.22 * v, 0.64 * v, 0.58 * v)
     material.visible = v > 0.02
   })
 

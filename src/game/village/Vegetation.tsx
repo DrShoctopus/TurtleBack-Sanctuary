@@ -60,7 +60,6 @@ export class VegetationResourceOwner {
         color: '#ffffff',
         side: DoubleSide,
         roughness: 1,
-        vertexColors: true,
       }),
       0.05,
     )
@@ -241,9 +240,9 @@ export class VegetationResourceOwner {
             #ifdef USE_INSTANCING
               float galecrestDistance = length(instanceMatrix[3].xz - vec2(0.0, -218.0));
               float turtleInfluence = 1.0 - smoothstep(65.0, 235.0, galecrestDistance);
-              sway += sin(uTime * 0.82 + ph * 0.53) * ${(
-                strength * 2.8
-              ).toFixed(3)} * uTurtleImpulse * turtleInfluence * aWindWeight;
+              sway += sin(uTime * 0.82 + ph * 0.53) * ${(strength * 2.8).toFixed(
+                3,
+              )} * uTurtleImpulse * turtleInfluence * aWindWeight;
             #endif
             transformed.x += sway;
             transformed.z += sway * 0.6;
