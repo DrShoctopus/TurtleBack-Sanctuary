@@ -47,7 +47,7 @@ export function FrameDriver() {
 
     // gamepad system buttons (menus open/close)
     const game = useGame.getState()
-    if (game.phase === 'playing') {
+    if (game.phase === 'playing' && !game.breathing) {
       if (game.overlay === null) {
         if (input.padPressed('pause')) game.setOverlay('pause')
         else if (input.padPressed('menu')) game.setOverlay('sanctuary', 'time')

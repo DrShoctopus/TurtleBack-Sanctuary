@@ -2,33 +2,23 @@ import { release } from 'node:os'
 import { BrowserWindow, ipcMain, shell, type IpcMainInvokeEvent } from 'electron'
 import {
   IPC_CHANNELS,
-  desktopPreferencesSchema,
-  displayModeSchema,
-  folderIdSchema,
   mediaWriteRequestSchema,
   rendererErrorSchema,
   saveWriteRequestSchema,
   settingsWriteRequestSchema,
   windowCommandSchema,
-  windowSizeIdSchema,
-  windowSizeSchema,
-  type DisplayMode,
 } from '../../shared/contracts'
 import { saveSlotSchema } from '../../../game/save/schema'
 import type { AppLogger } from '../logging/logger'
 import type { LocalAudioLibrary } from '../storage/localAudioLibrary'
 import type { DesktopRepositories } from '../storage/repositories'
-import {
-  validateExternalUrl,
-  validateRemoteMediaUrl,
-  type RemoteRequestPolicy,
-} from '../security/urlPolicy'
+import type { RemoteMediaLibrary } from '../security/remoteMedia'
 
 interface RegisterIpcOptions {
   window: BrowserWindow
   repositories: DesktopRepositories
   localAudio: LocalAudioLibrary
-  requestPolicy: RemoteRequestPolicy
+  remoteMedia: RemoteMediaLibrary
   logger: AppLogger
   loggerDirectory: string
   appVersion: string
@@ -62,7 +52,7 @@ function handle(
 }
 
 export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
-  const { window, repositories, localAudio, requestPolicy, logger } = options
+  const { window, repositories, localAudio, remoteMedia, logger } = options
 
   handle(IPC_CHANNELS.saveGame, window, async (_event, request) => {
     const parsed = saveWriteRequestSchema.parse(request)
@@ -72,9 +62,6 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
     repositories.loadSave(saveSlotSchema.parse(slot)),
   )
   handle(IPC_CHANNELS.listSaveSlots, window, () => repositories.listSaves())
-  handle(IPC_CHANNELS.deleteSave, window, (_event, slot) =>
-    repositories.deleteSave(saveSlotSchema.parse(slot)),
-  )
   handle(IPC_CHANNELS.getSettings, window, () => repositories.getSettings())
   handle(IPC_CHANNELS.setSettings, window, (_event, settings) =>
     repositories.setSettings(settingsWriteRequestSchema.parse(settings)),
@@ -87,31 +74,16 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
     await Promise.all([repositories.eraseAll(), localAudio.eraseAll()])
   })
   handle(IPC_CHANNELS.getDesktopPreferences, window, () => repositories.getPreferences())
-  handle(IPC_CHANNELS.setDesktopPreferences, window, async (_event, patch) => {
-    const current = await repositories.getPreferences()
-    const next = desktopPreferencesSchema.parse({ ...current, ...(patch as object) })
-    return repositories.setPreferences(next)
-  })
   handle(IPC_CHANNELS.selectLocalAudioFolder, window, () => localAudio.selectFolder(window))
   handle(IPC_CHANNELS.listLocalAudioFolders, window, () => localAudio.listFolders())
-  handle(IPC_CHANNELS.listLocalAudioFiles, window, (_event, folderId) =>
-    localAudio.list(folderIdSchema.parse(folderId)),
-  )
-  handle(IPC_CHANNELS.openExternalLink, window, async (_event, input) => {
-    const url = validateExternalUrl(String(input))
-    if (!url) return false
-    await shell.openExternal(url.toString(), { activate: true })
-    return true
-  })
   handle(IPC_CHANNELS.authorizeRemoteMediaUrl, window, async (_event, input) => {
-    const url = await validateRemoteMediaUrl(String(input))
-    if (!url) {
+    const playbackUrl = await remoteMedia.authorize(String(input))
+    if (!playbackUrl) {
       logger.warn('remote_media.authorization_rejected')
-      return false
+      return null
     }
-    requestPolicy.authorize(url)
-    logger.info('remote_media.authorization_granted', { origin: url.origin })
-    return true
+    logger.info('remote_media.authorization_granted')
+    return playbackUrl
   })
   handle(IPC_CHANNELS.getAppVersion, window, () => options.appVersion)
   handle(IPC_CHANNELS.getPlatformInfo, window, () => ({
@@ -122,27 +94,6 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
     chromiumVersion: process.versions.chrome,
     locale: Intl.DateTimeFormat().resolvedOptions().locale,
   }))
-  handle(IPC_CHANNELS.setDisplayMode, window, async (_event, rawMode) => {
-    const mode = displayModeSchema.parse(rawMode)
-    applyDisplayMode(window, mode)
-    await repositories.setPreferences({ displayMode: mode })
-    return mode
-  })
-  handle(IPC_CHANNELS.toggleFullscreen, window, async () => {
-    const fullscreen = !(window.isFullScreen() || window.isSimpleFullScreen())
-    applyDisplayMode(window, fullscreen ? 'fullscreen' : 'windowed')
-    await repositories.setPreferences({ displayMode: fullscreen ? 'fullscreen' : 'windowed' })
-    return fullscreen
-  })
-  handle(IPC_CHANNELS.setWindowSize, window, async (_event, rawSize) => {
-    const size = windowSizeSchema.parse(rawSize)
-    applyDisplayMode(window, 'windowed')
-    window.setSize(size.width, size.height, true)
-    window.center()
-    await repositories.setPreferences({
-      windowSize: windowSizeIdSchema.parse(`${size.width}x${size.height}`),
-    })
-  })
   handle(IPC_CHANNELS.windowCommand, window, (_event, rawCommand) => {
     const command = windowCommandSchema.parse(rawCommand)
     if (command === 'minimize') window.minimize()
@@ -167,14 +118,5 @@ export function registerIpcHandlers(options: RegisterIpcOptions): () => void {
   return () => {
     for (const channel of Object.values(IPC_CHANNELS)) ipcMain.removeHandler(channel)
     ipcMain.removeListener(IPC_CHANNELS.shutdownReady, shutdownListener)
-  }
-}
-
-function applyDisplayMode(window: BrowserWindow, mode: DisplayMode): void {
-  if (process.platform === 'darwin') {
-    window.setSimpleFullScreen(mode === 'borderless')
-    window.setFullScreen(mode === 'fullscreen')
-  } else {
-    window.setFullScreen(mode !== 'windowed')
   }
 }

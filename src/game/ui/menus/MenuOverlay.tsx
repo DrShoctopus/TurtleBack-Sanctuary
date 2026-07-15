@@ -171,7 +171,9 @@ function TimeWeatherTab() {
         <Toggle
           label="Progress time automatically"
           value={time.auto}
-          onChange={(v) => set('time', v ? { auto: true } : { auto: false, manual: runtime.time.t })}
+          onChange={(v) =>
+            set('time', v ? { auto: true } : { auto: false, manual: runtime.time.t })
+          }
         />
       </Row>
       <Row label="Presets">
@@ -273,7 +275,11 @@ function AudioTab() {
     <>
       <h3>Mixer</h3>
       <Row label="Mute everything">
-        <Toggle label="Mute everything" value={audio.muteAll} onChange={(v) => set('audio', { muteAll: v })} />
+        <Toggle
+          label="Mute everything"
+          value={audio.muteAll}
+          onChange={(v) => set('audio', { muteAll: v })}
+        />
       </Row>
       {vol('master', 'Master')}
       {vol('music', 'Sanctuary music', 'The original generative soundtrack')}
@@ -283,11 +289,19 @@ function AudioTab() {
       {vol('media', 'Music player & radio')}
       <h3>Sanctuary music</h3>
       <Row label="Original soundtrack" hint="Generative lo-fi that follows the time and weather">
-        <Toggle label="Original soundtrack" value={originalMusic} onChange={(v) => setState({ originalMusic: v })} />
+        <Toggle
+          label="Original soundtrack"
+          value={originalMusic}
+          onChange={(v) => setState({ originalMusic: v })}
+        />
       </Row>
       <h3>Cues</h3>
       <Row label="Sound captions" hint="Show text for meaningful sounds">
-        <Toggle label="Sound captions" value={subtitles} onChange={(v) => set('comfort', { subtitles: v })} />
+        <Toggle
+          label="Sound captions"
+          value={subtitles}
+          onChange={(v) => set('comfort', { subtitles: v })}
+        />
       </Row>
     </>
   )
@@ -300,7 +314,10 @@ function GraphicsTab() {
   return (
     <>
       <h3>Quality</h3>
-      <Row label="Preset" hint={g.quality === 'auto' ? `Auto is currently running “${autoLevel}”` : undefined}>
+      <Row
+        label="Preset"
+        hint={g.quality === 'auto' ? `Auto is currently running “${autoLevel}”` : undefined}
+      >
         <Seg
           label="Quality preset"
           value={g.quality}
@@ -369,23 +386,37 @@ function ComfortTab() {
             { value: 'on', label: 'On' },
             { value: 'off', label: 'Off' },
           ]}
-          onChange={(v) =>
-            set('comfort', { reducedMotion: v === 'system' ? null : v === 'on' })
-          }
+          onChange={(v) => set('comfort', { reducedMotion: v === 'system' ? null : v === 'on' })}
         />
       </Row>
       <Row label="Head bob">
-        <Toggle label="Head bob" value={c.headBob} onChange={(v) => set('comfort', { headBob: v })} />
+        <Toggle
+          label="Head bob"
+          value={c.headBob}
+          onChange={(v) => set('comfort', { headBob: v })}
+        />
       </Row>
       <Row label="Turtle sway" hint="The slow rock of the shell as she swims">
-        <Toggle label="Turtle sway" value={c.turtleBob} onChange={(v) => set('comfort', { turtleBob: v })} />
+        <Toggle
+          label="Turtle sway"
+          value={c.turtleBob}
+          onChange={(v) => set('comfort', { turtleBob: v })}
+        />
       </Row>
       <Row label="Camera sway" hint="Subtle drift while standing still">
-        <Toggle label="Camera sway" value={c.cameraSway} onChange={(v) => set('comfort', { cameraSway: v })} />
+        <Toggle
+          label="Camera sway"
+          value={c.cameraSway}
+          onChange={(v) => set('comfort', { cameraSway: v })}
+        />
       </Row>
       <h3>Interface</h3>
       <Row label="Center dot">
-        <Toggle label="Center dot" value={c.centerDot} onChange={(v) => set('comfort', { centerDot: v })} />
+        <Toggle
+          label="Center dot"
+          value={c.centerDot}
+          onChange={(v) => set('comfort', { centerDot: v })}
+        />
       </Row>
       <Row label="High-contrast prompts">
         <Toggle
@@ -395,7 +426,11 @@ function ComfortTab() {
         />
       </Row>
       <Row label="Clock & weather chip">
-        <Toggle label="Clock chip" value={c.showClock} onChange={(v) => set('comfort', { showClock: v })} />
+        <Toggle
+          label="Clock chip"
+          value={c.showClock}
+          onChange={(v) => set('comfort', { showClock: v })}
+        />
       </Row>
       <Row label="Hold to interact" hint="Hold E instead of tapping">
         <Toggle
@@ -416,30 +451,58 @@ function ControlsTab() {
     <>
       <h3>Mouse & keyboard</h3>
       <Row label="Mouse sensitivity">
-        <Slider label="Mouse sensitivity" min={0.2} max={2.5} step={0.05} value={i.mouseSens} onChange={(v) => set('input', { mouseSens: v })} />
+        <Slider
+          label="Mouse sensitivity"
+          min={0.2}
+          max={2.5}
+          step={0.05}
+          value={i.mouseSens}
+          onChange={(v) => set('input', { mouseSens: v })}
+        />
       </Row>
       <div style={{ color: 'var(--c-text-dim)', fontSize: '0.86em', lineHeight: 1.9 }}>
-        <b>W A S D</b> walk · <b>Mouse</b> look · <b>Shift</b> jog · <b>Space</b> hop ·{' '}
-        <b>E</b> interact · <b>M</b> sanctuary · <b>Tab</b> map · <b>H</b> return home ·{' '}
-        <b>Esc</b> pause
+        <b>W A S D</b> walk · <b>Mouse</b> look · <b>Shift</b> jog · <b>Space</b> hop · <b>E</b>{' '}
+        interact · <b>M</b> sanctuary · <b>Tab</b> map · <b>H</b> return home · <b>Esc</b> pause
       </div>
       <h3>Controller {padConnected ? '· connected' : '· press any button to connect'}</h3>
       <Row label="Look sensitivity">
-        <Slider label="Controller look sensitivity" min={0.2} max={2.5} step={0.05} value={i.padSens} onChange={(v) => set('input', { padSens: v })} />
+        <Slider
+          label="Controller look sensitivity"
+          min={0.2}
+          max={2.5}
+          step={0.05}
+          value={i.padSens}
+          onChange={(v) => set('input', { padSens: v })}
+        />
       </Row>
       <Row label="Stick deadzone">
-        <Slider label="Stick deadzone" min={0.05} max={0.4} step={0.01} value={i.deadzone} onChange={(v) => set('input', { deadzone: v })} />
+        <Slider
+          label="Stick deadzone"
+          min={0.05}
+          max={0.4}
+          step={0.01}
+          value={i.deadzone}
+          onChange={(v) => set('input', { deadzone: v })}
+        />
       </Row>
       <Row label="Invert look Y">
-        <Toggle label="Invert look Y" value={i.invertY} onChange={(v) => set('input', { invertY: v })} />
+        <Toggle
+          label="Invert look Y"
+          value={i.invertY}
+          onChange={(v) => set('input', { invertY: v })}
+        />
       </Row>
       <Row label="Vibration" hint="Very subtle, on supported pads">
-        <Toggle label="Vibration" value={i.vibration} onChange={(v) => set('input', { vibration: v })} />
+        <Toggle
+          label="Vibration"
+          value={i.vibration}
+          onChange={(v) => set('input', { vibration: v })}
+        />
       </Row>
       <div style={{ color: 'var(--c-text-dim)', fontSize: '0.86em', lineHeight: 1.9 }}>
         <b>Left stick</b> walk · <b>Right stick</b> look · <b>Ⓐ / Cross</b> interact ·{' '}
-        <b>Ⓑ / Circle</b> back · <b>Ⓧ / Square</b> hop · <b>Ⓨ / Triangle</b> sanctuary ·{' '}
-        <b>L3</b> jog · <b>Select</b> map · <b>Start</b> pause · <b>LB/RB</b> menu tabs
+        <b>Ⓑ / Circle</b> back · <b>Ⓧ / Square</b> hop · <b>Ⓨ / Triangle</b> sanctuary · <b>L3</b>{' '}
+        jog · <b>Select</b> map · <b>Start</b> pause · <b>LB/RB</b> menu tabs
       </div>
     </>
   )
@@ -452,10 +515,18 @@ function HomeTab() {
     <>
       <h3>Your house</h3>
       <Row label="Light warmth">
-        <Slider label="Light warmth" value={h.warmth} onChange={(v) => set('home', { warmth: v })} />
+        <Slider
+          label="Light warmth"
+          value={h.warmth}
+          onChange={(v) => set('home', { warmth: v })}
+        />
       </Row>
       <Row label="Window blinds">
-        <Slider label="Window blinds" value={h.blinds} onChange={(v) => set('home', { blinds: v })} />
+        <Slider
+          label="Window blinds"
+          value={h.blinds}
+          onChange={(v) => set('home', { blinds: v })}
+        />
       </Row>
       <Row label="Artwork" hint="Generated in-house, one of a kind">
         <Seg
@@ -510,21 +581,45 @@ function DataTab() {
         videos never leave this device.
       </p>
       <Row label="Reset settings" hint="Graphics, audio, comfort and controls">
-        <button className="btn small" data-nav onClick={() => { resetAll(); notify('Settings reset') }}>
+        <button
+          className="btn small"
+          data-nav
+          onClick={() => {
+            resetAll()
+            notify('Settings reset')
+          }}
+        >
           Reset
         </button>
       </Row>
       <Row label="Clear media history" hint="Recent YouTube videos">
-        <button className="btn small" data-nav onClick={() => { clearVideos(); notify('Media history cleared') }}>
+        <button
+          className="btn small"
+          data-nav
+          onClick={() => {
+            clearVideos()
+            notify('Media history cleared')
+          }}
+        >
           Clear
         </button>
       </Row>
       <Row label="Clear journal">
-        <button className="btn small" data-nav onClick={() => { clearJournal(); notify('Journal cleared') }}>
+        <button
+          className="btn small"
+          data-nav
+          onClick={() => {
+            clearJournal()
+            notify('Journal cleared')
+          }}
+        >
           Clear
         </button>
       </Row>
-      <Row label="Erase all local data" hint="Settings, media, saves, local-audio access and home decor. Reloads.">
+      <Row
+        label="Erase all local data"
+        hint="Settings, media, saves, local-audio access and home decor. Reloads."
+      >
         <button
           className="btn small danger"
           data-nav
@@ -551,18 +646,18 @@ function CreditsTab() {
     <div style={{ lineHeight: 1.75, color: 'var(--c-text-dim)', fontSize: '0.92em' }}>
       <h3>Turtleback Sanctuary</h3>
       <p>
-        A quiet place, built for slow evenings. Everything you see and hear — architecture,
-        terrain, textures, and the generative lo-fi soundtrack — is created procedurally by the
-        game at runtime. No third-party art, audio samples, or fonts are bundled.
+        A quiet place, built for slow evenings. Everything you see and hear — architecture, terrain,
+        textures, and the generative lo-fi soundtrack — is created procedurally by the game at
+        runtime. No third-party art, audio samples, or fonts are bundled.
       </p>
       <p>
-        Built with React, three.js, react-three-fiber, drei, Rapier physics, and Zustand — thank
-        you to those open-source communities. Video playback is provided by YouTube's official
-        embedded player; internet radio plays only the stations you add.
+        Built with React, three.js, react-three-fiber, Rapier physics, and Zustand — thank you to
+        those open-source communities. Video playback is provided by YouTube's official embedded
+        player; internet radio plays only the stations you add.
       </p>
       <p>
-        Full licensing notes live in <code>ASSET_LICENSES.md</code> in the project repository.
-        Be kind to yourself. The turtle knows the way.
+        Full licensing notes live in <code>ASSET_LICENSES.md</code> in the project repository. Be
+        kind to yourself. The turtle knows the way.
       </p>
     </div>
   )

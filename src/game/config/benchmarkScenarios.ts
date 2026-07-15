@@ -15,11 +15,8 @@ export interface BenchmarkScenario {
   tags: readonly string[]
 }
 
-export type GraphicsBenchmarkVariant = 'default' | 'no-ao'
-
 export interface GraphicsBenchmarkCli {
   scenario: BenchmarkScenario['id'] | null
-  variant: GraphicsBenchmarkVariant
 }
 
 export const BENCHMARK_TIMES = {
@@ -55,8 +52,6 @@ function scenario(
   tags: readonly string[] = [],
 ): BenchmarkScenario {
   const id = `${view}-${quality}-${condition.timeName}-${condition.weather}`
-  const scenarioTags =
-    id === 'turtle-material-close-high-noon-clear' ? [...tags, 'ao-review'] : [...tags]
   return Object.freeze({
     id,
     view,
@@ -64,7 +59,7 @@ function scenario(
     time: BENCHMARK_TIMES[condition.timeName],
     weather: condition.weather,
     warmupMs: condition.weather === 'rain' ? 1_500 : 750,
-    tags: Object.freeze(scenarioTags),
+    tags: Object.freeze([...tags]),
   })
 }
 

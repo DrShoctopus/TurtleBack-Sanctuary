@@ -20,9 +20,7 @@ import { mergeGeometries } from '../../village/kit/merge'
 import {
   BIOME_DEFINITIONS,
   BIOME_LAYERS,
-  biomeDefinition,
   buildBiomeMosaicPlan,
-  type BiomeDefinition,
   type BiomeLayer,
   type BiomeMosaicPlan,
   type BiomeTransform,
@@ -301,8 +299,4 @@ export function BiomeMosaic() {
   )
 
   return <primitive object={owned.group} />
-}
-
-export function biomePalette(id: SanctuaryBiome): BiomeDefinition['colors'] {
-  return biomeDefinition(id).colors
 }

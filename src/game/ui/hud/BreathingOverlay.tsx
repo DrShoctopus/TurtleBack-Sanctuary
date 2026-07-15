@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useGame } from '../../state/gameStore'
 import { useSettings, reducedMotionEnabled } from '../../state/settingsStore'
+import { input } from '../../input/InputManager'
 
 const PHASES = [
   { label: 'Breathe in', dur: 4.2, from: 0.62, to: 1 },
@@ -35,6 +36,7 @@ export function BreathingOverlay() {
               pad.axes.some((axis) => Math.abs(axis) > 0.35)),
         )
         if (padInput) {
+          input.captureTransientInput()
           setBreathing(false)
           return
         }
@@ -61,13 +63,18 @@ export function BreathingOverlay() {
       }
     }
     raf = requestAnimationFrame(loop)
-    const dismiss = () => setBreathing(false)
-    window.addEventListener('keydown', dismiss)
-    window.addEventListener('pointerdown', dismiss)
+    const dismiss = (event: Event) => {
+      event.preventDefault()
+      event.stopImmediatePropagation()
+      input.captureTransientInput()
+      setBreathing(false)
+    }
+    window.addEventListener('keydown', dismiss, true)
+    window.addEventListener('pointerdown', dismiss, true)
     return () => {
       cancelAnimationFrame(raf)
-      window.removeEventListener('keydown', dismiss)
-      window.removeEventListener('pointerdown', dismiss)
+      window.removeEventListener('keydown', dismiss, true)
+      window.removeEventListener('pointerdown', dismiss, true)
     }
   }, [breathing, setBreathing])
 

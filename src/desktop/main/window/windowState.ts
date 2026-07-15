@@ -48,13 +48,21 @@ export class WindowStateManager {
   attach(window: BrowserWindow): void {
     const schedule = () => {
       if (this.pendingTimer) clearTimeout(this.pendingTimer)
-      this.pendingTimer = setTimeout(() => void this.persist(window), 350)
+      this.pendingTimer = setTimeout(() => {
+        this.pendingTimer = null
+        void this.persist(window)
+      }, 350)
     }
     window.on('resize', schedule)
     window.on('move', schedule)
     window.on('maximize', schedule)
     window.on('unmaximize', schedule)
-    window.on('close', () => void this.persist(window))
+  }
+
+  async flush(window: BrowserWindow): Promise<void> {
+    if (this.pendingTimer) clearTimeout(this.pendingTimer)
+    this.pendingTimer = null
+    await this.persist(window)
   }
 
   async persist(window: BrowserWindow): Promise<void> {

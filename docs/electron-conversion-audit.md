@@ -119,7 +119,6 @@ The installed dependency tree at audit time resolved to:
 | React / React DOM             |  19.2.7 |
 | Three.js                      | 0.182.0 |
 | `@react-three/fiber`          |   9.6.1 |
-| `@react-three/drei`           |  10.7.7 |
 | `@react-three/postprocessing` |   3.0.4 |
 | `postprocessing`              |  6.39.2 |
 | `@react-three/rapier`         |   2.2.0 |
@@ -367,28 +366,23 @@ Classification:
 
 ### Local audio
 
-The renderer currently calls `showOpenFilePicker` where available, otherwise
-creates and clicks a hidden multi-file input. It accepts common audio filename
-extensions and creates object URLs lazily. Exported IndexedDB helpers can store
-file handles and re-request permission, but the music UI does not call them.
-
-For Electron this is **browser-only and requiring replacement**. The main process
-must own the picker and filesystem enumeration. The renderer must receive only
-validated metadata and opaque/app-controlled references. It must not receive
-absolute paths as persistent logical asset IDs or arbitrary filesystem access.
+Browser builds call `showOpenFilePicker` where available and otherwise use a
+hidden multi-file input. Both paths are session-only, accept common audio
+filename extensions, create object URLs lazily, and revoke them when removed or
+on teardown. Electron uses a main-process folder picker and filesystem scanner;
+the renderer receives validated metadata and opaque `turtleback-media:` URLs,
+never absolute paths.
 
 ### Internet radio
 
-Stations are user-entered direct HTTPS stream URLs played through an HTML audio
-element. Validation rejects non-HTTPS protocols, embedded credentials, exact
-loopback names, and `.local`, but it permits other hosts, private-network IPs,
-redirects, and DNS changes. Browser CORS/provider behavior is explicitly treated
-as fallible.
-
-This path is **risky or uncertain**. A static CSP host allowlist conflicts with
-arbitrary user stations. The desktop policy must define whether validated user
-streams are allowed, proxied nowhere, and limited further; it must never disable
-`webSecurity`. Offline or refused streams must remain non-blocking.
+Stations are user-entered HTTPS stream URLs. Browser builds play the validated
+URL through HTML audio and remain subject to provider/CORS behavior. Electron
+resolves the hostname, rejects credentials and local/private/multicast results,
+returns only an opaque `turtleback-media:` playback URL to the renderer, then
+re-resolves and IP-pins every connection and redirect in the main process. The
+renderer cannot authorize an origin or contact the arbitrary HTTPS endpoint
+directly, and `webSecurity` remains enabled. Offline or refused streams remain
+non-blocking.
 
 ### YouTube
 
@@ -421,10 +415,10 @@ architecture must preserve this with `contextIsolation: true`,
 `nodeIntegration: false`, and `sandbox: true`; expose no raw `ipcRenderer`, Node
 objects, or generic channel invocation.
 
-URL safety is strongest for YouTube IDs and weaker for arbitrary radio streams.
-There is no current policy for main-frame navigation, new windows, renderer
-permissions, external links, or remote subframe failures. These are desktop
-main-process responsibilities.
+URL safety combines strict YouTube ID/host validation with pinned remote-radio
+streaming. Main-frame navigation, new windows, renderer permissions, and remote
+requests are governed by the desktop main-process policy; provider-side iframe
+and remote-stream failures remain external and non-fatal.
 
 Classification:
 
@@ -525,7 +519,7 @@ Missing at baseline:
 
 - Rapier WASM under a restrictive CSP and its startup cost.
 - YouTube iframe behavior from a packaged origin and provider restrictions.
-- Arbitrary user-supplied HTTPS radio streams and private-network destinations.
+- Arbitrary user-supplied HTTPS radio provider availability and codec behavior.
 - Gamepad/haptics parity across packaged Windows and macOS builds.
 - GPU process failures, renderer crashes, sleep/wake, audio-device changes, and
   fullscreen transitions.

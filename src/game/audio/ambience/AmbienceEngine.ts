@@ -9,19 +9,7 @@ import { publishAudioCue } from '../cues'
 import { useSettings } from '../../state/settingsStore'
 import { events } from '../../core/events'
 import type { WildlifeCallEvent } from '../../world/wildlife/types'
-import {
-  BIOME_AMBIENT_BEDS,
-  biomeAmbiencePlanAt,
-  type AmbientHabitat,
-} from './BiomeAmbiencePlan'
-
-export interface AmbienceInputs {
-  rain: number
-  wind: number
-  indoors: boolean
-  zoneFlavor: string
-  night: number
-}
+import { BIOME_AMBIENT_BEDS, biomeAmbiencePlanAt, type AmbientHabitat } from './BiomeAmbiencePlan'
 
 export class AmbienceEngine {
   private ctx: AudioContext
@@ -259,7 +247,7 @@ export class AmbienceEngine {
     if (!this.started || runtime.player.indoors) return
     const ctx = this.ctx
     const t = ctx.currentTime + 0.05
-    const rng = mulberry32(this.seed ^ call.tick ^ call.variant * 0x9e37)
+    const rng = mulberry32(this.seed ^ call.tick ^ (call.variant * 0x9e37))
     const panner = ctx.createPanner()
     panner.panningModel = 'HRTF'
     panner.distanceModel = 'inverse'

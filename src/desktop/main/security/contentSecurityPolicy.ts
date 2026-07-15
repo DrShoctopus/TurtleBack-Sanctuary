@@ -27,7 +27,7 @@ export function rendererDocumentContentSecurityPolicy(development: boolean): str
     "style-src 'self' 'unsafe-inline'",
     "img-src 'self' data: blob: https:",
     "font-src 'self' data:",
-    "media-src 'self' blob: turtleback-media: https:",
+    "media-src 'self' blob: turtleback-media:",
     "connect-src 'self' https: wss: ws:",
     'frame-src https://www.youtube-nocookie.com https://www.youtube.com',
     "worker-src 'self'",

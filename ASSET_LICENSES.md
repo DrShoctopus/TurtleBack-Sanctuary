@@ -12,11 +12,6 @@ third-party content retain their provenance, license, and attribution here.
 | --- | --- | --- | --- | --- | --- |
 | `model.pipeline-smoke` | model | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
 | `texture.pipeline-smoke` | texture | Turtleback Sanctuary contributors | Original | [Generation record](docs/assets/generation/pipeline-smoke.md) | Turtleback Sanctuary contributors |
-| `turtle.sound.breath-deep` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
-| `turtle.sound.breath-loop` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
-| `turtle.sound.shell-resonance` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
-| `turtle.sound.stroke-front` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
-| `turtle.sound.stroke-rear` | turtle-sound | TurtleBack Sanctuary contributors, with OpenAI Codex synthesis assistance | Original | [Generation record](art-source/turtle/audio/README.md) | TurtleBack Sanctuary contributors |
 <!-- END GENERATED ASSET LICENSES -->
 
 ## Procedural content sources
@@ -39,10 +34,11 @@ third-party content retain their provenance, license, and attribution here.
   IFrame embed. The game never downloads, proxies, records, or restreams them.
   Videos remain subject to YouTube's terms and the uploader's embed settings.
 - **Local audio files** the player chooses are read locally and never uploaded.
-- **Internet-radio streams** the player adds play directly through a native
-  `<audio>` element (no proxy). The player is responsible for the legality of
-  streams they add. The bundled `public/config/radio-stations.example.json`
-  contains **no real endpoints**.
+- **Internet-radio streams** the player adds use direct browser playback or the
+  Electron app's DNS-checked, IP-pinned local relay. No third-party proxy is
+  involved. The player is responsible for the legality of streams they add.
+  The bundled `public/config/radio-stations.example.json` contains **no real
+  endpoints**.
 
 ## Third-party software and bundled runtime data
 
@@ -58,7 +54,7 @@ license and required attribution notice are shipped at
 | ---------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
 | react, react-dom                                           | MIT                                                                                               |
 | three                                                      | MIT                                                                                               |
-| @react-three/fiber, @react-three/drei, @react-three/rapier | MIT                                                                                               |
+| @react-three/fiber, @react-three/rapier                    | MIT                                                                                               |
 | @react-three/postprocessing, postprocessing                | MIT / Zlib                                                                                        |
 | @dimforge/rapier3d-compat                                  | Apache-2.0                                                                                        |
 | Basis Universal transcoder (bundled JS/WASM), Binomial LLC | Apache-2.0; `public/assets/decoders/basis/LICENSE.txt`, `public/assets/decoders/basis/NOTICE.txt` |

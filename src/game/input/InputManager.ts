@@ -10,12 +10,7 @@ import {
   type PadAction,
   type PadFrame,
 } from './gamepadMath'
-import {
-  keyboardActionForCode,
-  type KeyboardActionId,
-} from './actions'
-
-export type KeyAction = KeyboardActionId
+import { keyboardActionForCode, type KeyboardActionId } from './actions'
 
 export type MenuNavEvent = {
   kind: 'up' | 'down' | 'left' | 'right' | 'confirm' | 'back' | 'tabL' | 'tabR'
@@ -35,6 +30,7 @@ class InputManager {
   private padCur: PadFrame | null = null
   private padIndex: number | null = null
   private navHold: { kind: MenuNavEvent['kind']; t: number; repeats: number } | null = null
+  private suppressPadUntilNeutral = false
   private attached = false
   private unsubscribeRumble: (() => void) | null = null
   jogToggled = false
@@ -107,8 +103,15 @@ class InputManager {
 
   private onKeyDown = (e: KeyboardEvent) => {
     if (this.isTypingTarget(e)) return
-    const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
     const g = useGame.getState()
+    if (g.breathing) {
+      e.preventDefault()
+      e.stopImmediatePropagation()
+      this.captureTransientInput()
+      g.setBreathing(false)
+      return
+    }
+    const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
     // keep browser focus/scroll behavior out of gameplay keys
     if (action && (g.phase === 'playing' || g.phase === 'title')) {
       if (e.code === 'Tab' || e.code === 'Space' || e.code.startsWith('Arrow')) e.preventDefault()
@@ -143,6 +146,14 @@ class InputManager {
     this.mouseDY = 0
   }
 
+  /** Consume an overlay-dismissal gesture until held gamepad input returns neutral. */
+  captureTransientInput(): void {
+    this.clearAll()
+    this.suppressPadUntilNeutral = true
+    this.padPrev = this.padCur
+    this.navHold = null
+  }
+
   /** Poll pads, generate device + menu-nav events. Call once per frame. */
   update(dt: number): void {
     if (document.hidden) return
@@ -171,11 +182,17 @@ class InputManager {
     } else {
       this.padCur = null
     }
+    if (this.suppressPadUntilNeutral) {
+      const dz = useSettings.getState().input.deadzone
+      if (!this.padCur || !padActive(this.padCur, dz)) this.suppressPadUntilNeutral = false
+      this.padPrev = this.padCur
+    }
     this.updateMenuNav(dt)
   }
 
   /** Menu navigation events from pad while an overlay is open. */
   private updateMenuNav(dt: number): void {
+    if (this.suppressPadUntilNeutral) return
     const g = useGame.getState()
     const menuOpen = g.overlay !== null || g.phase === 'title'
     if (!menuOpen || !this.padCur) {
@@ -232,7 +249,7 @@ class InputManager {
       x *= inv
       y *= inv
     }
-    if (this.padCur) {
+    if (this.padCur && !this.suppressPadUntilNeutral) {
       const dz = useSettings.getState().input.deadzone
       const stick = applyRadialDeadzone(this.padCur.axes[0] ?? 0, this.padCur.axes[1] ?? 0, dz)
       if (Math.abs(stick.x) + Math.abs(stick.y) > 0.01) {
@@ -250,7 +267,7 @@ class InputManager {
     let dy = this.mouseDY * 0.0021 * s.mouseSens
     this.mouseDX = 0
     this.mouseDY = 0
-    if (this.padCur) {
+    if (this.padCur && !this.suppressPadUntilNeutral) {
       const stick = applyRadialDeadzone(
         this.padCur.axes[2] ?? 0,
         this.padCur.axes[3] ?? 0,
@@ -285,7 +302,7 @@ class InputManager {
   }
 
   padPressed(action: PadAction): boolean {
-    if (!this.padCur) return false
+    if (!this.padCur || this.suppressPadUntilNeutral) return false
     return actionPressed(
       this.padPrev,
       this.padCur,
@@ -295,6 +312,7 @@ class InputManager {
   }
 
   padHeld(action: PadAction): boolean {
+    if (this.suppressPadUntilNeutral) return false
     return actionHeld(this.padCur, action, useSettings.getState().input.gamepadBindings)
   }
 

@@ -92,16 +92,6 @@ export function cylGeo(segments = 16): BufferGeometry {
   return g
 }
 
-export function coneGeo(segments = 12): BufferGeometry {
-  const key = `cone${segments}`
-  let g = geoCache.get(key)
-  if (!g) {
-    g = new CylinderGeometry(0.02, 0.5, 1, segments)
-    geoCache.set(key, g)
-  }
-  return g
-}
-
 export function sphereGeo(detail = 14): BufferGeometry {
   const key = `sph${detail}`
   let g = geoCache.get(key)

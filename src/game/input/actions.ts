@@ -1,32 +1,5 @@
 /** Engine-neutral input actions and their default desktop bindings. */
 
-export const INPUT_ACTION_IDS = [
-  'move_forward',
-  'move_backward',
-  'move_left',
-  'move_right',
-  'look_x',
-  'look_y',
-  'jog',
-  'jump',
-  'interact',
-  'pause',
-  'open_sanctuary',
-  'open_map',
-  'return_home',
-  'performance_overlay',
-  'menu_up',
-  'menu_down',
-  'menu_left',
-  'menu_right',
-  'menu_confirm',
-  'menu_back',
-  'menu_tab_left',
-  'menu_tab_right',
-] as const
-
-export type InputActionId = (typeof INPUT_ACTION_IDS)[number]
-
 export const KEYBOARD_ACTION_IDS = [
   'move_forward',
   'move_backward',
@@ -58,31 +31,6 @@ export const DEFAULT_KEYBOARD_BINDINGS: KeyboardBindings = {
   open_map: ['Tab'],
   return_home: ['KeyH'],
   performance_overlay: ['F3'],
-}
-
-export const INPUT_ACTION_LABELS: Record<InputActionId, string> = {
-  move_forward: 'Move forward',
-  move_backward: 'Move backward',
-  move_left: 'Move left',
-  move_right: 'Move right',
-  look_x: 'Look horizontally',
-  look_y: 'Look vertically',
-  jog: 'Jog',
-  jump: 'Hop',
-  interact: 'Interact',
-  pause: 'Pause',
-  open_sanctuary: 'Open sanctuary settings',
-  open_map: 'Open map',
-  return_home: 'Return home',
-  performance_overlay: 'Performance overlay',
-  menu_up: 'Menu up',
-  menu_down: 'Menu down',
-  menu_left: 'Menu left',
-  menu_right: 'Menu right',
-  menu_confirm: 'Menu confirm',
-  menu_back: 'Menu back',
-  menu_tab_left: 'Previous menu tab',
-  menu_tab_right: 'Next menu tab',
 }
 
 export const PAD_BUTTON = {
@@ -158,4 +106,3 @@ export function cloneDefaultKeyboardBindings(): KeyboardBindings {
     KEYBOARD_ACTION_IDS.map((action) => [action, [...DEFAULT_KEYBOARD_BINDINGS[action]]]),
   ) as KeyboardBindings
 }
-

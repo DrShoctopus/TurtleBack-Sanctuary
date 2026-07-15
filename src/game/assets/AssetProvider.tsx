@@ -1,12 +1,4 @@
-import {
-  createContext,
-  type ReactNode,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from 'react'
+import { type ReactNode, useEffect, useMemo, useRef, useState } from 'react'
 import { useThree } from '@react-three/fiber'
 import type { QualityLevel } from '../core/quality'
 import { AssetManager, type AssetPreloadLease } from './AssetManager'
@@ -20,14 +12,14 @@ import { resolveStaticAssetUrl } from './urls'
 export const PIPELINE_SMOKE_IDS = ['model.pipeline-smoke', 'texture.pipeline-smoke'] as const
 export const ASSET_PIPELINE_AUTHORED_MARK = 'turtleback:asset-pipeline-authored'
 export const ASSET_PIPELINE_FALLBACK_MARK = 'turtleback:asset-pipeline-fallback'
-const AssetManagerContext = createContext<AssetManager | null>(null)
 const canonicalAssetRegistry = createAssetRegistry(canonicalAssetManifest.assets, {
   proceduralFallbackKeys: PROCEDURAL_FALLBACK_KEYS,
 })
 
-let activePipelineInvalidator:
-  | { readonly token: symbol; readonly invalidate: () => boolean }
-  | null = null
+let activePipelineInvalidator: {
+  readonly token: symbol
+  readonly invalidate: () => boolean
+} | null = null
 
 /**
  * Diagnostic-only cache seam used after a deliberate smoke-asset failure is
@@ -185,13 +177,5 @@ export function AssetProvider(props: {
 
   if (initialError) throw initialError
   if (!ready) return null
-  return (
-    <AssetManagerContext.Provider value={manager}>{props.children}</AssetManagerContext.Provider>
-  )
-}
-
-export function useAssetManager(): AssetManager {
-  const manager = useContext(AssetManagerContext)
-  if (!manager) throw new Error('useAssetManager must be used within AssetProvider')
-  return manager
+  return <>{props.children}</>
 }

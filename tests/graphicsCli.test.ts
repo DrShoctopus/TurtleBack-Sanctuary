@@ -8,27 +8,17 @@ import {
   stripLeadingPackageManagerSeparator,
 } from '../scripts/lib/graphicsCli'
 
-const AO_SCENARIO = 'turtle-material-close-high-noon-clear'
 const DEFAULT_SCENARIO = 'arrival-bridge-high-noon-clear'
 
 describe('graphics CLI parser', () => {
   it('uses the full default matrix when no options are present', () => {
-    expect(parseGraphicsArgs([])).toEqual({ scenario: null, variant: 'default' })
-    expect(parseGraphicsArgs(['--'])).toEqual({ scenario: null, variant: 'default' })
+    expect(parseGraphicsArgs([])).toEqual({ scenario: null })
+    expect(parseGraphicsArgs(['--'])).toEqual({ scenario: null })
   })
 
-  it('accepts one registered scenario and either supported variant in any order', () => {
+  it('accepts one registered scenario', () => {
     expect(parseGraphicsArgs([`--scenario=${DEFAULT_SCENARIO}`])).toEqual({
       scenario: DEFAULT_SCENARIO,
-      variant: 'default',
-    })
-    expect(parseGraphicsArgs([`--scenario=${AO_SCENARIO}`, '--variant=default'])).toEqual({
-      scenario: AO_SCENARIO,
-      variant: 'default',
-    })
-    expect(parseGraphicsArgs(['--', '--variant=no-ao', `--scenario=${AO_SCENARIO}`])).toEqual({
-      scenario: AO_SCENARIO,
-      variant: 'no-ao',
     })
   })
 
@@ -38,19 +28,11 @@ describe('graphics CLI parser', () => {
     ['--scenario'],
     ['--scenario='],
     ['--scenario=not-registered'],
-    ['--variant'],
-    ['--variant='],
-    ['--variant=fast'],
+    ['--variant=default'],
     [`--scenario=${DEFAULT_SCENARIO}`, `--scenario=${DEFAULT_SCENARIO}`],
-    ['--variant=default', '--variant=default'],
     ['--', '--', `--scenario=${DEFAULT_SCENARIO}`],
   ])('rejects malformed, unknown, empty, positional, or duplicate input: %j', (...args) => {
     expect(() => parseGraphicsArgs(args)).toThrow()
-  })
-
-  it('rejects no-ao without one explicitly targeted AO-review scenario', () => {
-    expect(() => parseGraphicsArgs(['--variant=no-ao'])).toThrow()
-    expect(() => parseGraphicsArgs([`--scenario=${DEFAULT_SCENARIO}`, '--variant=no-ao'])).toThrow()
   })
 })
 

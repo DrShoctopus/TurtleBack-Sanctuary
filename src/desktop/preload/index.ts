@@ -3,16 +3,11 @@ import {
   IPC_CHANNELS,
   desktopPreferencesSchema,
   desktopLifecycleEventSchema,
-  displayModeSchema,
   localAudioFolderSchema,
   platformInfoSchema,
-  portableAudioTrackSchema,
   rendererErrorSchema,
   windowCommandSchema,
-  windowSizeIdSchema,
-  windowSizeSchema,
   type DesktopAppBridge,
-  type DesktopPreferences,
 } from '../shared/contracts'
 import { gameSettingsSchema } from '../../game/data/settings'
 import { portableMediaSchema } from '../../game/data/media'
@@ -31,9 +26,6 @@ const bridge: DesktopAppBridge = {
   },
   async listSaveSlots() {
     return (await ipcRenderer.invoke(IPC_CHANNELS.listSaveSlots)) as SaveSlotInfo[]
-  },
-  async deleteSave(slot) {
-    await ipcRenderer.invoke(IPC_CHANNELS.deleteSave, saveSlotSchema.parse(slot))
   },
   async getSettings() {
     const value = await ipcRenderer.invoke(IPC_CHANNELS.getSettings)
@@ -62,20 +54,6 @@ const bridge: DesktopAppBridge = {
       await ipcRenderer.invoke(IPC_CHANNELS.getDesktopPreferences),
     )
   },
-  async setDesktopPreferences(patch) {
-    const safePatch: Partial<DesktopPreferences> = {}
-    if (patch.displayMode !== undefined)
-      safePatch.displayMode = displayModeSchema.parse(patch.displayMode)
-    if (patch.windowSize !== undefined)
-      safePatch.windowSize = windowSizeIdSchema.parse(patch.windowSize)
-    if (patch.lastSaveSlot !== undefined)
-      safePatch.lastSaveSlot = saveSlotSchema.parse(patch.lastSaveSlot)
-    if (patch.autoLoadLastSave !== undefined)
-      safePatch.autoLoadLastSave = Boolean(patch.autoLoadLastSave)
-    return desktopPreferencesSchema.parse(
-      await ipcRenderer.invoke(IPC_CHANNELS.setDesktopPreferences, safePatch),
-    )
-  },
   async selectLocalAudioFolder() {
     const value = await ipcRenderer.invoke(IPC_CHANNELS.selectLocalAudioFolder)
     return value === null ? null : localAudioFolderSchema.parse(value)
@@ -84,32 +62,15 @@ const bridge: DesktopAppBridge = {
     const value = await ipcRenderer.invoke(IPC_CHANNELS.listLocalAudioFolders)
     return localAudioFolderSchema.array().parse(value)
   },
-  async listLocalAudioFiles(folderId) {
-    const value = await ipcRenderer.invoke(IPC_CHANNELS.listLocalAudioFiles, folderId)
-    return portableAudioTrackSchema.array().parse(value)
-  },
-  async openExternalLink(url) {
-    return Boolean(await ipcRenderer.invoke(IPC_CHANNELS.openExternalLink, String(url)))
-  },
   async authorizeRemoteMediaUrl(url) {
-    return Boolean(await ipcRenderer.invoke(IPC_CHANNELS.authorizeRemoteMediaUrl, String(url)))
+    const value = await ipcRenderer.invoke(IPC_CHANNELS.authorizeRemoteMediaUrl, String(url))
+    return typeof value === 'string' ? value : null
   },
   async getAppVersion() {
     return String(await ipcRenderer.invoke(IPC_CHANNELS.getAppVersion))
   },
   async getPlatformInfo() {
     return platformInfoSchema.parse(await ipcRenderer.invoke(IPC_CHANNELS.getPlatformInfo))
-  },
-  async setDisplayMode(mode) {
-    return displayModeSchema.parse(
-      await ipcRenderer.invoke(IPC_CHANNELS.setDisplayMode, displayModeSchema.parse(mode)),
-    )
-  },
-  async toggleFullscreen() {
-    return Boolean(await ipcRenderer.invoke(IPC_CHANNELS.toggleFullscreen))
-  },
-  async setWindowSize(width, height) {
-    await ipcRenderer.invoke(IPC_CHANNELS.setWindowSize, windowSizeSchema.parse({ width, height }))
   },
   async windowCommand(command) {
     await ipcRenderer.invoke(IPC_CHANNELS.windowCommand, windowCommandSchema.parse(command))

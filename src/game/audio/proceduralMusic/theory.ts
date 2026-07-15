@@ -5,8 +5,6 @@ export function midiToFreq(midi: number): number {
   return 440 * Math.pow(2, (midi - 69) / 12)
 }
 
-export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'] as const
-
 /** Scale interval sets (semitones from root). */
 export const SCALES = {
   major: [0, 2, 4, 5, 7, 9, 11],

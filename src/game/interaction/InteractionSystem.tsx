@@ -48,7 +48,7 @@ export function InteractionSystem() {
   useFrame((_, dtRaw) => {
     const dt = Math.min(0.1, dtRaw)
     const g = useGame.getState()
-    if (g.phase !== 'playing' || g.overlay !== null) {
+    if (g.phase !== 'playing' || g.overlay !== null || g.breathing) {
       if (g.prompt) g.setPrompt(null)
       return
     }
@@ -56,14 +56,23 @@ export function InteractionSystem() {
     // seated: single prompt — stand
     if (g.sitting) {
       g.setPrompt({ label: 'Stand up', action: 'stand' })
-      if (input.consumeKey('interact') || input.padPressed('interact') || input.padPressed('back') || input.consumeKey('jump')) {
+      if (
+        input.consumeKey('interact') ||
+        input.padPressed('interact') ||
+        input.padPressed('back') ||
+        input.consumeKey('jump')
+      ) {
         standUp()
       }
       return
     }
     if (g.telescope) {
       g.setPrompt({ label: 'Lower telescope', action: 'stand' })
-      if (input.consumeKey('interact') || input.padPressed('interact') || input.padPressed('back')) {
+      if (
+        input.consumeKey('interact') ||
+        input.padPressed('interact') ||
+        input.padPressed('back')
+      ) {
         g.setTelescope(false)
       }
       return
@@ -99,10 +108,19 @@ export function InteractionSystem() {
           { x: camera.position.x, y: camera.position.y, z: camera.position.z },
           { x: toTarget.x, y: toTarget.y, z: toTarget.z },
         )
-        const hit = world.castRay(ray, dist - 0.35, true, undefined, undefined, undefined, undefined, (c) => {
-          const rb = c.parent()
-          return !(rb && (rb.userData as { player?: boolean } | undefined)?.player)
-        })
+        const hit = world.castRay(
+          ray,
+          dist - 0.35,
+          true,
+          undefined,
+          undefined,
+          undefined,
+          undefined,
+          (c) => {
+            const rb = c.parent()
+            return !(rb && (rb.userData as { player?: boolean } | undefined)?.player)
+          },
+        )
         if (hit) best = null
       }
     }
@@ -111,7 +129,12 @@ export function InteractionSystem() {
       currentTarget.current = best
       holdTime.current = 0
       g.setPrompt(
-        best ? { label: typeof best.label === 'function' ? best.label() : best.label, action: 'interact' } : null,
+        best
+          ? {
+              label: typeof best.label === 'function' ? best.label() : best.label,
+              action: 'interact',
+            }
+          : null,
       )
     } else if (best && typeof best.label === 'function') {
       // dynamic labels (e.g. "Brewing…") refresh in place
@@ -132,7 +155,11 @@ export function InteractionSystem() {
       } else {
         holdTime.current = 0
       }
-    } else if (input.consumeKey('interact') || input.padPressed('interact') || input.padPressed('interactAlt')) {
+    } else if (
+      input.consumeKey('interact') ||
+      input.padPressed('interact') ||
+      input.padPressed('interactAlt')
+    ) {
       best.onUse()
     }
   })

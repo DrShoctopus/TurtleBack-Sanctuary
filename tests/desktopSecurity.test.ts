@@ -9,11 +9,12 @@ import {
 } from '@/desktop/main/security/contentSecurityPolicy'
 import { rendererContentType } from '@/desktop/main/security/rendererContentType'
 import { resolveRendererFile } from '@/desktop/main/security/rendererProtocol'
+import { RemoteMediaLibrary } from '@/desktop/main/security/remoteMedia'
 import {
   RemoteRequestPolicy,
   isBlockedLocalHostname,
   isTrustedEmbedUrl,
-  validateExternalUrl,
+  validateRemoteMediaUrl,
 } from '@/desktop/main/security/urlPolicy'
 
 describe('desktop renderer protocol', () => {
@@ -91,6 +92,7 @@ describe('desktop content security policy', () => {
       "'unsafe-inline'",
     ])
     expect(directive(production, 'worker-src')).toEqual(["'self'"])
+    expect(directive(production, 'media-src')).toEqual(["'self'", 'blob:', 'turtleback-media:'])
   })
 
   it('scopes the Basis generated-code allowance to the exact worker resource', () => {
@@ -165,18 +167,36 @@ describe('desktop URL policy', () => {
       '192.168.1.2',
       '::1',
       'fd00::1',
+      '::ffff:7f00:1',
+      'ff02::1',
     ]) {
       expect(isBlockedLocalHostname(hostname), hostname).toBe(true)
     }
     expect(isBlockedLocalHostname('radio.example.com')).toBe(false)
   })
 
-  it('only opens explicitly approved external hosts over credential-free HTTPS', () => {
-    expect(validateExternalUrl('https://github.com/example/project')?.hostname).toBe('github.com')
-    expect(validateExternalUrl('https://youtu.be/abcdefghijk')?.hostname).toBe('youtu.be')
-    expect(validateExternalUrl('http://github.com/example/project')).toBeNull()
-    expect(validateExternalUrl('https://user:pass@github.com/example/project')).toBeNull()
-    expect(validateExternalUrl('https://example.com/')).toBeNull()
+  it('rejects private DNS results including IPv4-mapped IPv6 addresses', async () => {
+    const mapped = await validateRemoteMediaUrl('https://radio.example/live', async () => [
+      { address: '::ffff:7f00:1', family: 6 },
+    ])
+    const mixed = await validateRemoteMediaUrl('https://radio.example/live', async () => [
+      { address: '203.0.113.5', family: 4 },
+      { address: '192.168.1.10', family: 4 },
+    ])
+    const publicOnly = await validateRemoteMediaUrl('https://radio.example/live', async () => [
+      { address: '203.0.113.5', family: 4 },
+    ])
+
+    expect(mapped).toBeNull()
+    expect(mixed).toBeNull()
+    expect(publicOnly?.addresses).toEqual([{ address: '203.0.113.5', family: 4 }])
+  })
+
+  it('never issues desktop playback URLs for direct private-network destinations', async () => {
+    const remoteMedia = new RemoteMediaLibrary()
+
+    await expect(remoteMedia.authorize('https://127.0.0.1/live')).resolves.toBeNull()
+    await expect(remoteMedia.authorize('https://[::ffff:127.0.0.1]/live')).resolves.toBeNull()
   })
 
   it('allows only trusted embed families before explicit media authorization', () => {
@@ -189,8 +209,7 @@ describe('desktop URL policy', () => {
     expect(policy.isAllowed('https://www.youtube-nocookie.com/embed/abcdefghijk')).toBe(true)
     expect(policy.isAllowed('https://radio.example.com/live')).toBe(false)
 
-    policy.authorize(new URL('https://radio.example.com/live'))
-    expect(policy.isAllowed('https://radio.example.com/other')).toBe(true)
+    expect(policy.isAllowed('https://radio.example.com/other')).toBe(false)
   })
 
   it('limits the development exception to the configured local endpoint', () => {

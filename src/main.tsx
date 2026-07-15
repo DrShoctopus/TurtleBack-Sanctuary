@@ -37,10 +37,9 @@ if (import.meta.env.DEV || import.meta.env.VITE_TURTLEBACK_DIAGNOSTICS === '1') 
   // Dev/QA handle: inspect stores and runtime from the console or e2e tests.
   void Promise.all([
     import('./game/core/runtime'),
-    import('./game/state/gameStore'),
     import('./game/core/events'),
     import('./game/audio/AudioManager'),
-  ]).then(([{ runtime }, { useGame }, { events }, { audio }]) => {
+  ]).then(([{ runtime }, { events }, { audio }]) => {
     ;(window as unknown as Record<string, unknown>).__sanctuary = {
       runtime,
       game: useGame,

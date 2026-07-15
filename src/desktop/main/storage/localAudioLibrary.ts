@@ -83,14 +83,6 @@ export class LocalAudioLibrary {
     return { folderId: folder.id, displayName: folder.displayName, tracks }
   }
 
-  async list(folderId: string): Promise<PortableAudioTrack[]> {
-    const safeId = folderIdSchema.parse(folderId)
-    const library = await this.readLibrary()
-    const folder = library.folders.find((entry) => entry.id === safeId)
-    if (!folder) return []
-    return this.scan(folder.path)
-  }
-
   async listFolders(): Promise<LocalAudioFolder[]> {
     const library = await this.readLibrary()
     const folders = await Promise.all(

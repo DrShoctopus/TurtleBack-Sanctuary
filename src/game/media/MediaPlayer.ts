@@ -1,8 +1,9 @@
 /**
  * The home stereo playback engine: built-in generative tracks, local files, and
- * direct internet-radio streams — all through one <audio> element routed into
- * the media bus. Positional ("room") vs personal listening is handled by a
- * PannerNode whose position the world updates.
+ * internet-radio streams — all through one <audio> element routed into the
+ * media bus. Desktop radio uses a pinned app-controlled playback URL; browser
+ * builds use the validated HTTPS URL directly. Positional ("room") vs personal
+ * listening is handled by a PannerNode whose position the world updates.
  */
 import { audio as audioManager } from '../audio/AudioManager'
 import { validateStreamUrl } from './safeUrl'
@@ -37,7 +38,7 @@ export const BUILTIN_ITEMS: PlaylistItem[] = [
   { id: 'builtin-night', kind: 'builtin', title: 'Sanctuary — Night', mood: 'night' },
 ]
 
-class MediaPlayer {
+export class MediaPlayer {
   private el: HTMLAudioElement | null = null
   private srcNode: MediaElementAudioSourceNode | null = null
   private panner: PannerNode | null = null
@@ -55,6 +56,7 @@ class MediaPlayer {
   duration = 0
   /** builtin generative is playing (no <audio> element) */
   private builtinActive = false
+  private selectionGeneration = 0
 
   private listeners = new Set<Listener>()
 
@@ -131,6 +133,7 @@ class MediaPlayer {
 
   async playIndex(i: number): Promise<void> {
     if (i < 0 || i >= this.playlist.length) return
+    const generation = ++this.selectionGeneration
     this.index = i
     const item = this.playlist[i]
     this.errorMessage = ''
@@ -144,6 +147,7 @@ class MediaPlayer {
       return
     }
 
+    this.stopElement()
     this.builtinActive = false
     setMusicPlayerState(null, false)
     if (!this.ensureGraph() || !this.el) {
@@ -151,6 +155,7 @@ class MediaPlayer {
       this.set('status', 'error')
       return
     }
+    this.set('status', 'loading')
 
     let src = ''
     if (item.kind === 'radio') {
@@ -160,30 +165,48 @@ class MediaPlayer {
         this.set('status', 'error')
         return
       }
-      if (window.desktopApp && !(await window.desktopApp.authorizeRemoteMediaUrl(check.url!))) {
-        this.errorMessage = 'This station address was refused by the desktop network policy.'
-        this.set('status', 'error')
-        return
+      if (window.desktopApp) {
+        const playbackUrl = await window.desktopApp.authorizeRemoteMediaUrl(check.url!)
+        if (!this.isCurrentSelection(generation, item.id)) return
+        if (!playbackUrl) {
+          this.failSelection(
+            generation,
+            item.id,
+            'This station address was refused by the desktop network policy.',
+          )
+          return
+        }
+        src = playbackUrl
+      } else {
+        src = check.url!
       }
-      src = check.url!
     } else if (item.kind === 'local' && item.track) {
       try {
         src = await item.track.getUrl()
       } catch {
-        this.errorMessage = 'That file could not be opened.'
-        this.set('status', 'error')
+        this.failSelection(generation, item.id, 'That file could not be opened.')
         return
       }
     }
 
-    this.set('status', 'loading')
+    if (!this.isCurrentSelection(generation, item.id)) return
     this.el.src = src
     try {
       await this.el.play()
     } catch {
       // often an autoplay rejection; the UI will show a Play affordance
-      this.set('status', 'paused')
+      if (this.isCurrentSelection(generation, item.id)) this.set('status', 'paused')
     }
+  }
+
+  private isCurrentSelection(generation: number, itemId: string): boolean {
+    return generation === this.selectionGeneration && this.playlist[this.index]?.id === itemId
+  }
+
+  private failSelection(generation: number, itemId: string, message: string): void {
+    if (!this.isCurrentSelection(generation, itemId)) return
+    this.errorMessage = message
+    this.set('status', 'error')
   }
 
   play(): void {
@@ -259,8 +282,7 @@ class MediaPlayer {
       track: t,
     }))
     const ids = new Set(items.map((item) => item.id))
-    this.playlist = [...this.playlist.filter((item) => !ids.has(item.id)), ...items]
-    this.emit()
+    this.setPlaylist([...this.playlist.filter((item) => !ids.has(item.id)), ...items])
   }
 
   addRadio(name: string, url: string): void {
@@ -269,8 +291,28 @@ class MediaPlayer {
   }
 
   setPlaylist(items: PlaylistItem[]): void {
+    const current = this.playlist[this.index]
+    const nextIndex = current ? items.findIndex((item) => item.id === current.id) : -1
+    const nextCurrent = nextIndex >= 0 ? items[nextIndex] : undefined
+    const preservesCurrentSource = Boolean(
+      current && nextCurrent && (current.kind !== 'local' || current.track === nextCurrent.track),
+    )
+    if (!preservesCurrentSource) {
+      this.selectionGeneration++
+      this.stopElement()
+      this.builtinActive = false
+      setMusicPlayerState(null, false)
+      this.status = 'idle'
+      this.errorMessage = ''
+      this.currentTime = 0
+      this.duration = 0
+    }
+    const retainedTracks = new Set(items.flatMap((item) => (item.track ? [item.track] : [])))
+    for (const item of this.playlist) {
+      if (item.track && !retainedTracks.has(item.track)) item.track.revoke()
+    }
     this.playlist = items
-    if (this.index >= items.length) this.index = 0
+    this.index = preservesCurrentSource ? nextIndex : 0
     this.emit()
   }
 
@@ -312,7 +354,17 @@ class MediaPlayer {
   }
 
   dispose(): void {
+    this.selectionGeneration++
     this.stopElement()
+    const tracks = new Set(this.playlist.flatMap((item) => (item.track ? [item.track] : [])))
+    for (const track of tracks) track.revoke()
+    this.srcNode?.disconnect()
+    this.panner?.disconnect()
+    this.mediaGain?.disconnect()
+    this.srcNode = null
+    this.panner = null
+    this.mediaGain = null
+    this.el = null
     this.listeners.clear()
   }
 }

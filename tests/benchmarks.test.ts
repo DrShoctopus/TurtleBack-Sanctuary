@@ -106,13 +106,6 @@ describe('visual benchmark registry', () => {
     }
   })
 
-  it('keeps AO diagnostics targeted and the final turtle scenario canonical', () => {
-    const aoReview = BENCHMARK_SCENARIOS.filter((scenario) => scenario.tags.includes('ao-review'))
-    expect(aoReview.map((scenario) => scenario.id)).toEqual([
-      'turtle-material-close-high-noon-clear',
-    ])
-  })
-
   it('runs every dry capture before rain so slow wetness cannot leak into clear evidence', () => {
     const firstRain = BENCHMARK_SCENARIOS.findIndex((scenario) => scenario.weather === 'rain')
     expect(firstRain).toBeGreaterThan(0)

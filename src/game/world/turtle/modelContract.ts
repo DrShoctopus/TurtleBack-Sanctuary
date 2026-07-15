@@ -35,7 +35,6 @@ export const TURTLE_REQUIRED_CLIPS = [
   'Nostril_Micro',
 ] as const
 
-export type TurtleNodeName = (typeof TURTLE_REQUIRED_NODES)[number]
 export type TurtleClipName = (typeof TURTLE_REQUIRED_CLIPS)[number]
 export type TurtleLod = 0 | 1 | 2
 

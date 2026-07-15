@@ -1,6 +1,23 @@
+import { randomUUID } from 'node:crypto'
 import { copyFile, mkdir, open, readFile, rename, stat, unlink } from 'node:fs/promises'
 import { dirname } from 'node:path'
 import type { ZodType } from 'zod'
+
+const fileOperationTails = new Map<string, Promise<void>>()
+
+function withFileOperation<T>(file: string, operation: () => Promise<T>): Promise<T> {
+  const previous = fileOperationTails.get(file) ?? Promise.resolve()
+  const result = previous.then(operation)
+  const tail = result.then(
+    () => undefined,
+    () => undefined,
+  )
+  fileOperationTails.set(file, tail)
+  void tail.then(() => {
+    if (fileOperationTails.get(file) === tail) fileOperationTails.delete(file)
+  })
+  return result
+}
 
 async function exists(file: string): Promise<boolean> {
   try {
@@ -31,6 +48,13 @@ export async function readAtomicJson<T>(
   file: string,
   schema: ZodType<T>,
 ): Promise<AtomicReadResult<T>> {
+  return withFileOperation(file, () => readAtomicJsonUnlocked(file, schema))
+}
+
+async function readAtomicJsonUnlocked<T>(
+  file: string,
+  schema: ZodType<T>,
+): Promise<AtomicReadResult<T>> {
   const primaryExists = await exists(file)
   const primary = primaryExists ? await readAndValidate(file, schema) : null
   if (primary) return { data: primary, recoveredFromBackup: false, primaryCorrupt: false }
@@ -40,7 +64,7 @@ export async function readAtomicJson<T>(
   if (backup) {
     // Repair the primary immediately. The invalid bytes remain in .corrupt for
     // diagnostics instead of being silently replaced by defaults on the next write.
-    await writeAtomicJson(file, backup, schema).catch(() => undefined)
+    await writeAtomicJsonUnlocked(file, backup, schema).catch(() => undefined)
     return { data: backup, recoveredFromBackup: true, primaryCorrupt: primaryExists }
   }
   return { data: null, recoveredFromBackup: false, primaryCorrupt: primaryExists }
@@ -58,9 +82,17 @@ export async function writeAtomicJson<T>(
   value: T,
   schema: ZodType<T>,
 ): Promise<void> {
+  return withFileOperation(file, () => writeAtomicJsonUnlocked(file, value, schema))
+}
+
+async function writeAtomicJsonUnlocked<T>(
+  file: string,
+  value: T,
+  schema: ZodType<T>,
+): Promise<void> {
   const validated = schema.parse(value)
   await mkdir(dirname(file), { recursive: true })
-  const temp = `${file}.tmp-${process.pid}-${Date.now()}`
+  const temp = `${file}.tmp-${process.pid}-${randomUUID()}`
   const json = `${JSON.stringify(validated, null, 2)}\n`
   try {
     const handle = await open(temp, 'wx', 0o600)
@@ -94,9 +126,11 @@ export async function writeAtomicJson<T>(
 }
 
 export async function deleteAtomicJson(file: string): Promise<void> {
-  await Promise.all([
-    unlink(file).catch(() => undefined),
-    unlink(`${file}.bak`).catch(() => undefined),
-    unlink(`${file}.corrupt`).catch(() => undefined),
-  ])
+  await withFileOperation(file, async () => {
+    await Promise.all([
+      unlink(file).catch(() => undefined),
+      unlink(`${file}.bak`).catch(() => undefined),
+      unlink(`${file}.corrupt`).catch(() => undefined),
+    ])
+  })
 }
