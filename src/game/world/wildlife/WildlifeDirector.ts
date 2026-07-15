@@ -21,6 +21,8 @@ const CATEGORY_BY_SPECIES: Readonly<Record<WildlifeSpeciesId, WildlifeCategory>>
   'lumenfen-insects': 'insects',
   'galecrest-seabird': 'coast',
   'shell-ray': 'ocean',
+  'blossom-grazer': 'ground',
+  'lumenfen-heron': 'wetland',
 }
 
 const GROUP_SIZE_BY_SPECIES: Readonly<Record<WildlifeSpeciesId, number>> = {
@@ -30,6 +32,8 @@ const GROUP_SIZE_BY_SPECIES: Readonly<Record<WildlifeSpeciesId, number>> = {
   'lumenfen-insects': 7,
   'galecrest-seabird': 3,
   'shell-ray': 3,
+  'blossom-grazer': 1,
+  'lumenfen-heron': 1,
 }
 
 const REPRESENTATION_BY_SPECIES: Readonly<Record<WildlifeSpeciesId, 'near' | 'distant'>> = {
@@ -39,6 +43,8 @@ const REPRESENTATION_BY_SPECIES: Readonly<Record<WildlifeSpeciesId, 'near' | 'di
   'lumenfen-insects': 'near',
   'galecrest-seabird': 'distant',
   'shell-ray': 'distant',
+  'blossom-grazer': 'near',
+  'lumenfen-heron': 'near',
 }
 
 const CALL_INTERVAL_BY_SPECIES: Partial<Record<WildlifeSpeciesId, number>> = {
@@ -83,6 +89,15 @@ function behaviorFor(
   }
   if (anchor.speciesId === 'lumenfen-insects') {
     return context.time > 0.76 || context.time < 0.18 ? 'glow' : context.rain > 0.48 ? 'rest' : 'drift'
+  }
+  if (anchor.speciesId === 'blossom-grazer') {
+    const [x, , z] = anchor.position
+    if (Math.hypot(context.player[0] - x, context.player[2] - z) < 11) return 'flee'
+    return context.rain > 0.6 || phase > 205 ? 'rest' : 'browse'
+  }
+  if (anchor.speciesId === 'lumenfen-heron') {
+    if (context.rain > 0.72) return 'rest'
+    return phase < 122 ? 'wade' : 'stalk'
   }
   if (anchor.speciesId === 'galecrest-seabird') return context.rain > 0.62 ? 'perch' : 'soar'
   return 'glide'
@@ -133,6 +148,29 @@ function animatePosition(
     const angle = elapsed * 0.075 + phase
     return { position: [x + Math.cos(angle) * radius, y + Math.sin(angle * 1.4) * 5, z + Math.sin(angle) * radius], heading: -angle + Math.PI / 2 }
   }
+  if (anchor.speciesId === 'blossom-grazer') {
+    if (behavior === 'rest') return { position: [x, y, z], heading: phase }
+    if (behavior === 'flee') {
+      const away = Math.atan2(x - context.player[0], z - context.player[2])
+      return {
+        position: [x + Math.sin(away) * 4.2, y, z + Math.cos(away) * 4.2],
+        heading: away,
+      }
+    }
+    const angle = time * 0.075 + phase
+    return {
+      position: [x + Math.cos(angle) * 2.4, y, z + Math.sin(angle) * 1.8],
+      heading: angle + Math.PI / 2,
+    }
+  }
+  if (anchor.speciesId === 'lumenfen-heron') {
+    const pace = behavior === 'stalk' ? 0.035 : 0.07
+    const angle = time * pace + phase
+    return {
+      position: [x + Math.cos(angle) * 1.6, y, z + Math.sin(angle) * 1.1],
+      heading: angle + Math.PI / 2,
+    }
+  }
   const radius = 34 + (seed % 26)
   const angle = elapsed * 0.035 + phase
   return { position: [x + Math.cos(angle) * radius, y + Math.sin(angle * 1.5) * 1.4, z + Math.sin(angle) * radius], heading: -angle + Math.PI / 2 }
@@ -143,6 +181,8 @@ function scaleFor(anchor: WildlifeHabitatAnchor): number {
   if (anchor.speciesId === 'shell-ray') return variation * 4.1
   if (anchor.speciesId === 'galecrest-seabird') return variation * 1.7
   if (anchor.speciesId === 'shell-hare') return variation * 1.25
+  if (anchor.speciesId === 'blossom-grazer') return variation * 1.45
+  if (anchor.speciesId === 'lumenfen-heron') return variation * 1.18
   return variation
 }
 
@@ -158,10 +198,18 @@ function coverageFirstSelection(
     used.add(candidate.id)
     selected.push(candidate)
   }
-  for (const habitat of ['crownwood', 'shell-meadow', 'garden-wetland', 'galecrest', 'open-ocean'] as const) {
+  for (const habitat of [
+    'crownwood',
+    'shell-meadow',
+    'garden-wetland',
+    'galecrest',
+    'open-ocean',
+    'blossomshade',
+    'lumenfen',
+  ] as const) {
     addFirst((agent) => agent.habitat === habitat)
   }
-  for (const category of ['canopy', 'ground', 'insects', 'coast', 'ocean'] as const) {
+  for (const category of ['canopy', 'ground', 'insects', 'coast', 'ocean', 'wetland'] as const) {
     addFirst((agent) => agent.category === category)
   }
   const maxTotal = budget.maxNearAgents + budget.maxDistantGroups

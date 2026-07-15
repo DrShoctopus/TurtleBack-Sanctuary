@@ -163,6 +163,10 @@ class AudioManager {
     return Math.sqrt(sum / this.analyserData.length)
   }
 
+  ambienceSnapshot(): ReturnType<AmbienceEngine['snapshot']> | null {
+    return this.ambience?.snapshot() ?? null
+  }
+
   private onVisibility = () => {
     if (!this.ctx) return
     // reduce activity when hidden: suspend the whole context

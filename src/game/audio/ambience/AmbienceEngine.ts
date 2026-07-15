@@ -9,6 +9,11 @@ import { publishAudioCue } from '../cues'
 import { useSettings } from '../../state/settingsStore'
 import { events } from '../../core/events'
 import type { WildlifeCallEvent } from '../../world/wildlife/types'
+import {
+  BIOME_AMBIENT_BEDS,
+  biomeAmbiencePlanAt,
+  type AmbientHabitat,
+} from './BiomeAmbiencePlan'
 
 export interface AmbienceInputs {
   rain: number
@@ -34,6 +39,15 @@ export class AmbienceEngine {
   private masterFilter!: BiquadFilterNode
   private interiorTone!: GainNode
   private turtleResonanceGain!: GainNode
+  private biomeGains = new Map<AmbientHabitat, GainNode>()
+  private biomeWeights: Readonly<Record<AmbientHabitat, number>> = {
+    crownwood: 0,
+    blossomshade: 0,
+    lumenfen: 0,
+    fernfall: 0,
+    galecrest: 0,
+    hearth: 0,
+  }
 
   private unsubscribeWildlife: (() => void) | null = null
   private started = false
@@ -117,6 +131,26 @@ export class AmbienceEngine {
     this.rainGain.connect(this.out)
     rainSrc.start()
 
+    // One shared procedural texture branches into gently overlapping biome
+    // filters. Moving through a threshold only crossfades gains; no source is
+    // restarted and no binary ambience assets are required.
+    const biomeSource = ctx.createBufferSource()
+    biomeSource.buffer = this.noiseBuffer
+    biomeSource.loop = true
+    for (const bed of BIOME_AMBIENT_BEDS) {
+      const filter = ctx.createBiquadFilter()
+      filter.type = 'bandpass'
+      filter.frequency.value = bed.centerFrequency
+      filter.Q.value = bed.q
+      const gain = ctx.createGain()
+      gain.gain.value = 0
+      biomeSource.connect(filter)
+      filter.connect(gain)
+      gain.connect(this.masterFilter)
+      this.biomeGains.set(bed.id, gain)
+    }
+    biomeSource.start()
+
     // --- interior room tone (very low hum, on only when indoors) ---
     const toneOsc = ctx.createOscillator()
     toneOsc.type = 'sine'
@@ -190,11 +224,34 @@ export class AmbienceEngine {
       (indoors ? 0.35 : 1)
     this.turtleResonanceGain.gain.setTargetAtTime(turtleTarget, t, 0.32)
 
+    const biomePlan = biomeAmbiencePlanAt(runtime.player.pos.x, runtime.player.pos.z)
+    this.biomeWeights = biomePlan.weights
+    for (const bed of BIOME_AMBIENT_BEDS) {
+      const habitatLevel = biomePlan.weights[bed.id]
+      const rainShape = bed.id === 'lumenfen' || bed.id === 'fernfall' ? 0.86 + rain * 0.36 : 1
+      const nightShape = bed.id === 'lumenfen' ? 0.9 + night * 0.34 : 1
+      const target = indoors ? 0 : habitatLevel * bed.maxGain * quietLevel * rainShape * nightShape
+      this.biomeGains.get(bed.id)?.gain.setTargetAtTime(target, t, 1.1)
+    }
+
     // subtitle cue when rain begins
     if (rain > 0.25 && this.lastRainAnnounced < 0.25) publishAudioCue('🌧 Rain begins to fall')
     if (rain < 0.1 && this.lastRainAnnounced > 0.25) publishAudioCue('The rain eases')
     this.lastRainAnnounced = rain
-    void night
+  }
+
+  snapshot(): {
+    biomeBedCount: number
+    activeBiomeBeds: readonly AmbientHabitat[]
+    biomeBedWeights: Readonly<Record<AmbientHabitat, number>>
+  } {
+    return {
+      biomeBedCount: BIOME_AMBIENT_BEDS.length,
+      activeBiomeBeds: BIOME_AMBIENT_BEDS.map(({ id }) => id).filter(
+        (id) => this.biomeWeights[id] > 0.025,
+      ),
+      biomeBedWeights: { ...this.biomeWeights },
+    }
   }
 
   /** A call can only arrive from a represented wildlife emitter ID. */

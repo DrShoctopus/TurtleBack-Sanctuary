@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Approved; Slices 2–7 and Slice 8A implemented
+**Status:** Approved; Slices 2–8 implemented
 
 ## Decision
 
@@ -102,3 +102,9 @@ Generation provenance and prompt records are in [generation-record.md](generatio
 The first wildlife wave now uses the approved board in the live scene: grouped Crownwood songbirds, paired shell hares, butterflies/dragonflies/fireflies, Galecrest seabirds, and ocean rays share the same faceted painterly material language as the forest and turtle. Stable habitat anchors keep discoveries beside routes and outside traversal/building hazards; the fixed-tick director owns weather, time, Quiet Mode, Reduced Motion, pooling, Low-tier coverage, and visible-emitter calls.
 
 The seven-condition visual record and probe contract are in [runtime-evidence/slice-6/](runtime-evidence/slice-6/).
+
+## Slice 8 runtime translation
+
+The remaining shell now reads as an overlapping habitat mosaic rather than one generalized meadow. Blossomshade, Lumenfen, Fernfall, Galecrest, and Hearth use biome-specific canopy silhouettes, palettes, six-layer environmental stacks, paired discovery-cluster families, continuous field transitions, procedural ambient beds, and Low-tier identity retention. The restrained second wildlife wave adds a browsing grazer and wading bird where they create the strongest habitat contrast.
+
+The live visual records and probe contracts are in [runtime-evidence/slice-8a/](runtime-evidence/slice-8a/) and [runtime-evidence/slice-8b/](runtime-evidence/slice-8b/).

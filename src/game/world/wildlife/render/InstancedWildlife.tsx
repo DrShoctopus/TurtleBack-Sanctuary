@@ -2,6 +2,7 @@ import { type MutableRefObject, useMemo, useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import {
   ConeGeometry,
+  CylinderGeometry,
   DoubleSide,
   IcosahedronGeometry,
   InstancedMesh,
@@ -37,6 +38,24 @@ interface MeshRefs {
   hareEarR: MutableRefObject<InstancedMesh | null>
   hareTail: MutableRefObject<InstancedMesh | null>
   hareEye: MutableRefObject<InstancedMesh | null>
+  grazerBody: MutableRefObject<InstancedMesh | null>
+  grazerChest: MutableRefObject<InstancedMesh | null>
+  grazerNeck: MutableRefObject<InstancedMesh | null>
+  grazerHead: MutableRefObject<InstancedMesh | null>
+  grazerEarL: MutableRefObject<InstancedMesh | null>
+  grazerEarR: MutableRefObject<InstancedMesh | null>
+  grazerLegFL: MutableRefObject<InstancedMesh | null>
+  grazerLegFR: MutableRefObject<InstancedMesh | null>
+  grazerLegBL: MutableRefObject<InstancedMesh | null>
+  grazerLegBR: MutableRefObject<InstancedMesh | null>
+  heronBody: MutableRefObject<InstancedMesh | null>
+  heronNeck: MutableRefObject<InstancedMesh | null>
+  heronHead: MutableRefObject<InstancedMesh | null>
+  heronBeak: MutableRefObject<InstancedMesh | null>
+  heronWingL: MutableRefObject<InstancedMesh | null>
+  heronWingR: MutableRefObject<InstancedMesh | null>
+  heronLegL: MutableRefObject<InstancedMesh | null>
+  heronLegR: MutableRefObject<InstancedMesh | null>
   insectBody: MutableRefObject<InstancedMesh | null>
   insectWingL: MutableRefObject<InstancedMesh | null>
   insectWingR: MutableRefObject<InstancedMesh | null>
@@ -120,6 +139,8 @@ export function InstancedWildlife({ frameRef }: { frameRef: MutableRefObject<Wil
     songbirdBody: useRef(null), songbirdHead: useRef(null), songbirdBeak: useRef(null), songbirdEye: useRef(null), songbirdWingL: useRef(null), songbirdWingR: useRef(null), songbirdTail: useRef(null),
     seabirdBody: useRef(null), seabirdHead: useRef(null), seabirdBeak: useRef(null), seabirdWingL: useRef(null), seabirdWingR: useRef(null), seabirdTail: useRef(null),
     hareBody: useRef(null), hareChest: useRef(null), hareHead: useRef(null), hareEarL: useRef(null), hareEarR: useRef(null), hareTail: useRef(null), hareEye: useRef(null),
+    grazerBody: useRef(null), grazerChest: useRef(null), grazerNeck: useRef(null), grazerHead: useRef(null), grazerEarL: useRef(null), grazerEarR: useRef(null), grazerLegFL: useRef(null), grazerLegFR: useRef(null), grazerLegBL: useRef(null), grazerLegBR: useRef(null),
+    heronBody: useRef(null), heronNeck: useRef(null), heronHead: useRef(null), heronBeak: useRef(null), heronWingL: useRef(null), heronWingR: useRef(null), heronLegL: useRef(null), heronLegR: useRef(null),
     insectBody: useRef(null), insectWingL: useRef(null), insectWingR: useRef(null), fireflyGlow: useRef(null),
     rayBody: useRef(null), rayWing: useRef(null), rayTail: useRef(null),
   }
@@ -134,6 +155,8 @@ export function InstancedWildlife({ frameRef }: { frameRef: MutableRefObject<Wil
     insectWing: new PlaneGeometry(1, 1),
     rayWing: new IcosahedronGeometry(1, 1),
     rayTail: new ConeGeometry(0.12, 2.4, 5),
+    leg: new CylinderGeometry(0.09, 0.12, 1.4, 6),
+    neck: new CylinderGeometry(0.16, 0.22, 1.8, 7),
   }), [])
   const materials = useMemo(() => ({
     songbird: new MeshStandardMaterial({ color: '#46594a', roughness: 0.82, flatShading: true }),
@@ -151,6 +174,11 @@ export function InstancedWildlife({ frameRef }: { frameRef: MutableRefObject<Wil
     glow: new MeshBasicMaterial({ color: '#c7f28a', transparent: true, opacity: 0.86, toneMapped: false, depthWrite: false }),
     ray: new MeshStandardMaterial({ color: '#496b68', roughness: 0.72, flatShading: true }),
     rayWing: new MeshStandardMaterial({ color: '#789083', roughness: 0.78, flatShading: true }),
+    grazer: new MeshStandardMaterial({ color: '#927657', roughness: 0.94, flatShading: true }),
+    grazerAccent: new MeshStandardMaterial({ color: '#c2a97b', roughness: 0.9, flatShading: true }),
+    heron: new MeshStandardMaterial({ color: '#9eaaa3', roughness: 0.84, flatShading: true }),
+    heronWing: new MeshStandardMaterial({ color: '#586d68', roughness: 0.88, flatShading: true, side: DoubleSide }),
+    heronLeg: new MeshStandardMaterial({ color: '#b49a63', roughness: 0.82, flatShading: true }),
   }), [])
 
   useFrame(() => {
@@ -195,6 +223,39 @@ export function InstancedWildlife({ frameRef }: { frameRef: MutableRefObject<Wil
       place(refs.hareEye.current, index, agent, { position: [0.26, 1.06, -0.69], scale: [0.065, 0.065, 0.065] }, hop)
     })
     ;['hareBody', 'hareChest', 'hareHead', 'hareEarL', 'hareEarR', 'hareTail', 'hareEye'].forEach((key) => finish(refs[key as keyof MeshRefs].current, hares.length))
+
+    const grazers = species(frame, 'blossom-grazer')
+    grazers.forEach((agent, index) => {
+      const moving = agent.behavior === 'browse' || agent.behavior === 'flee'
+      const stride = moving ? Math.sin(t * (agent.behavior === 'flee' ? 6.2 : 1.4) + agent.phase * 11) * 0.24 : 0
+      const headDip = agent.behavior === 'browse' ? 0.42 + Math.sin(t * 0.7 + agent.phase * 8) * 0.16 : 0
+      place(refs.grazerBody.current, index, agent, { position: [0, 1.18, 0.12], scale: [0.68, 0.62, 1.16] })
+      place(refs.grazerChest.current, index, agent, { position: [0, 1.24, -0.72], scale: [0.58, 0.72, 0.6] })
+      place(refs.grazerNeck.current, index, agent, { position: [0, 1.82 - headDip * 0.3, -0.82], scale: [0.78, 0.72, 0.78], rotation: [0.26 + headDip * 0.4, 0, 0] })
+      place(refs.grazerHead.current, index, agent, { position: [0, 2.38 - headDip, -1.18], scale: [0.4, 0.36, 0.58], rotation: [headDip * 0.34, 0, 0] })
+      place(refs.grazerEarL.current, index, agent, { position: [-0.3, 2.68 - headDip, -1.08], scale: [0.4, 0.38, 0.3], rotation: [0, 0, 0.68] })
+      place(refs.grazerEarR.current, index, agent, { position: [0.3, 2.68 - headDip, -1.08], scale: [0.4, 0.38, 0.3], rotation: [0, 0, -0.68] })
+      place(refs.grazerLegFL.current, index, agent, { position: [-0.4, 0.55, -0.6], scale: [0.76, 0.78, 0.76], rotation: [stride, 0, 0] })
+      place(refs.grazerLegFR.current, index, agent, { position: [0.4, 0.55, -0.6], scale: [0.76, 0.78, 0.76], rotation: [-stride, 0, 0] })
+      place(refs.grazerLegBL.current, index, agent, { position: [-0.4, 0.55, 0.72], scale: [0.76, 0.78, 0.76], rotation: [-stride, 0, 0] })
+      place(refs.grazerLegBR.current, index, agent, { position: [0.4, 0.55, 0.72], scale: [0.76, 0.78, 0.76], rotation: [stride, 0, 0] })
+    })
+    ;['grazerBody', 'grazerChest', 'grazerNeck', 'grazerHead', 'grazerEarL', 'grazerEarR', 'grazerLegFL', 'grazerLegFR', 'grazerLegBL', 'grazerLegBR'].forEach((key) => finish(refs[key as keyof MeshRefs].current, grazers.length))
+
+    const herons = species(frame, 'lumenfen-heron')
+    herons.forEach((agent, index) => {
+      const step = agent.behavior === 'wade' ? Math.sin(t * 1.25 + agent.phase * 9) * 0.18 : 0
+      const stalk = agent.behavior === 'stalk' ? 0.32 : 0
+      place(refs.heronBody.current, index, agent, { position: [0, 1.72, 0], scale: [0.42, 0.54, 0.78], rotation: [0.08, 0, 0] })
+      place(refs.heronNeck.current, index, agent, { position: [0, 2.42 - stalk * 0.2, -0.48], scale: [0.68, 0.9, 0.68], rotation: [0.28 + stalk, 0, 0] })
+      place(refs.heronHead.current, index, agent, { position: [0, 3.16 - stalk, -0.74], scale: [0.28, 0.3, 0.34] })
+      place(refs.heronBeak.current, index, agent, { position: [0, 3.1 - stalk, -1.15], scale: [0.58, 0.58, 0.78], rotation: [-Math.PI / 2, 0, 0] })
+      place(refs.heronWingL.current, index, agent, { position: [-0.38, 1.76, 0.04], scale: [0.42, 0.58, 0.18], rotation: [0, 0, Math.PI / 2 + 0.14] })
+      place(refs.heronWingR.current, index, agent, { position: [0.38, 1.76, 0.04], scale: [0.42, 0.58, 0.18], rotation: [0, 0, -Math.PI / 2 - 0.14] })
+      place(refs.heronLegL.current, index, agent, { position: [-0.13, 0.7, 0], scale: [0.55, 1, 0.55], rotation: [step, 0, 0] })
+      place(refs.heronLegR.current, index, agent, { position: [0.13, 0.7, 0], scale: [0.55, 1, 0.55], rotation: [-step, 0, 0] })
+    })
+    ;['heronBody', 'heronNeck', 'heronHead', 'heronBeak', 'heronWingL', 'heronWingR', 'heronLegL', 'heronLegR'].forEach((key) => finish(refs[key as keyof MeshRefs].current, herons.length))
 
     const insectGroups = [...species(frame, 'blossom-pollinators'), ...species(frame, 'lumenfen-insects')]
     let insectCount = 0
@@ -250,6 +311,24 @@ export function InstancedWildlife({ frameRef }: { frameRef: MutableRefObject<Wil
       <instancedMesh ref={refs.hareEarR} args={[geometry.ear, materials.hare, MAX_AGENTS]} castShadow />
       <instancedMesh ref={refs.hareTail} args={[geometry.head, materials.hareTail, MAX_AGENTS]} />
       <instancedMesh ref={refs.hareEye} args={[geometry.head, materials.eye, MAX_AGENTS]} />
+      <instancedMesh ref={refs.grazerBody} args={[geometry.rounded, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerChest} args={[geometry.rounded, materials.grazerAccent, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerNeck} args={[geometry.neck, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerHead} args={[geometry.head, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerEarL} args={[geometry.ear, materials.grazer, MAX_AGENTS]} />
+      <instancedMesh ref={refs.grazerEarR} args={[geometry.ear, materials.grazer, MAX_AGENTS]} />
+      <instancedMesh ref={refs.grazerLegFL} args={[geometry.leg, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerLegFR} args={[geometry.leg, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerLegBL} args={[geometry.leg, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.grazerLegBR} args={[geometry.leg, materials.grazer, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.heronBody} args={[geometry.rounded, materials.heron, MAX_AGENTS]} castShadow />
+      <instancedMesh ref={refs.heronNeck} args={[geometry.neck, materials.heron, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronHead} args={[geometry.head, materials.heron, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronBeak} args={[geometry.beak, materials.beak, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronWingL} args={[geometry.wing, materials.heronWing, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronWingR} args={[geometry.wing, materials.heronWing, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronLegL} args={[geometry.leg, materials.heronLeg, MAX_AGENTS]} />
+      <instancedMesh ref={refs.heronLegR} args={[geometry.leg, materials.heronLeg, MAX_AGENTS]} />
       <instancedMesh ref={refs.insectBody} args={[geometry.insect, materials.insect, MAX_INSECTS]} />
       <instancedMesh ref={refs.insectWingL} args={[geometry.insectWing, materials.insectWing, MAX_INSECTS]} />
       <instancedMesh ref={refs.insectWingR} args={[geometry.insectWing, materials.insectWing, MAX_INSECTS]} />

@@ -86,8 +86,8 @@ async function capture(
         Math.abs(runtime.time.t - time) < 0.001 &&
         weatherReady &&
         wildlife.activeAgents! > 0 &&
-        wildlife.categories?.length === 5 &&
-        wildlife.habitats?.length === 5 &&
+        wildlife.categories?.length === 6 &&
+        wildlife.habitats?.length === 7 &&
         wildlife.quietMode === quiet
       )
     },

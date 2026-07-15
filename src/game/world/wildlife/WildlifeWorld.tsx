@@ -20,7 +20,8 @@ export function WildlifeWorld() {
     const unregisterWildlife = registerProbeSection('wildlife', 'director', () => ({
       ...director.snapshot(),
       lowHabitatCoverage:
-        quality.level !== 'low' || (director.snapshot().habitats.length >= 5 && director.snapshot().categories.length >= 5),
+        quality.level !== 'low' ||
+        (director.snapshot().habitats.length >= 7 && director.snapshot().categories.length >= 6),
     }))
     const unregisterAudio = registerProbeSection('audio', 'wildlife', () => {
       const snapshot = director.snapshot()

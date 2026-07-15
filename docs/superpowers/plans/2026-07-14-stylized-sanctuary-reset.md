@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–7 and Slice 8A complete; Slice 8B next
+**Status:** Slices 1–8 complete; Slice 9 next
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -377,6 +377,8 @@ Runtime asset budget: two separately reviewed/pushed slices of at most 12 MiB ea
 Suggested commits: `feat: expand sanctuary biome mosaic` and `feat: complete sanctuary habitat variety`
 
 **Slice 8A completed 2026-07-15:** Blossomshade, Lumenfen, Fernfall, Galecrest, and Hearth now overlap through continuous exposure/moisture/slope/elevation/district fields. A compact instanced kit gives every biome six environmental layers, two signature cluster families, its own canopy silhouette and palette, and route-safe heavy placement. High presents 2,510 instances while Low retains all six layers in 1,120 instances. Six live captures and the probe contract are recorded under `docs/art-direction/runtime-evidence/slice-8a/`; habitat audio, special clusters, and second-wave wildlife remain in Slice 8B.
+
+**Slice 8B completed 2026-07-15:** ten authored discovery clusters add wetland reeds/lilies/lights, ravine roots/fall stones, flowering arches, coastal scrub/saltstone, and civic lantern/planter details. Six procedural habitat beds crossfade without source restarts. A contrast-driven second wildlife wave adds a calm Blossomshade grazer and Lumenfen heron to the deterministic director, bringing the pool to 26 owners across eight species, seven habitats, and six categories with zero orphan calls. Evidence and the live probe contract are under `docs/art-direction/runtime-evidence/slice-8b/`.
 
 ### Slice 9 — Time, weather, and final composition
 

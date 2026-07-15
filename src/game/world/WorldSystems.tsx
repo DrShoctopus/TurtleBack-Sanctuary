@@ -175,17 +175,21 @@ export function WorldSystems() {
       }))
       const unregisterMusic = registerProbeSection('audio', 'music', () => {
         const music = audio.music?.snapshot()
-        if (!music) return {}
+        const ambience = audio.ambienceSnapshot()
+        if (!music && !ambience) return {}
         return {
-          musicForm: music.form,
-          musicPalette: music.palette,
-          musicLead: music.lead,
-          musicSectionIndex: music.sectionIndex,
-          musicGlobalBar: music.globalBar,
-          musicScheduledEvents: music.scheduledEvents,
-          musicSchedulerTimers: music.schedulerTimers,
-          musicBiome: music.biome,
-          musicTurtleEvent: music.turtleEvent,
+          musicForm: music?.form,
+          musicPalette: music?.palette,
+          musicLead: music?.lead,
+          musicSectionIndex: music?.sectionIndex,
+          musicGlobalBar: music?.globalBar,
+          musicScheduledEvents: music?.scheduledEvents,
+          musicSchedulerTimers: music?.schedulerTimers,
+          musicBiome: music?.biome,
+          musicTurtleEvent: music?.turtleEvent,
+          biomeBedCount: ambience?.biomeBedCount,
+          activeBiomeBeds: ambience?.activeBiomeBeds,
+          biomeBedWeights: ambience?.biomeBedWeights,
         }
       })
       const teleport = (x: number, z: number, yaw = 0, pitch = 0) => {

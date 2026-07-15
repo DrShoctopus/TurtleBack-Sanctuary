@@ -65,6 +65,9 @@ export interface AudioProbeSection {
   musicSchedulerTimers?: number
   musicBiome?: 'forest' | 'village' | 'edge'
   musicTurtleEvent?: boolean
+  biomeBedCount?: number
+  activeBiomeBeds?: readonly string[]
+  biomeBedWeights?: Readonly<Record<string, number>>
 }
 
 export interface AtmosphereProbeSection {
@@ -88,6 +91,9 @@ export interface WorldProbeSection {
   biomeInstances: number
   biomeLayers: Readonly<Record<string, Readonly<Record<string, number>>>>
   biomeClusterFamilies: Readonly<Record<string, readonly string[]>>
+  habitatSignatureClusters: number
+  habitatSignatureFeatures: number
+  habitatClusterFamilies: Readonly<Record<string, readonly string[]>>
 }
 
 export interface ProbeSectionMap {

@@ -12,7 +12,7 @@ async function boot(page: Page): Promise<void> {
   )
 }
 
-test('first-wave habitats expose deterministic wildlife on High and Low', async ({ page }) => {
+test('both wildlife waves expose deterministic habitat coverage on High and Low', async ({ page }) => {
   const errors: string[] = []
   page.on('pageerror', (error) => errors.push(error.stack ?? error.message))
   await boot(page)
@@ -39,7 +39,7 @@ test('first-wave habitats expose deterministic wildlife on High and Low', async 
     )
     const probe = await page.evaluate(() => (window as any).__turtlebackDebug.probe())
     expect(probe.sections.wildlife).toMatchObject({
-      pooledAgents: 22,
+      pooledAgents: 26,
       orphanCalls: 0,
       lowHabitatCoverage: true,
     })
@@ -49,8 +49,9 @@ test('first-wave habitats expose deterministic wildlife on High and Low', async 
       'ground',
       'insects',
       'ocean',
+      'wetland',
     ])
-    expect(probe.sections.wildlife.habitats).toHaveLength(5)
+    expect(probe.sections.wildlife.habitats).toHaveLength(7)
     expect(probe.sections.audio.wildlifeOrphanCalls).toBe(0)
     expect(probe.fallbackAssetIds).toEqual([])
   }
@@ -92,5 +93,5 @@ test('weather, time, Quiet Mode, and review cameras remain live', async ({ page 
     () => (window as any).__turtlebackDebug.probe().sections.wildlife,
   )
   expect(wildlife.behaviors).toEqual(expect.arrayContaining(['glow', 'perch', 'rest']))
-  expect(wildlife.categories).toHaveLength(5)
+  expect(wildlife.categories).toHaveLength(6)
 })

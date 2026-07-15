@@ -3,6 +3,7 @@ import { VILLAGE_PROP_EXCLUSION_ZONES } from '../../village/dressing/layout'
 import { crownwoodInfluence } from '../../village/forest/layout'
 import { distanceToPath, isInsideShell, terrainHeight } from '../shell/shellShape'
 import type { WildlifeHabitat, WildlifePosition, WildlifeSpeciesId } from './types'
+import { biomeWeightsAt } from '../biomes/layout'
 
 export interface WildlifeHabitatAnchor {
   readonly id: string
@@ -46,6 +47,11 @@ export const SHOWCASE_WILDLIFE_ANCHORS: readonly WildlifeHabitatAnchor[] = Objec
   { id: 'ray.gale.2', speciesId: 'shell-ray', habitat: 'open-ocean', position: [218, 2.4, -205], safeRadius: 26, importance: 0.96 },
   { id: 'ray.east.1', speciesId: 'shell-ray', habitat: 'open-ocean', position: [242, 2.1, 12], safeRadius: 26, importance: 0.9 },
   { id: 'ray.west.1', speciesId: 'shell-ray', habitat: 'open-ocean', position: [-244, 2.6, -82], safeRadius: 26, importance: 0.86 },
+
+  { id: 'grazer.blossom.1', speciesId: 'blossom-grazer', habitat: 'blossomshade', position: onShell(90, 100, 0.82), safeRadius: 4.8, importance: 0.99 },
+  { id: 'grazer.blossom.2', speciesId: 'blossom-grazer', habitat: 'blossomshade', position: onShell(82, 116, 0.82), safeRadius: 4.8, importance: 0.9 },
+  { id: 'heron.lumenfen.1', speciesId: 'lumenfen-heron', habitat: 'lumenfen', position: onShell(-62, 92, 0.25), safeRadius: 3.2, importance: 0.98 },
+  { id: 'heron.lumenfen.2', speciesId: 'lumenfen-heron', habitat: 'lumenfen', position: onShell(-70, 100, 0.25), safeRadius: 3.2, importance: 0.88 },
 ])
 
 export function isGroundWildlifeSafe(x: number, z: number, radius = 2.2): boolean {
@@ -67,6 +73,7 @@ export function isGroundWildlifeSafe(x: number, z: number, radius = 2.2): boolea
 
 export function habitatStrength(habitat: WildlifeHabitat, x: number, z: number): number {
   if (habitat === 'crownwood') return crownwoodInfluence(x, z)
+  if (habitat === 'blossomshade' || habitat === 'lumenfen') return biomeWeightsAt(x, z)[habitat]
   if (habitat === 'garden-wetland') return Math.max(0, 1 - Math.hypot(x + 58, z - 88) / 56)
   if (habitat === 'galecrest') {
     const exposedRim = Math.max(0, (Math.abs(x) - 108) / 58)
@@ -80,7 +87,12 @@ export function validateShowcaseWildlifeAnchors(): readonly string[] {
   const errors: string[] = []
   for (const anchor of SHOWCASE_WILDLIFE_ANCHORS) {
     const [x, , z] = anchor.position
-    if (anchor.speciesId === 'shell-hare' && !isGroundWildlifeSafe(x, z, 1.6)) {
+    if (
+      (anchor.speciesId === 'shell-hare' ||
+        anchor.speciesId === 'blossom-grazer' ||
+        anchor.speciesId === 'lumenfen-heron') &&
+      !isGroundWildlifeSafe(x, z, anchor.speciesId === 'blossom-grazer' ? 2.5 : 1.6)
+    ) {
       errors.push(`${anchor.id} overlaps a traversal or structure clearance`)
     }
     if (habitatStrength(anchor.habitat, x, z) <= 0) {

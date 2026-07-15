@@ -28,11 +28,23 @@ describe('showcase wildlife habitats', () => {
     for (const hare of hares) {
       expect(isGroundWildlifeSafe(hare.position[0], hare.position[2], 1.6), hare.id).toBe(true)
     }
+    for (const animal of SHOWCASE_WILDLIFE_ANCHORS.filter((anchor) =>
+      anchor.speciesId === 'blossom-grazer' || anchor.speciesId === 'lumenfen-heron')) {
+      expect(isGroundWildlifeSafe(animal.position[0], animal.position[2], 1.6), animal.id).toBe(true)
+    }
   })
 
-  it('authors all five first-wave habitats without runtime asset weight', () => {
+  it('authors the first and contrast-driven second wave without runtime asset weight', () => {
     expect(new Set(SHOWCASE_WILDLIFE_ANCHORS.map((anchor) => anchor.habitat))).toEqual(
-      new Set(['crownwood', 'shell-meadow', 'garden-wetland', 'galecrest', 'open-ocean']),
+      new Set([
+        'crownwood',
+        'shell-meadow',
+        'garden-wetland',
+        'galecrest',
+        'open-ocean',
+        'blossomshade',
+        'lumenfen',
+      ]),
     )
     expect(new Set(SHOWCASE_WILDLIFE_ANCHORS.map((anchor) => anchor.speciesId))).toEqual(
       new Set([
@@ -42,6 +54,8 @@ describe('showcase wildlife habitats', () => {
         'lumenfen-insects',
         'galecrest-seabird',
         'shell-ray',
+        'blossom-grazer',
+        'lumenfen-heron',
       ]),
     )
   })
@@ -51,11 +65,13 @@ describe('WildlifeDirector', () => {
   it('retains one representative category per habitat on Low', () => {
     const director = new WildlifeDirector(20260712)
     const frame = director.update(0.1, clearDay, QUALITY_PROFILES.low.wildlife)
-    expect(frame.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean'])
+    expect(frame.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean', 'wetland'])
     expect(frame.habitats).toEqual([
+      'blossomshade',
       'crownwood',
       'galecrest',
       'garden-wetland',
+      'lumenfen',
       'open-ocean',
       'shell-meadow',
     ])
@@ -120,14 +136,14 @@ describe('WildlifeDirector', () => {
     }
     expect(quietCalls).toBeGreaterThan(0)
     expect(quietCalls).toBeLessThan(normalCalls)
-    expect(quietFrame.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean'])
+    expect(quietFrame.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean', 'wetland'])
   })
 
   it('proves four-plus categories across the canonical five-minute showcase walk', () => {
     const report = simulateFiveMinuteShowcase(20260712, QUALITY_PROFILES.high.wildlife)
     expect(report).toMatchObject({ seconds: 300 })
-    expect(report.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean'])
-    expect(report.habitats).toHaveLength(5)
+    expect(report.categories).toEqual(['canopy', 'coast', 'ground', 'insects', 'ocean', 'wetland'])
+    expect(report.habitats).toHaveLength(7)
     expect(report.calls).toBeGreaterThan(5)
   })
 })

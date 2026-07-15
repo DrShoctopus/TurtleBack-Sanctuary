@@ -9,11 +9,20 @@ export const WILDLIFE_SPECIES = [
   'lumenfen-insects',
   'galecrest-seabird',
   'shell-ray',
+  'blossom-grazer',
+  'lumenfen-heron',
 ] as const
 
 export type WildlifeSpeciesId = (typeof WILDLIFE_SPECIES)[number]
-export type WildlifeCategory = 'canopy' | 'ground' | 'insects' | 'coast' | 'ocean'
-export type WildlifeHabitat = 'crownwood' | 'shell-meadow' | 'garden-wetland' | 'galecrest' | 'open-ocean'
+export type WildlifeCategory = 'canopy' | 'ground' | 'insects' | 'coast' | 'ocean' | 'wetland'
+export type WildlifeHabitat =
+  | 'crownwood'
+  | 'shell-meadow'
+  | 'garden-wetland'
+  | 'galecrest'
+  | 'open-ocean'
+  | 'blossomshade'
+  | 'lumenfen'
 export type WildlifeRepresentation = 'near' | 'distant'
 export type WildlifeBehavior =
   | 'perch'
@@ -26,6 +35,9 @@ export type WildlifeBehavior =
   | 'glow'
   | 'soar'
   | 'glide'
+  | 'browse'
+  | 'wade'
+  | 'stalk'
 
 export type WildlifePosition = readonly [number, number, number]
 

@@ -148,6 +148,7 @@ Look sensitivity, stick deadzone, invert-Y, and (where supported) subtle vibrati
 - An **original, seeded adaptive lo-fi soundtrack** with seven long-form musical sections, four instrumentation palettes, biome/turtle accents, and dawn / day / rain / night colour — plus a layered ambient soundscape with indoor/outdoor audio zones, all synthesized with the Web Audio API.
 - A home **television** that plays YouTube videos through the official embed, a **music player** (built-in tracks, your local files, direct radio URLs), a private **journal**, and more.
 - Eight seeded, pooled **distant landmarks** (moon gates, a striding lighthouse, jellyfish processions, a floating station, a whale constellation, mirror cities…) that drift past on the horizon.
+- A deterministic, quality-budgeted **wildlife ecology** spanning songbirds, shell hares, pollinators, wetland insects, seabirds, ocean rays, a gentle grazer, and a wading bird—always calm, habitat-bound, and nonviolent.
 - Deep **accessibility & comfort** options: reduced motion, head-bob / sway toggles, FOV, UI scale, high-contrast prompts, subtitles, separate volume buses, and more.
 
 ---
