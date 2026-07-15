@@ -1,0 +1,116 @@
+{
+  "schemaVersion": 1,
+  "capturedAt": "2026-07-15T16:54:06.157Z",
+  "sourceCommit": "3dd07c29e13cabcf05726c550bf2a075f9c7cab6",
+  "manifest": {
+    "assetCount": 7,
+    "variantCount": 7,
+    "encodedBytes": 622409,
+    "decodedBytes": 5894526
+  },
+  "directories": {
+    "public": {
+      "fileCount": 13,
+      "bytes": 638889
+    },
+    "dist": {
+      "fileCount": 23,
+      "bytes": 5274997
+    }
+  },
+  "packagedApp": {
+    "appAsar": {
+      "path": "release/mac-arm64/Turtleback Sanctuary.app/Contents/Resources/app.asar",
+      "bytes": 5979932
+    }
+  },
+  "largestRuntimeFiles": [
+    {
+      "relative": "dist/assets/physics-DhD37sVq.js",
+      "bytes": 3159356
+    },
+    {
+      "relative": "dist/assets/index-D_b7VBM5.js",
+      "bytes": 713651
+    },
+    {
+      "relative": "dist/assets/decoders/basis/basis_transcoder.wasm",
+      "bytes": 527333
+    },
+    {
+      "relative": "dist/assets/audio/turtle/breath-loop.mp3",
+      "bytes": 241112
+    },
+    {
+      "relative": "public/assets/audio/turtle/breath-loop.mp3",
+      "bytes": 241112
+    },
+    {
+      "relative": "dist/assets/AudioManager-CTd_OO8D.js",
+      "bytes": 148788
+    },
+    {
+      "relative": "dist/assets/audio/turtle/shell-resonance.mp3",
+      "bytes": 131196
+    },
+    {
+      "relative": "public/assets/audio/turtle/shell-resonance.mp3",
+      "bytes": 131196
+    },
+    {
+      "relative": "dist/assets/audio/turtle/breath-deep.mp3",
+      "bytes": 129272
+    },
+    {
+      "relative": "public/assets/audio/turtle/breath-deep.mp3",
+      "bytes": 129272
+    },
+    {
+      "relative": "dist/assets/audio/turtle/stroke-front.mp3",
+      "bytes": 65433
+    },
+    {
+      "relative": "public/assets/audio/turtle/stroke-front.mp3",
+      "bytes": 65433
+    },
+    {
+      "relative": "dist/assets/decoders/basis/basis_transcoder.js",
+      "bytes": 57529
+    },
+    {
+      "relative": "dist/assets/audio/turtle/stroke-rear.mp3",
+      "bytes": 53432
+    },
+    {
+      "relative": "public/assets/audio/turtle/stroke-rear.mp3",
+      "bytes": 53432
+    },
+    {
+      "relative": "dist/assets/index-CYo9Zuc8.css",
+      "bytes": 13756
+    },
+    {
+      "relative": "dist/assets/decoders/basis/LICENSE.txt",
+      "bytes": 11347
+    },
+    {
+      "relative": "public/assets/decoders/basis/LICENSE.txt",
+      "bytes": 11347
+    },
+    {
+      "relative": "dist/assets/textures-C9fDKgyp.js",
+      "bytes": 7941
+    },
+    {
+      "relative": "dist/assets/MediaPlayer-DT3xQz-M.js",
+      "bytes": 6005
+    }
+  ],
+  "gates": {
+    "maxRuntimeFileBytes": 10485760,
+    "oversizedRuntimeFiles": [],
+    "uncompressedRuntimeAssets": [],
+    "unregisteredAuthoredBinaries": [],
+    "passed": true
+  }
+}

@@ -11,4 +11,4 @@
 
 All dry frames run before rain so authored slow-drying wetness cannot contaminate clear evidence. The harness waits for exact quality, manual time, settled rain/wetness, Quiet Mode, and an empty fallback list, and it fails on any page error.
 
-Packaged soak, size, asset/license, and desktop proof are recorded in the Slice 10 release closeout after the source commit is built from a clean tree.
+The source commit was then built from a clean tree. The 30-minute packaged soak, size, asset/license, normal-package, and offline lifecycle proof are recorded in `docs/performance/slice-10-release-closeout.md` and its adjacent JSON reports.

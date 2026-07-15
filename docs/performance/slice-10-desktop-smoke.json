@@ -1,0 +1,435 @@
+{
+  "schemaVersion": 2,
+  "measuredAt": "2026-07-15T16:52:28.801Z",
+  "sourceCommit": "3dd07c29e13cabcf05726c550bf2a075f9c7cab6",
+  "artifact": "release/mac-arm64/Turtleback Sanctuary.app/Contents/MacOS/Turtleback Sanctuary",
+  "offlineMode": "Chromium host resolver maps all DNS names to NOTFOUND",
+  "host": {
+    "platform": "darwin",
+    "architecture": "arm64",
+    "release": "25.5.0",
+    "cpu": "Apple M5",
+    "logicalCpuCount": 10,
+    "totalMemoryBytes": 17179869184
+  },
+  "firstLaunch": {
+    "electronAttachedMs": 1812,
+    "windowCreatedMs": 1812,
+    "titleAndRapierReadyMs": 8267.4,
+    "url": "app://turtleback/index.html",
+    "protocol": "app:",
+    "bridgeAvailable": true,
+    "requireType": "undefined",
+    "processType": "undefined",
+    "canvasVisible": true,
+    "firstContentfulPaintMs": 196,
+    "domContentLoadedMs": 132.79999999701977,
+    "viewport": {
+      "width": 1280,
+      "height": 688,
+      "devicePixelRatio": 2
+    },
+    "javascriptEvalBlocked": true,
+    "assetPipeline": {
+      "authoredReady": true,
+      "authoredReadyMark": {
+        "name": "turtleback:asset-pipeline-authored",
+        "count": 1,
+        "startTimeMs": 276.40000000596046
+      },
+      "fallbackUsed": false,
+      "fallbackMarkCount": 0,
+      "runtimeResponses": [
+        {
+          "id": "model.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.glb",
+          "url": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "status": 200,
+          "contentType": "model/gltf-binary",
+          "observedAtMs": 1989.5
+        },
+        {
+          "id": "texture.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.ktx2",
+          "url": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "status": 200,
+          "contentType": "image/ktx2",
+          "observedAtMs": 1989.6
+        },
+        {
+          "id": "basis.transcoder-source",
+          "path": "assets/decoders/basis/basis_transcoder.js",
+          "url": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "observedAtMs": 1992.4
+        },
+        {
+          "id": "basis.transcoder-wasm",
+          "path": "assets/decoders/basis/basis_transcoder.wasm",
+          "url": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "status": 200,
+          "contentType": "application/wasm",
+          "observedAtMs": 1992.5
+        },
+        {
+          "id": "basis.transcoder-worker",
+          "path": "assets/decoders/basis/turtleback-basis-worker.js",
+          "url": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "observedAtMs": 2001.3
+        }
+      ],
+      "resources": [
+        {
+          "id": "model.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.glb",
+          "expectedUrl": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "responseUrl": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 1612,
+          "contentType": "model/gltf-binary",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "texture.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.ktx2",
+          "expectedUrl": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "responseUrl": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 352,
+          "contentType": "image/ktx2",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-source",
+          "path": "assets/decoders/basis/basis_transcoder.js",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "responseUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 57529,
+          "contentType": "text/javascript; charset=utf-8",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-wasm",
+          "path": "assets/decoders/basis/basis_transcoder.wasm",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "responseUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 527333,
+          "contentType": "application/wasm",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-worker",
+          "path": "assets/decoders/basis/turtleback-basis-worker.js",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "responseUrl": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 2333,
+          "contentType": "text/javascript; charset=utf-8",
+          "contentSecurityPolicy": "default-src 'none'; script-src blob: 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'none'; object-src 'none'; worker-src 'none'"
+        }
+      ]
+    },
+    "controllableFrameMs": 8417.6,
+    "enterTransitionMs": 142.5,
+    "shutdown": {
+      "elapsedMs": 218.8,
+      "coordinated": true,
+      "assetManagerDisposedBeforeShutdownReady": true,
+      "disposalEvidence": "renderer acknowledged teardown after synchronous React root unmount",
+      "rendererErrorCount": 0,
+      "shutdownRequestedAt": "2026-07-15T16:52:38.031Z",
+      "rendererShutdownReadyAt": "2026-07-15T16:52:38.172Z",
+      "lifecycleLogEvents": [
+        "lifecycle.shutdown_requested",
+        "lifecycle.renderer_shutdown_ready"
+      ]
+    }
+  },
+  "relaunch": {
+    "electronAttachedMs": 244.3,
+    "windowCreatedMs": 244.3,
+    "titleAndRapierReadyMs": 2808.1,
+    "url": "app://turtleback/index.html",
+    "protocol": "app:",
+    "bridgeAvailable": true,
+    "requireType": "undefined",
+    "processType": "undefined",
+    "canvasVisible": true,
+    "firstContentfulPaintMs": 200,
+    "domContentLoadedMs": 127.90000000596046,
+    "viewport": {
+      "width": 1280,
+      "height": 688,
+      "devicePixelRatio": 2
+    },
+    "javascriptEvalBlocked": true,
+    "assetPipeline": {
+      "authoredReady": true,
+      "authoredReadyMark": {
+        "name": "turtleback:asset-pipeline-authored",
+        "count": 1,
+        "startTimeMs": 282.40000000596046
+      },
+      "fallbackUsed": false,
+      "fallbackMarkCount": 0,
+      "runtimeResponses": [
+        {
+          "id": "model.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.glb",
+          "url": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "status": 200,
+          "contentType": "model/gltf-binary",
+          "observedAtMs": 428.4
+        },
+        {
+          "id": "texture.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.ktx2",
+          "url": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "status": 200,
+          "contentType": "image/ktx2",
+          "observedAtMs": 428.6
+        },
+        {
+          "id": "basis.transcoder-source",
+          "path": "assets/decoders/basis/basis_transcoder.js",
+          "url": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "observedAtMs": 432.4
+        },
+        {
+          "id": "basis.transcoder-wasm",
+          "path": "assets/decoders/basis/basis_transcoder.wasm",
+          "url": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "status": 200,
+          "contentType": "application/wasm",
+          "observedAtMs": 432.6
+        },
+        {
+          "id": "basis.transcoder-worker",
+          "path": "assets/decoders/basis/turtleback-basis-worker.js",
+          "url": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "status": 200,
+          "contentType": "text/javascript; charset=utf-8",
+          "observedAtMs": 436
+        }
+      ],
+      "resources": [
+        {
+          "id": "model.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.glb",
+          "expectedUrl": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "responseUrl": "app://turtleback/assets/system/pipeline-smoke.glb",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 1612,
+          "contentType": "model/gltf-binary",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "texture.pipeline-smoke",
+          "path": "assets/system/pipeline-smoke.ktx2",
+          "expectedUrl": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "responseUrl": "app://turtleback/assets/system/pipeline-smoke.ktx2",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 352,
+          "contentType": "image/ktx2",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-source",
+          "path": "assets/decoders/basis/basis_transcoder.js",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "responseUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.js",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 57529,
+          "contentType": "text/javascript; charset=utf-8",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-wasm",
+          "path": "assets/decoders/basis/basis_transcoder.wasm",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "responseUrl": "app://turtleback/assets/decoders/basis/basis_transcoder.wasm",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 527333,
+          "contentType": "application/wasm",
+          "contentSecurityPolicy": ""
+        },
+        {
+          "id": "basis.transcoder-worker",
+          "path": "assets/decoders/basis/turtleback-basis-worker.js",
+          "expectedUrl": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "responseUrl": "app://turtleback/assets/decoders/basis/turtleback-basis-worker.js",
+          "status": 200,
+          "ok": true,
+          "encodedBytes": 2333,
+          "contentType": "text/javascript; charset=utf-8",
+          "contentSecurityPolicy": "default-src 'none'; script-src blob: 'unsafe-eval' 'wasm-unsafe-eval'; connect-src 'none'; object-src 'none'; worker-src 'none'"
+        }
+      ]
+    },
+    "platform": {
+      "platform": "darwin",
+      "arch": "arm64",
+      "release": "25.5.0",
+      "electronVersion": "43.1.0",
+      "chromiumVersion": "150.0.7871.47",
+      "locale": "en-US"
+    },
+    "appVersion": "1.0.0",
+    "persistedFov": 83,
+    "mediaRepositoryAvailable": true,
+    "saveSlots": [
+      "autosave"
+    ],
+    "secondInstance": {
+      "duplicateExitedMs": 169.4,
+      "primaryRemainedResponsive": true
+    },
+    "powerCycle": {
+      "elapsedMs": 542.1,
+      "rendererRemainedResponsive": true
+    },
+    "shutdown": {
+      "elapsedMs": 201.4,
+      "coordinated": true,
+      "assetManagerDisposedBeforeShutdownReady": true,
+      "disposalEvidence": "renderer acknowledged teardown after synchronous React root unmount",
+      "rendererErrorCount": 0,
+      "shutdownRequestedAt": "2026-07-15T16:53:46.941Z",
+      "rendererShutdownReadyAt": "2026-07-15T16:53:47.074Z",
+      "lifecycleLogEvents": [
+        "lifecycle.second_instance",
+        "lifecycle.system_suspend",
+        "lifecycle.system_resume",
+        "lifecycle.shutdown_requested",
+        "lifecycle.renderer_shutdown_ready"
+      ]
+    },
+    "lifecycleLogEvents": [
+      "lifecycle.second_instance",
+      "lifecycle.system_suspend",
+      "lifecycle.system_resume",
+      "lifecycle.shutdown_requested",
+      "lifecycle.renderer_shutdown_ready"
+    ]
+  },
+  "frameSample": {
+    "durationMs": 60000,
+    "elapsedMs": 60005.699999997014,
+    "frameCount": 3889,
+    "averageFps": 64.81050966825141,
+    "medianFrameMs": 16.600000000002183,
+    "p95FrameMs": 17.900000000001455,
+    "p99FrameMs": 24.69999999999709,
+    "maxFrameMs": 26.700000000000728,
+    "framesOver25Ms": 23,
+    "framesOver50Ms": 0
+  },
+  "processMetrics": {
+    "title": [
+      {
+        "type": "Browser",
+        "cpuPercent": 0,
+        "workingSetKb": 183408,
+        "peakWorkingSetKb": 194944
+      },
+      {
+        "type": "GPU",
+        "cpuPercent": 0,
+        "workingSetKb": 204480,
+        "peakWorkingSetKb": 216352
+      },
+      {
+        "type": "Utility",
+        "cpuPercent": 0,
+        "workingSetKb": 46304,
+        "peakWorkingSetKb": 46352
+      },
+      {
+        "type": "Tab",
+        "cpuPercent": 0,
+        "workingSetKb": 411200,
+        "peakWorkingSetKb": 411200
+      }
+    ],
+    "gameplayStart": [
+      {
+        "type": "Browser",
+        "cpuPercent": 0,
+        "workingSetKb": 189840,
+        "peakWorkingSetKb": 191344
+      },
+      {
+        "type": "GPU",
+        "cpuPercent": 0,
+        "workingSetKb": 216912,
+        "peakWorkingSetKb": 240592
+      },
+      {
+        "type": "Utility",
+        "cpuPercent": 0,
+        "workingSetKb": 45728,
+        "peakWorkingSetKb": 45728
+      },
+      {
+        "type": "Tab",
+        "cpuPercent": 0,
+        "workingSetKb": 466016,
+        "peakWorkingSetKb": 466016
+      },
+      {
+        "type": "Utility",
+        "cpuPercent": 0,
+        "workingSetKb": 46480,
+        "peakWorkingSetKb": 46576
+      }
+    ],
+    "gameplayEnd": [
+      {
+        "type": "Browser",
+        "cpuPercent": 0.07396788308694811,
+        "workingSetKb": 186720,
+        "peakWorkingSetKb": 191344
+      },
+      {
+        "type": "GPU",
+        "cpuPercent": 3.443206051108663,
+        "workingSetKb": 216480,
+        "peakWorkingSetKb": 240592
+      },
+      {
+        "type": "Utility",
+        "cpuPercent": 0.0001399571801007482,
+        "workingSetKb": 45792,
+        "peakWorkingSetKb": 45792
+      },
+      {
+        "type": "Tab",
+        "cpuPercent": 4.194498053503929,
+        "workingSetKb": 523088,
+        "peakWorkingSetKb": 523088
+      },
+      {
+        "type": "Utility",
+        "cpuPercent": 0.063897459092052,
+        "workingSetKb": 46544,
+        "peakWorkingSetKb": 46576
+      }
+    ]
+  }
+}

@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–9 complete; Slice 10 next
+**Status:** Slices 1–10 engineering-complete; named hardware and owner approval remain
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -427,6 +427,8 @@ Acceptance:
 - owner approves the final normal-play showcase walk before release status is claimed.
 
 Suggested commit: `perf: close stylized sanctuary overhaul`
+
+**Slice 10 engineering completed 2026-07-15:** the final quality pass keeps habitat-detail shadows tier-aware and preserves the established LOD, culling, streaming, and instancing contracts. Seven authored assets now have a strict reproducible license/size inventory; optional turtle MP3s remain outside preload/decode paths with a silence fallback. Six curated release-condition captures and the 332-scenario matrix pass. A clean-commit packaged traversal completed 30 minutes with −1.20% final-window working-set growth, 55 stable textures, two cell transitions per minute, and no errors or fallbacks. The arm64 offline Electron package, preload isolation, GLB/KTX2/Basis loading, persistence/lifecycle, signature metadata, and size gates pass. Engineering evidence is under `docs/performance/slice-10-*` and `docs/art-direction/runtime-evidence/slice-10/`; named High/Low reference hardware, owner visual/listening approval, release signing/notarization, and physical platform checks remain external gates.
 
 ## Slice verification and push gate
 
