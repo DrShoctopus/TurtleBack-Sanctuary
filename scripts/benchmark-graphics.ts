@@ -2,11 +2,7 @@ import { mkdir, writeFile } from 'node:fs/promises'
 import { join } from 'node:path'
 import { chromium, type Browser, type Page } from '@playwright/test'
 import { createServer, type ViteDevServer } from 'vite'
-import {
-  BENCHMARK_SCENARIOS,
-  type BenchmarkScenario,
-  type GraphicsBenchmarkVariant,
-} from '../src/game/config/benchmarkScenarios'
+import { BENCHMARK_SCENARIOS, type BenchmarkScenario } from '../src/game/config/benchmarkScenarios'
 import { frameTimePercentiles } from '../src/game/debug/performanceMath'
 import type { SceneProbeSnapshot } from '../src/game/debug/probes'
 import { scenarioCondition } from '../visual/graphics.matrix'
@@ -20,7 +16,6 @@ interface BenchmarkDebugWindow extends Window {
   __turtlebackDebug?: {
     benchmark: (id: string) => boolean
     probe: () => SceneProbeSnapshot
-    setBenchmarkVariant: (variant: GraphicsBenchmarkVariant) => boolean
   }
   __sanctuary?: {
     game: { getState: () => { sceneReady: boolean; phase: string } }
@@ -47,7 +42,7 @@ interface GraphicsBenchmarkResult {
   readonly schemaVersion: 1
   readonly capturedAt: string
   readonly scenarioId: string
-  readonly variant: GraphicsBenchmarkVariant
+  readonly variant: 'default'
   readonly view: BenchmarkScenario['view']
   readonly quality: BenchmarkScenario['quality']
   readonly condition: string
@@ -103,25 +98,17 @@ async function bootSanctuary(page: Page, url: string): Promise<void> {
   )
 }
 
-async function applyScenario(
-  page: Page,
-  scenario: BenchmarkScenario,
-  variant: GraphicsBenchmarkVariant,
-): Promise<void> {
-  const accepted = await page.evaluate(
-    ({ selected, selectedVariant }) => {
-      const app = window as BenchmarkDebugWindow
-      const debug = app.__turtlebackDebug
-      const settings = app.__sanctuary?.settings.getState()
-      if (!debug || !settings) return false
-      if (!debug.setBenchmarkVariant(selectedVariant)) return false
-      settings.set('graphics', { quality: selected.quality })
-      settings.set('time', { auto: false, manual: selected.time })
-      settings.set('weather', { mode: selected.weather, rainIntensity: 1 })
-      return debug.benchmark(selected.view)
-    },
-    { selected: scenario, selectedVariant: variant },
-  )
+async function applyScenario(page: Page, scenario: BenchmarkScenario): Promise<void> {
+  const accepted = await page.evaluate((selected) => {
+    const app = window as BenchmarkDebugWindow
+    const debug = app.__turtlebackDebug
+    const settings = app.__sanctuary?.settings.getState()
+    if (!debug || !settings) return false
+    settings.set('graphics', { quality: selected.quality })
+    settings.set('time', { auto: false, manual: selected.time })
+    settings.set('weather', { mode: selected.weather, rainIntensity: 1 })
+    return debug.benchmark(selected.view)
+  }, scenario)
   if (!accepted) throw new Error(`Debug seam rejected benchmark scenario ${scenario.id}`)
 
   await page.waitForFunction(
@@ -218,7 +205,7 @@ async function main(): Promise<void> {
     for (const scenario of scenarios) {
       const errorCountBefore = pageErrors.length
       const consoleErrorCountBefore = consoleErrors.length
-      await applyScenario(page, scenario, cli.variant)
+      await applyScenario(page, scenario)
       const measurement = await measure(page)
       if (pageErrors.length > errorCountBefore) {
         throw new Error(
@@ -230,7 +217,7 @@ async function main(): Promise<void> {
         schemaVersion: 1,
         capturedAt: new Date().toISOString(),
         scenarioId: scenario.id,
-        variant: cli.variant,
+        variant: 'default',
         view: scenario.view,
         quality: scenario.quality,
         condition: scenarioCondition(scenario),

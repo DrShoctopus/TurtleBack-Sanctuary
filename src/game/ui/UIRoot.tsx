@@ -46,7 +46,7 @@ export function UIRoot() {
       const g = useGame.getState()
       const target = event.target as Element | null
       if (target?.closest('button, input, textarea, select, [role="dialog"]')) return
-      if (g.phase === 'playing' && g.overlay === null && !g.pointerLocked) {
+      if (g.phase === 'playing' && g.overlay === null && !g.breathing && !g.pointerLocked) {
         requestPointerLock()
       }
     }
@@ -63,6 +63,7 @@ export function UIRoot() {
       }
       const g = useGame.getState()
       if (g.phase !== 'playing') return
+      if (g.breathing) return
       const action = keyboardActionForCode(e.code, useSettings.getState().input.keyboardBindings)
       switch (action) {
         case 'pause': {

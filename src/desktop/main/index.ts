@@ -7,6 +7,7 @@ import { RendererRecoveryPolicy, rendererRecoveryUrl } from './lifecycle/recover
 import { AppLogger } from './logging/logger'
 import { rendererCacheControl } from './security/rendererCacheControl'
 import { contentSecurityPolicyForResponse } from './security/contentSecurityPolicy'
+import { RemoteMediaLibrary } from './security/remoteMedia'
 import { RemoteRequestPolicy } from './security/urlPolicy'
 import { resolveRendererFile } from './security/rendererProtocol'
 import { rendererContentType } from './security/rendererContentType'
@@ -36,6 +37,7 @@ protocol.registerSchemesAsPrivileged([
       secure: true,
       supportFetchAPI: true,
       stream: true,
+      corsEnabled: true,
     },
   },
 ])
@@ -56,6 +58,7 @@ async function startApplication(): Promise<void> {
   const logger = new AppLogger(join(logDirectory, 'turtleback.log'))
   const repositories = new DesktopRepositories(userDataDirectory, logger)
   const localAudio = new LocalAudioLibrary(join(userDataDirectory, 'local-audio.json'), logger)
+  const remoteMedia = new RemoteMediaLibrary()
   const windowState = new WindowStateManager(userDataDirectory, logger)
   const requestPolicy = new RemoteRequestPolicy()
   const developmentUrl = developmentRendererUrl()
@@ -63,7 +66,7 @@ async function startApplication(): Promise<void> {
   const rendererDirectory = resolve(__dirname, '..', '..', 'dist')
   const recoveryPolicy = new RendererRecoveryPolicy()
 
-  await installProtocols(rendererDirectory, localAudio, logger)
+  await installProtocols(rendererDirectory, localAudio, remoteMedia, logger)
   installSessionSecurity(session.defaultSession, requestPolicy, logger, developmentUrl)
 
   let mainWindow: BrowserWindow | null = null
@@ -73,23 +76,30 @@ async function startApplication(): Promise<void> {
   let shutdownTimer: ReturnType<typeof setTimeout> | null = null
   let unresponsiveTimer: ReturnType<typeof setTimeout> | null = null
   let recoveryInFlight = false
+  let finishPromise: Promise<void> | null = null
 
   const clearUnresponsiveTimer = () => {
     if (unresponsiveTimer) clearTimeout(unresponsiveTimer)
     unresponsiveTimer = null
   }
 
-  const finishQuit = () => {
-    if (quitAllowed) return
-    quitAllowed = true
-    if (shutdownTimer) clearTimeout(shutdownTimer)
-    clearUnresponsiveTimer()
-    shutdownTimer = null
-    removeIpcHandlers?.()
-    removeIpcHandlers = null
-    if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
-    mainWindow = null
-    app.quit()
+  const finishQuit = (): Promise<void> => {
+    if (finishPromise) return finishPromise
+    finishPromise = (async () => {
+      if (shutdownTimer) clearTimeout(shutdownTimer)
+      clearUnresponsiveTimer()
+      shutdownTimer = null
+      const window = mainWindow
+      if (window && !window.isDestroyed()) await windowState.flush(window)
+      if (quitAllowed) return
+      quitAllowed = true
+      removeIpcHandlers?.()
+      removeIpcHandlers = null
+      if (mainWindow && !mainWindow.isDestroyed()) mainWindow.destroy()
+      mainWindow = null
+      app.quit()
+    })()
+    return finishPromise
   }
 
   const beginQuit = () => {
@@ -97,19 +107,19 @@ async function startApplication(): Promise<void> {
     quitStarted = true
     logger.info('lifecycle.shutdown_requested')
     if (!mainWindow || mainWindow.isDestroyed()) {
-      finishQuit()
+      void finishQuit()
       return
     }
     try {
       mainWindow.webContents.send(IPC_CHANNELS.prepareShutdown)
     } catch (error) {
       logger.warn('lifecycle.shutdown_renderer_unavailable', { error: String(error) })
-      finishQuit()
+      void finishQuit()
       return
     }
     shutdownTimer = setTimeout(() => {
       logger.warn('lifecycle.shutdown_timeout', { timeoutMs: SHUTDOWN_TIMEOUT_MS })
-      finishQuit()
+      void finishQuit()
     }, SHUTDOWN_TIMEOUT_MS)
   }
 
@@ -205,13 +215,13 @@ async function startApplication(): Promise<void> {
       window,
       repositories,
       localAudio,
-      requestPolicy,
+      remoteMedia,
       logger,
       loggerDirectory: logDirectory,
       appVersion: app.getVersion(),
       onShutdownReady: () => {
         logger.info('lifecycle.renderer_shutdown_ready')
-        finishQuit()
+        void finishQuit()
       },
       onReloadRequested: () => {
         recoveryPolicy.reset()
@@ -326,6 +336,7 @@ async function startApplication(): Promise<void> {
 async function installProtocols(
   rendererDirectory: string,
   localAudio: LocalAudioLibrary,
+  remoteMedia: RemoteMediaLibrary,
   logger: AppLogger,
 ): Promise<void> {
   await protocol.handle('app', async (request) => {
@@ -347,7 +358,12 @@ async function installProtocols(
       return new Response('Not found', { status: 404 })
     }
   })
-  await protocol.handle('turtleback-media', (request) => localAudio.handleProtocol(request))
+  await protocol.handle('turtleback-media', (request) => {
+    const url = new URL(request.url)
+    return url.hostname === 'remote'
+      ? remoteMedia.handleProtocol(request)
+      : localAudio.handleProtocol(request)
+  })
 }
 
 function installSessionSecurity(

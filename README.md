@@ -169,15 +169,15 @@ Open the home stereo → **Your files**. Click **Add audio files…** to pick co
 
 - Files play locally through a native `<audio>` element and are **never uploaded**.
 - In the Electron app, you choose a folder once. The main process retains only the folder registration, scans supported files, and gives the renderer opaque playback URLs; absolute filesystem paths are never exposed to game code.
-- On browsers with the **File System Access API**, chosen file handles can be persisted in IndexedDB so the game can re-request access on a later visit (you re-grant permission each session — that's a browser security rule, not a limitation of the game).
-- On other browsers, a standard file picker is used; those files are available only for the current session.
+- On browsers with the **File System Access API**, its native picker is used for the current session. Handles are not persisted.
+- On other browsers, a standard file picker is used; those files are likewise available only for the current session.
 
 ## How to add radio stations
 
 Open the home stereo → **Radio**. Enter an optional station name and a **direct `https://` audio-stream URL**, then **Save station**.
 
 - Only secure `https` URLs are accepted (mixed-content and privacy). `http`, `file:`, `data:`, `javascript:`, loopback/`.local` hosts, and URLs with embedded credentials are rejected with a clear message.
-- Streams play directly through a native `<audio>` element — **no server-side proxy is ever used**.
+- Browser builds play streams directly through a native `<audio>` element. The Electron app exchanges the remote URL for an opaque local playback URL and streams through a DNS-checked, IP-pinned main-process relay; no third-party proxy is used.
 - Some stations block cross-origin browser playback or don't expose track titles. That is a station limitation, not a bug, and the game says so.
 - A starter template lives at [`public/config/radio-stations.example.json`](public/config/radio-stations.example.json). It intentionally contains no real endpoints — add your own licensed streams.
 

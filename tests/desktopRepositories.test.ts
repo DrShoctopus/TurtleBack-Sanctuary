@@ -57,12 +57,11 @@ describe('DesktopRepositories', () => {
 
     await repositories.setSettings(settings)
     await repositories.setMedia(media)
-    await repositories.setPreferences({ displayMode: 'fullscreen' })
     await repositories.writeSave('autosave', sampleSave())
 
     expect(await repositories.getSettings()).toEqual(settings)
     expect(await repositories.getMedia()).toEqual(media)
-    expect(await repositories.getPreferences()).toMatchObject({ displayMode: 'fullscreen' })
+    expect(await repositories.getPreferences()).toEqual(DEFAULT_DESKTOP_PREFERENCES)
     expect(await repositories.loadSave('autosave')).toEqual(sampleSave())
     expect(await repositories.listSaves()).toEqual([
       {
@@ -102,11 +101,22 @@ describe('DesktopRepositories', () => {
     expect(await readFile(join(directory, 'media.json.corrupt'), 'utf8')).toBe('{broken-media')
   })
 
+  it('serializes concurrent writes to the same repository document', async () => {
+    const { repositories } = await createRepositories()
+    const first = structuredClone(DEFAULT_SETTINGS)
+    const second = structuredClone(DEFAULT_SETTINGS)
+    first.graphics.fov = 72
+    second.graphics.fov = 94
+
+    await Promise.all([repositories.setSettings(first), repositories.setSettings(second)])
+
+    expect(await repositories.getSettings()).toEqual(second)
+  })
+
   it('erases durable application data and returns clean defaults', async () => {
     const { repositories } = await createRepositories()
     await repositories.setSettings(DEFAULT_SETTINGS)
     await repositories.setMedia(EMPTY_MEDIA)
-    await repositories.setPreferences({ displayMode: 'fullscreen' })
     await repositories.writeSave('autosave', sampleSave())
 
     await repositories.eraseAll()

@@ -13,7 +13,6 @@ import {
   type BenchmarkId,
   type FixedBenchmark,
 } from '../config/benchmarks'
-import type { GraphicsBenchmarkVariant } from '../config/benchmarkScenarios'
 import { FrameTimeWindow } from '../core/frameTimeStats'
 import { cellId } from './spatial/cells'
 import {
@@ -29,10 +28,7 @@ import {
 } from '../debug/performanceMath'
 import { canonicalAssetManifest } from '../assets/registry'
 import { assetFailureRouter } from '../assets/AssetFailureRouter'
-import {
-  invalidateActivePipelineSmokePreload,
-  PIPELINE_SMOKE_IDS,
-} from '../assets/AssetProvider'
+import { invalidateActivePipelineSmokePreload, PIPELINE_SMOKE_IDS } from '../assets/AssetProvider'
 import { readActiveAssetDiagnostics } from '../assets/diagnostics'
 import { audio } from '../audio/AudioManager'
 
@@ -43,42 +39,10 @@ export interface TurtlebackDebug {
   player: () => { x: number; y: number; z: number; yaw: number }
   probe: () => SceneProbeSnapshot
   failAsset: (id: string) => boolean
-  setBenchmarkVariant: (variant: GraphicsBenchmarkVariant) => boolean
 }
-
-type BenchmarkVariantToggle = (variant: GraphicsBenchmarkVariant) => void
 
 const DIAGNOSTICS_ENABLED =
   import.meta.env.DEV || import.meta.env.VITE_TURTLEBACK_DIAGNOSTICS === '1'
-const benchmarkVariantToggles = new Map<string, BenchmarkVariantToggle>()
-let benchmarkVariant: GraphicsBenchmarkVariant = 'default'
-
-/** Typed extension seam for later AO and presentation systems. */
-export function registerBenchmarkVariantToggle(
-  id: string,
-  toggle: BenchmarkVariantToggle,
-): () => void {
-  if (!id || id !== id.trim()) throw new Error('benchmark variant toggle ID must be nonblank')
-  if (benchmarkVariantToggles.has(id)) {
-    throw new Error(`duplicate benchmark variant toggle ID: ${id}`)
-  }
-  benchmarkVariantToggles.set(id, toggle)
-  toggle(benchmarkVariant)
-  return () => {
-    if (benchmarkVariantToggles.get(id) === toggle) benchmarkVariantToggles.delete(id)
-  }
-}
-
-function setGraphicsBenchmarkVariant(candidate: string): candidate is GraphicsBenchmarkVariant {
-  if (candidate !== 'default' && candidate !== 'no-ao') return false
-  benchmarkVariant = candidate
-  for (const [, toggle] of [...benchmarkVariantToggles].sort(([left], [right]) =>
-    left.localeCompare(right),
-  )) {
-    toggle(candidate)
-  }
-  return true
-}
 
 interface VegetationInstanceCounts {
   total: number
@@ -256,7 +220,6 @@ export function WorldSystems() {
         }),
         probe,
         failAsset,
-        setBenchmarkVariant: setGraphicsBenchmarkVariant,
       } satisfies TurtlebackDebug
       const onBenchmarkKey = (event: KeyboardEvent) => {
         const functionKey = ['F6', 'F7', 'F8', 'F9', 'F10', 'F11', 'F12'].includes(event.code)

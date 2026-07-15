@@ -78,7 +78,7 @@ export function Landmarks() {
       node.position.set(event.side * event.offset, 0, -rel)
       node.scale.setScalar(event.scale)
       applyLandmarkDetail(node, quality.landmarkDetail)
-      node.userData.update?.(t, night, node)
+      node.userData.update?.(t, night, node, dt)
     }
   })
 
@@ -112,7 +112,7 @@ const jellyMat = new MeshStandardMaterial({
 })
 
 type Builder = () => Group
-type UpdateFn = (t: number, night: number, node: Group) => void
+type UpdateFn = (t: number, night: number, node: Group, dt: number) => void
 
 function tagged(g: Group, update?: UpdateFn): Group {
   g.userData.update = update
@@ -225,6 +225,7 @@ const BUILDERS: Record<LandmarkType, Builder> = {
         jellyMat.clone(),
       )
       bell.position.set((rng() - 0.5) * 220, 30 + rng() * 55, (rng() - 0.5) * 320)
+      bell.userData.baseY = bell.position.y
       bell.userData.phase = rng() * Math.PI * 2
       bells.push(bell)
       g.add(bell)
@@ -234,7 +235,7 @@ const BUILDERS: Record<LandmarkType, Builder> = {
         const ph = bell.userData.phase as number
         const pulse = 1 + Math.sin(t * 0.55 + ph) * 0.12
         bell.scale.set(pulse, 1 / pulse, pulse)
-        bell.position.y += Math.sin(t * 0.3 + ph) * 0.02
+        bell.position.y = (bell.userData.baseY as number) + Math.sin(t * 0.3 + ph) * 1.2
         const m = bell.material as MeshStandardMaterial
         m.emissiveIntensity = 0.15 + night * 1.15 + Math.sin(t * 0.8 + ph) * 0.1
       }
@@ -372,9 +373,9 @@ const BUILDERS: Record<LandmarkType, Builder> = {
       drops.push(d)
       g.add(d)
     }
-    return tagged(g, (t, _n, node) => {
+    return tagged(g, (t, _n, node, dt) => {
       for (const d of drops) {
-        d.position.y += (d.userData.speed as number) * 0.016
+        d.position.y += (d.userData.speed as number) * dt
         if (d.position.y > 104) d.position.y = 4
       }
       node.rotation.y = t * 0.02

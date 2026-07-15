@@ -66,7 +66,7 @@ export function MusicOverlay() {
   const playing = mediaPlayer.status === 'playing' || mediaPlayer.status === 'live'
 
   const openFiles = useCallback(async () => {
-    const { tracks } = await pickLocalAudio()
+    const tracks = await pickLocalAudio()
     if (tracks.length) {
       mediaPlayer.addLocalTracks(tracks)
       notify(`Added ${tracks.length} track${tracks.length > 1 ? 's' : ''}`)
@@ -228,7 +228,8 @@ export function MusicOverlay() {
             <>
               <p className="muted">
                 Add a station’s direct <b>https</b> stream URL. Some stations block browser playback
-                or don’t expose titles — that’s a station limitation, not a bug. Nothing is proxied.
+                or don’t expose titles — that’s a station limitation, not a bug. Desktop streams
+                stay inside the app's pinned security relay; browser builds connect directly.
               </p>
               <form className="radio-form" onSubmit={submitStation}>
                 <input

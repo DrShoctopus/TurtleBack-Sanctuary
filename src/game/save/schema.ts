@@ -59,8 +59,3 @@ export const saveSlotSchema = z
   .min(1)
   .max(48)
   .regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]*$/)
-
-export function parsePortableSave(value: unknown): PortableSaveData {
-  return portableSaveSchema.parse(value)
-}
-

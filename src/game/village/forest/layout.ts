@@ -18,7 +18,6 @@ export const TREE_FORM_IDS = [
   'broadleaf-arch',
 ] as const
 
-export type TreeFormId = (typeof TREE_FORM_IDS)[number]
 export type ForestLayer =
   'trees' | 'midstory' | 'understory' | 'groundCover' | 'deadfall' | 'boulders' | 'mist'
 

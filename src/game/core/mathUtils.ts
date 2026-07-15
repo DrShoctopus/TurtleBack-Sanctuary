@@ -69,7 +69,6 @@ export function sampleCycle(stops: ColorStop[], t: number): [number, number, num
 }
 
 export const DEG2RAD = Math.PI / 180
-export const RAD2DEG = 180 / Math.PI
 
 /** Perceptual volume curve: slider value → gain. */
 export const volumeToGain = (v: number) => clamp01(v) * clamp01(v)

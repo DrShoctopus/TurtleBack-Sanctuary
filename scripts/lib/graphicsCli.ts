@@ -1,13 +1,7 @@
 import {
   BENCHMARK_SCENARIOS,
   type GraphicsBenchmarkCli,
-  type GraphicsBenchmarkVariant,
 } from '../../src/game/config/benchmarkScenarios'
-
-export const GRAPHICS_BENCHMARK_VARIANTS = [
-  'default',
-  'no-ao',
-] as const satisfies readonly GraphicsBenchmarkVariant[]
 
 /** Phase F extends this exact registry instead of creating a second parser. */
 export const GRAPHICS_REFERENCE_IDS = ['high-dedicated', 'low-integrated'] as const
@@ -61,28 +55,12 @@ export function parseGraphicsReferenceId(value: string): GraphicsReferenceId {
   return parseRegisteredId('graphics reference', value, GRAPHICS_REFERENCE_IDS)
 }
 
-const SCENARIO_BY_ID = new Map(BENCHMARK_SCENARIOS.map((scenario) => [scenario.id, scenario]))
 const SCENARIO_IDS = BENCHMARK_SCENARIOS.map((scenario) => scenario.id)
 
 export function parseGraphicsArgs(argv: readonly string[]): GraphicsBenchmarkCli {
-  const options = parseUniqueLongOptions(argv, ['scenario', 'variant'])
+  const options = parseUniqueLongOptions(argv, ['scenario'])
   const scenario = options.has('scenario')
     ? parseRegisteredId('graphics scenario', options.get('scenario')!, SCENARIO_IDS)
     : null
-  const variant = options.has('variant')
-    ? parseRegisteredId(
-        'graphics benchmark variant',
-        options.get('variant')!,
-        GRAPHICS_BENCHMARK_VARIANTS,
-      )
-    : 'default'
-
-  if (variant === 'no-ao') {
-    if (!scenario) throw new Error('The no-ao variant requires one explicit AO-review scenario')
-    if (!SCENARIO_BY_ID.get(scenario)?.tags.includes('ao-review')) {
-      throw new Error(`Scenario ${scenario} is not registered for AO review`)
-    }
-  }
-
-  return { scenario, variant }
+  return { scenario }
 }

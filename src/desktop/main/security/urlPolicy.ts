@@ -1,6 +1,5 @@
 import { lookup } from 'node:dns/promises'
 
-const EXTERNAL_HOSTS = new Set(['youtube.com', 'www.youtube.com', 'youtu.be', 'github.com'])
 const EMBED_SUFFIXES = [
   'youtube-nocookie.com',
   'youtube.com',
@@ -33,16 +32,37 @@ function isPrivateIPv4(host: string): boolean {
 
 function isPrivateIPv6(host: string): boolean {
   const normalized = host.toLowerCase().replace(/^\[|\]$/g, '')
+  const mapped = ipv4MappedAddress(normalized)
+  if (mapped) return isPrivateIPv4(mapped)
   return (
     normalized === '::' ||
     normalized === '::1' ||
+    normalized.startsWith('ff') ||
     normalized.startsWith('fc') ||
     normalized.startsWith('fd') ||
     normalized.startsWith('fe8') ||
     normalized.startsWith('fe9') ||
     normalized.startsWith('fea') ||
-    normalized.startsWith('feb')
+    normalized.startsWith('feb') ||
+    normalized.startsWith('fec') ||
+    normalized.startsWith('fed') ||
+    normalized.startsWith('fee') ||
+    normalized.startsWith('fef')
   )
+}
+
+function ipv4MappedAddress(host: string): string | null {
+  if (!host.startsWith('::ffff:')) return null
+  const suffix = host.slice('::ffff:'.length)
+  if (suffix.includes('.')) return suffix
+  const words = suffix.split(':')
+  if (words.length !== 2) return null
+  const high = Number.parseInt(words[0], 16)
+  const low = Number.parseInt(words[1], 16)
+  if (![high, low].every((word) => Number.isInteger(word) && word >= 0 && word <= 0xffff)) {
+    return null
+  }
+  return `${high >>> 8}.${high & 0xff}.${low >>> 8}.${low & 0xff}`
 }
 
 export function isBlockedLocalHostname(hostname: string): boolean {
@@ -59,7 +79,20 @@ export function isBlockedLocalHostname(hostname: string): boolean {
   return isPrivateIPv4(host) || isPrivateIPv6(host)
 }
 
-export async function validateRemoteMediaUrl(input: string): Promise<URL | null> {
+export interface ResolvedRemoteMediaUrl {
+  readonly url: URL
+  readonly addresses: readonly { readonly address: string; readonly family: 4 | 6 }[]
+}
+
+type RemoteAddressResolver = (
+  hostname: string,
+) => Promise<readonly { readonly address: string; readonly family: number }[]>
+
+export async function validateRemoteMediaUrl(
+  input: string,
+  resolveAddresses: RemoteAddressResolver = (hostname) =>
+    lookup(hostname, { all: true, verbatim: true }),
+): Promise<ResolvedRemoteMediaUrl | null> {
   let url: URL
   try {
     url = new URL(input)
@@ -75,20 +108,16 @@ export async function validateRemoteMediaUrl(input: string): Promise<URL | null>
     return null
   }
   try {
-    const addresses = await lookup(url.hostname, { all: true, verbatim: true })
+    const hostname = url.hostname.replace(/^\[|\]$/g, '')
+    const addresses = await resolveAddresses(hostname)
     if (addresses.length === 0) return null
     if (addresses.some((entry) => isBlockedLocalHostname(entry.address))) return null
-  } catch {
-    return null
-  }
-  return url
-}
-
-export function validateExternalUrl(input: string): URL | null {
-  try {
-    const url = new URL(input)
-    if (url.protocol !== 'https:' || url.username || url.password) return null
-    return EXTERNAL_HOSTS.has(url.hostname.toLowerCase()) ? url : null
+    const safeAddresses = addresses.filter(
+      (entry): entry is { address: string; family: 4 | 6 } =>
+        entry.family === 4 || entry.family === 6,
+    )
+    if (safeAddresses.length === 0) return null
+    return { url, addresses: safeAddresses }
   } catch {
     return null
   }
@@ -106,12 +135,6 @@ export function isTrustedEmbedUrl(input: string): boolean {
 }
 
 export class RemoteRequestPolicy {
-  private readonly authorizedMediaOrigins = new Set<string>()
-
-  authorize(url: URL): void {
-    this.authorizedMediaOrigins.add(url.origin)
-  }
-
   isAllowed(input: string, developmentOrigin?: string): boolean {
     try {
       const url = new URL(input)
@@ -130,7 +153,7 @@ export class RemoteRequestPolicy {
         if (sameEndpoint && (url.protocol === 'http:' || url.protocol === 'ws:')) return true
       }
       if (isTrustedEmbedUrl(input)) return true
-      return this.authorizedMediaOrigins.has(url.origin)
+      return false
     } catch {
       return false
     }

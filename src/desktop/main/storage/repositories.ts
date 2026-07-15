@@ -79,12 +79,6 @@ export class DesktopRepositories {
       .sort((a, b) => b.savedAt.localeCompare(a.savedAt))
   }
 
-  async deleteSave(slot: string): Promise<void> {
-    const safeSlot = saveSlotSchema.parse(slot)
-    await deleteAtomicJson(this.saveFile(safeSlot))
-    this.logger.info('save.delete', { slot: safeSlot })
-  }
-
   async getSettings(): Promise<GameSettings | null> {
     const result = await readAtomicJson(this.settingsFile, gameSettingsSchema)
     if (result.primaryCorrupt) this.logger.warn('settings.primary_corrupt')
@@ -116,13 +110,6 @@ export class DesktopRepositories {
     if (result.primaryCorrupt) this.logger.warn('desktop_preferences.primary_corrupt')
     if (result.recoveredFromBackup) this.logger.warn('desktop_preferences.recovered_backup')
     return result.data ?? structuredClone(DEFAULT_DESKTOP_PREFERENCES)
-  }
-
-  async setPreferences(patch: Partial<DesktopPreferences>): Promise<DesktopPreferences> {
-    const current = await this.getPreferences()
-    const next = desktopPreferencesSchema.parse({ ...current, ...patch })
-    await writeAtomicJson(this.preferencesFile, next, desktopPreferencesSchema)
-    return next
   }
 
   async eraseAll(): Promise<void> {

@@ -1,14 +1,10 @@
 import { expect, test, type Page, type TestInfo } from '@playwright/test'
-import type {
-  BenchmarkScenario,
-  GraphicsBenchmarkVariant,
-} from '../src/game/config/benchmarkScenarios'
+import type { BenchmarkScenario } from '../src/game/config/benchmarkScenarios'
 import { graphicsCapturePartition, type GraphicsCapturePartition } from './graphics.matrix'
 
 interface GraphicsDebugWindow extends Window {
   __turtlebackDebug?: {
     benchmark: (id: string) => boolean
-    setBenchmarkVariant: (variant: GraphicsBenchmarkVariant) => boolean
   }
   __sanctuary?: {
     game: { getState: () => { sceneReady: boolean; phase: string } }
@@ -42,30 +38,19 @@ async function bootSanctuary(page: Page): Promise<void> {
   )
 }
 
-async function applyScenario(
-  page: Page,
-  scenario: BenchmarkScenario,
-  variant: GraphicsBenchmarkVariant,
-): Promise<void> {
-  const accepted = await page.evaluate(
-    ({ selected, selectedVariant }) => {
-      const app = window as GraphicsDebugWindow
-      const debug = app.__turtlebackDebug
-      const settings = app.__sanctuary?.settings.getState()
-      if (!debug || !settings) return { benchmark: false, variant: false }
+async function applyScenario(page: Page, scenario: BenchmarkScenario): Promise<void> {
+  const accepted = await page.evaluate((selected) => {
+    const app = window as GraphicsDebugWindow
+    const debug = app.__turtlebackDebug
+    const settings = app.__sanctuary?.settings.getState()
+    if (!debug || !settings) return false
 
-      const variantAccepted = debug.setBenchmarkVariant(selectedVariant)
-      settings.set('graphics', { quality: selected.quality })
-      settings.set('time', { auto: false, manual: selected.time })
-      settings.set('weather', { mode: selected.weather, rainIntensity: 1 })
-      return {
-        benchmark: debug.benchmark(selected.view),
-        variant: variantAccepted,
-      }
-    },
-    { selected: scenario, selectedVariant: variant },
-  )
-  expect(accepted).toEqual({ benchmark: true, variant: true })
+    settings.set('graphics', { quality: selected.quality })
+    settings.set('time', { auto: false, manual: selected.time })
+    settings.set('weather', { mode: selected.weather, rainIntensity: 1 })
+    return debug.benchmark(selected.view)
+  }, scenario)
+  expect(accepted).toBe(true)
 
   await page.waitForFunction(
     (selected) => {
@@ -109,7 +94,7 @@ async function captureMatrix(page: Page, testInfo: TestInfo): Promise<void> {
   const entries = graphicsCapturePartition(requestedPartition as GraphicsCapturePartition)
   for (const entry of entries) {
     const errorCountBefore = pageErrors.length
-    await applyScenario(page, entry.scenario, 'default')
+    await applyScenario(page, entry.scenario)
     await page.screenshot({ path: testInfo.outputPath(entry.outputPath) })
     if (pageErrors.length > errorCountBefore) {
       throw new Error(`Page error during ${entry.scenario.id}: ${pageErrors[errorCountBefore]}`)
