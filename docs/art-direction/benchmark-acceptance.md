@@ -6,18 +6,23 @@ This scorecard converts the Slice 1 frames into in-engine acceptance. Style fram
 
 ## Canonical comparisons
 
-| Runtime view | Target frame | Current role |
-| --- | --- | --- |
-| `arrival-bridge` | `style-frames/arrival-overlook.jpg` | first-impression and navigation composition |
-| `forest-interior` | `style-frames/crownwood-interior.jpg` | forest density and depth |
-| `galecrest-turtle-reveal` | `style-frames/galecrest-turtle-reveal.jpg` | normal-play monumental turtle reveal |
-| `turtle-material-close` | `style-frames/turtle-material-close.jpg` | anatomy/material diagnostic only |
-| `turtle-eye-encounter` | `style-frames/turtle-material-close.jpg` | normal-player scale and eye encounter |
-| `turtle-distant-silhouette` | `style-frames/galecrest-turtle-reveal.jpg` | diagnostic complete-island silhouette |
+| Runtime view                | Target frame                                  | Current role                                    |
+| --------------------------- | --------------------------------------------- | ----------------------------------------------- |
+| `arrival-bridge`            | `style-frames/arrival-overlook.jpg`           | first-impression and navigation composition     |
+| `forest-interior`           | `style-frames/crownwood-interior.jpg`         | forest density and depth                        |
+| `galecrest-turtle-reveal`   | `style-frames/galecrest-turtle-reveal.jpg`    | normal-play monumental turtle reveal            |
+| `turtle-material-close`     | `style-frames/turtle-material-close.jpg`      | anatomy/material diagnostic only                |
+| `turtle-eye-encounter`      | `style-frames/turtle-material-close.jpg`      | normal-player scale and eye encounter           |
+| `turtle-distant-silhouette` | `style-frames/galecrest-turtle-reveal.jpg`    | diagnostic complete-island silhouette           |
+| `village-threshold`         | `style-frames/arrival-overlook.jpg`           | inhabited transition and route framing          |
+| `market-lane`               | `style-frames/environment-shape-language.jpg` | trade-story cluster and district identity       |
+| `garden-workyard`           | `style-frames/crownwood-interior.jpg`         | forest-to-village overlap and productive detail |
 
 Slice 3 replaced the frontal fixed portrait. Galecrest and the eye encounter use the normal player camera; only the distant silhouette and material close remain fixed diagnostics.
 
 Slice 4 turned `arrival-bridge` toward the village route and moved `forest-interior` onto Crownwood's west trail. Both remain normal-player teleport views; the deterministic High/Low and Reduced Motion evidence is in `runtime-evidence/slice-4/`.
+
+Slice 5 added normal-player threshold, market, and garden-workyard reviews. Its High/Low, night, and rain evidence is in `runtime-evidence/slice-5/`; probes require 21 anchors, 28 story clusters, 21 prop families, and all seven showcase districts.
 
 ## Hard failures
 
@@ -38,16 +43,16 @@ Any one of these rejects the capture:
 
 Score every category `0` (fails), `1` (partial), or `2` (matches target). A hero view needs at least 14/16 with no zero.
 
-| Category | 0 | 1 | 2 |
-| --- | --- | --- | --- |
-| Composition | no hierarchy | partial framing/anchor | clear foreground, anchor, horizon |
-| Silhouette | primitive/noisy | readable but generic | distinctive at thumbnail size |
-| Density | empty/random | several layers missing | authored clusters and full required layers |
-| Material cohesion | mismatched/plastic | coherent but flat | painterly, selective, material-readable |
-| Atmosphere | white/flat | depth present | directional color depth supports subject |
-| Scale | weak/ambiguous | some cues | repeated environmental cues make scale undeniable |
-| Navigation | obscured/unclear | route visible | route inviting and compositionally reinforced |
-| Living world | dead or distracting | limited/repetitive | calm layered motion/wildlife supports habitat |
+| Category          | 0                   | 1                      | 2                                                 |
+| ----------------- | ------------------- | ---------------------- | ------------------------------------------------- |
+| Composition       | no hierarchy        | partial framing/anchor | clear foreground, anchor, horizon                 |
+| Silhouette        | primitive/noisy     | readable but generic   | distinctive at thumbnail size                     |
+| Density           | empty/random        | several layers missing | authored clusters and full required layers        |
+| Material cohesion | mismatched/plastic  | coherent but flat      | painterly, selective, material-readable           |
+| Atmosphere        | white/flat          | depth present          | directional color depth supports subject          |
+| Scale             | weak/ambiguous      | some cues              | repeated environmental cues make scale undeniable |
+| Navigation        | obscured/unclear    | route visible          | route inviting and compositionally reinforced     |
+| Living world      | dead or distracting | limited/repetitive     | calm layered motion/wildlife supports habitat     |
 
 ## View-specific gates
 
@@ -68,6 +73,15 @@ Score every category `0` (fails), `1` (partial), or `2` (matches target). A hero
 - At least one plausible wildlife discovery can occur without being guaranteed in the exact screenshot.
 
 Slice 4 runtime probes additionally require `forestLod` 0/1/2 on High-or-Ultra/Medium/Low, all seven `forestLayers` above zero, retained-cell horizon trees, and zero fallback or page errors.
+
+### Village threshold and story districts
+
+- Every showcase district has three visible navigation anchors and at least three functional story clusters.
+- Market, garden, residential, arts, wellness, observatory, and plaza clusters imply different daily uses instead of repeating one decorative scatter.
+- Signs, carts, baskets, tools, drying lines, firewood, lanterns, shrines, path edging, and work surfaces share the painterly material language.
+- Contact patches, moss, rain chains, runoff landings, corner battens, eave blocks, window trim, and thresholds ground the architecture without photographic decals.
+- The shared masks keep paths, spawn, bridges, stairs, interactions, forest trunks, and legacy vegetation clear.
+- Low keeps the district anchors and story-cluster silhouettes; night and rain preserve route readability.
 
 ### Galecrest turtle reveal
 

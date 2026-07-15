@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Approved; Slice 2 rendering language implemented
+**Status:** Approved; Slices 2–5 implemented
 
 ## Decision
 

@@ -35,6 +35,10 @@ export type MatKey =
   | 'ceramicTerracotta'
   | 'leafGreen'
   | 'leafDeep'
+  | 'weatheringMoss'
+  | 'earthDark'
+  | 'rope'
+  | 'lanternGlass'
   | 'paint.coral'
   | 'paint.night'
   | 'water'
@@ -48,6 +52,8 @@ const PAINTERLY_MATERIAL_FAMILIES: Partial<Record<MatKey, PainterlySurfaceFamily
   stoneCounter: 'rock',
   leafGreen: 'foliage',
   leafDeep: 'foliage',
+  weatheringMoss: 'foliage',
+  earthDark: 'soilPath',
   'paint.coral': 'paintedWood',
   'paint.night': 'paintedWood',
 }
@@ -229,6 +235,44 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
   mk('leafGreen', new MeshStandardMaterial({ color: '#5f8a4e', roughness: 0.95 }))
   mk('leafDeep', new MeshStandardMaterial({ color: '#3f6b42', roughness: 0.95 }))
   mk(
+    'weatheringMoss',
+    new MeshStandardMaterial({
+      map: getTexture('grass'),
+      color: '#526d45',
+      roughness: 0.99,
+      ...detail('ground', 0.24),
+    }),
+  )
+  mk(
+    'earthDark',
+    new MeshStandardMaterial({
+      map: getTexture('shellRock'),
+      color: '#514536',
+      roughness: 1,
+      ...detail('ground', 0.3),
+    }),
+  )
+  mk(
+    'rope',
+    new MeshStandardMaterial({
+      map: getTexture('fabric'),
+      color: '#a6875f',
+      roughness: 1,
+      ...detail('fabric', 0.2),
+    }),
+  )
+  mk(
+    'lanternGlass',
+    new MeshStandardMaterial({
+      color: '#eac781',
+      emissive: new Color('#b86b2c'),
+      emissiveIntensity: 0.22,
+      roughness: 0.5,
+      transparent: true,
+      opacity: 0.82,
+    }),
+  )
+  mk(
     'paint.coral',
     new MeshStandardMaterial({
       map: getTexture('plaster'),
@@ -284,6 +328,9 @@ export function exteriorVillageMaterials(): Map<MatKey, MeshStandardMaterial> {
     'fabricTeal',
     'fabricRust',
     'ceramicTerracotta',
+    'weatheringMoss',
+    'earthDark',
+    'rope',
     'paint.coral',
     'paint.night',
   ])

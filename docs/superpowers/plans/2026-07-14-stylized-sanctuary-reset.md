@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–4 complete; Slice 5 not started
+**Status:** Slices 1–5 complete; Slice 6 not started
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -274,6 +274,8 @@ Runtime asset budget: 12 MiB.
 Suggested commit: `feat: build dense Crownwood arrival corridor`
 
 ### Slice 5 — Environmental object and village-life density
+
+**Implementation record:** completed on 2026-07-15. High/Low, night, and sunset-rain evidence is recorded in `docs/art-direction/runtime-evidence/slice-5/`.
 
 **Goal:** make inhabited spaces feel authored rather than merely populated.
 

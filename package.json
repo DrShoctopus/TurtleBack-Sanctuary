@@ -18,6 +18,7 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "capture:graphics": "playwright test -c playwright.visual.config.ts",
+    "capture:village-life": "playwright test -c playwright.village-life.config.ts",
     "benchmark:graphics": "tsx scripts/benchmark-graphics.ts",
     "validate:assets": "tsx scripts/validate-assets.ts",
     "validate:assets:rendering": "tsx scripts/validate-assets.ts --slice=rendering",

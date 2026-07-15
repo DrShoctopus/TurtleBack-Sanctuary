@@ -52,6 +52,10 @@ export interface WorldProbeSection {
   forestLod: 0 | 1 | 2
   forestDiscoveries: number
   forestLayers: Readonly<Record<string, number>>
+  villageAnchors: number
+  villageStoryClusters: number
+  villageDistricts: number
+  villagePropFamilies: number
 }
 
 export interface ProbeSectionMap {

@@ -24,6 +24,9 @@ import { ringChime } from '../activities/handlers'
 import { mulberry32 } from '../core/rng'
 import { buildTraversalArchitecture, type TraversalSurface } from './traversal'
 import { useQualityProfile } from '../core/useQualityProfile'
+import { registerProbeSection } from '../debug/probes'
+import { buildVillageStoryClusters } from './dressing/buildStoryClusters'
+import { VILLAGE_ANCHORS } from './dressing/layout'
 
 export function Village() {
   return (
@@ -102,7 +105,7 @@ function collectLampSpots(): Array<[number, number]> {
 }
 
 function OutdoorProps() {
-  const { merged, colliders, seats, surfaces } = useMemo(() => buildOutdoor(), [])
+  const { merged, colliders, seats, surfaces, storyStats } = useMemo(() => buildOutdoor(), [])
   const mats = exteriorVillageMaterials()
 
   // outdoor seat interactions
@@ -135,11 +138,19 @@ function OutdoorProps() {
       }),
     )
     for (const surface of surfaces) unsubs.push(registerSurfaceBox(surface))
+    unsubs.push(
+      registerProbeSection('world', 'village-dressing', () => ({
+        villageAnchors: VILLAGE_ANCHORS.length,
+        villageStoryClusters: storyStats.clusters,
+        villageDistricts: storyStats.districts,
+        villagePropFamilies: storyStats.propFamilies,
+      })),
+    )
     return () => unsubs.forEach((fn) => fn())
-  }, [seats, surfaces])
+  }, [seats, storyStats, surfaces])
 
   return (
-    <group>
+    <group name="village:outdoor-props">
       <RigidBody type="fixed" colliders={false}>
         {colliders.map((c, i) => (
           <CuboidCollider
@@ -270,13 +281,14 @@ function buildOutdoor() {
   }
 
   buildDistrictDressing(plan, H, seats)
+  const storyStats = buildVillageStoryClusters(plan, H)
 
   // --- lamp posts along all paths ---
   for (const [lx, lz] of collectLampSpots()) {
     p.lampPostBase(plan, lx, lz, H(lx, lz))
   }
 
-  return { merged: plan.merge(), colliders: plan.colliders, seats, surfaces }
+  return { merged: plan.merge(), colliders: plan.colliders, seats, surfaces, storyStats }
 }
 
 function buildDistrictDressing(
@@ -299,8 +311,6 @@ function buildDistrictDressing(
 
   // Market Lane — two small covered counters establish a social silhouette
   // between the café and store without competing with their interiors.
-  p.marketCanopy(plan, 29, -31, 0.28, heightAt(29, -31), 'fabricRust')
-  p.marketCanopy(plan, 48, -8, -0.38, heightAt(48, -8), 'fabricTeal')
   p.planterBox(plan, 24, -27, 0.25, 1.5, heightAt(24, -27))
   p.planterBox(plan, 54, -3, -0.4, 1.45, heightAt(54, -3))
 

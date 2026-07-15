@@ -1,13 +1,10 @@
 import { BUILDINGS, EXTRA_PADS, WATER_FEATURES } from '../../config/layout'
 import { type QualityLevel } from '../../core/quality'
 import { mulberry32, type Rng } from '../../core/rng'
-import {
-  distanceToPath,
-  isInsideShell,
-  terrainHeight,
-} from '../../world/shell/shellShape'
+import { distanceToPath, isInsideShell, terrainHeight } from '../../world/shell/shellShape'
 import { cellId, worldToCell } from '../../world/spatial/cells'
 import { DEFAULT_SPATIAL_GRID, type CellKey } from '../../world/spatial/types'
+import { VILLAGE_PROP_EXCLUSION_ZONES } from '../dressing/layout'
 
 export const TREE_FORM_IDS = [
   'ancient-column',
@@ -23,13 +20,7 @@ export const TREE_FORM_IDS = [
 
 export type TreeFormId = (typeof TREE_FORM_IDS)[number]
 export type ForestLayer =
-  | 'trees'
-  | 'midstory'
-  | 'understory'
-  | 'groundCover'
-  | 'deadfall'
-  | 'boulders'
-  | 'mist'
+  'trees' | 'midstory' | 'understory' | 'groundCover' | 'deadfall' | 'boulders' | 'mist'
 
 export const FOREST_LAYERS: readonly ForestLayer[] = [
   'trees',
@@ -194,6 +185,11 @@ export function isForestPlacementAllowed(x: number, z: number, margin: number): 
   for (const feature of WATER_FEATURES) {
     if (Math.hypot(x - feature.x, z - feature.z) < feature.r + margin + 0.8) return false
   }
+  for (const zone of VILLAGE_PROP_EXCLUSION_ZONES) {
+    if (Math.hypot(x - zone.x, z - zone.z) < zone.radius + Math.max(0.65, margin * 0.4)) {
+      return false
+    }
+  }
   return true
 }
 
@@ -241,11 +237,7 @@ function scatterLayer(input: {
     const edgeTexture = 0.72 + Math.sin(x * 0.071 - z * 0.043) * 0.18
     if (input.rng() > influence * edgeTexture) continue
     if (!isForestPlacementAllowed(x, z, input.margin)) continue
-    if (
-      input.layer !== 'trees' &&
-      input.layer !== 'deadfall' &&
-      input.layer !== 'boulders'
-    ) {
+    if (input.layer !== 'trees' && input.layer !== 'deadfall' && input.layer !== 'boulders') {
       const edgeDistance = Math.max(0, distanceToPath(x, z) - input.margin)
       const pathEdgeBias = 0.28 + 0.72 * clamp01(1 - edgeDistance / 34)
       if (input.rng() > pathEdgeBias) continue
@@ -273,8 +265,7 @@ function buildArrivalSentinels(seed: number): readonly ForestTransform[] {
   return gates.flatMap((z, gateIndex) =>
     ([-1, 1] as const).map((side, sideIndex) => {
       const centreX = z > -142 ? -5.5 : 0
-      const x =
-        gateIndex === 3 && side < 0 ? -26 : centreX + side * (11.8 + gateIndex * 0.65)
+      const x = gateIndex === 3 && side < 0 ? -26 : centreX + side * (11.8 + gateIndex * 0.65)
       const transform = makeTransform(
         'trees',
         LAYER_TARGETS.trees + gateIndex * 2 + sideIndex,
@@ -448,8 +439,9 @@ function retainedHorizonTrees(
   }
   return [...perCell.values()].flatMap((cellTrees) => {
     const cap = Math.min(8, cellTrees.length)
-    return Array.from({ length: cap }, (_, index) =>
-      cellTrees[Math.floor((index * cellTrees.length) / cap)],
+    return Array.from(
+      { length: cap },
+      (_, index) => cellTrees[Math.floor((index * cellTrees.length) / cap)],
     )
   })
 }
@@ -477,7 +469,9 @@ export function selectCrownwoodLayout(
   const retained = new Set(retainedCells)
   const near = Object.fromEntries(
     FOREST_LAYERS.map((layer) => {
-      const activeTransforms = layout.layers[layer].filter((transform) => active.has(transform.cell))
+      const activeTransforms = layout.layers[layer].filter((transform) =>
+        active.has(transform.cell),
+      )
       return [layer, qualityFiltered(activeTransforms, QUALITY_KEEP[quality][layer])]
     }),
   ) as Record<ForestLayer, readonly ForestTransform[]>

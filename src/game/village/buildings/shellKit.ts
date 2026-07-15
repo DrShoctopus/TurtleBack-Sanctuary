@@ -1,6 +1,6 @@
 /** Exterior architecture: walls with openings, roofs, porches, window glazing. */
 import type { MatKey } from '../kit/materials'
-import { BuildPlan, wallWithOpenings, type Opening } from '../kit/geometry'
+import { BuildPlan, cylGeo, sphereGeo, wallWithOpenings, type Opening } from '../kit/geometry'
 
 export interface WindowSpec {
   /** wall index: 0 front (+z), 1 back (-z), 2 east (+x), 3 west (-x) */
@@ -118,6 +118,29 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     })
   }
 
+  // Corner battens turn the wall planes into a deliberate timber-and-plaster
+  // construction system. A restrained shady-side moss field grounds the shell
+  // without applying noisy decals to every facade.
+  for (const [x, z] of [
+    [-w / 2, -d / 2],
+    [w / 2, -d / 2],
+    [-w / 2, d / 2],
+    [w / 2, d / 2],
+  ] as const) {
+    plan.box(trim, {
+      pos: [x, plinthH + h / 2, z],
+      size: [0.13, h + 0.12, 0.13],
+    })
+  }
+  for (let index = 0; index < Math.max(3, Math.floor(w / 2.4)); index++) {
+    const x = -w * 0.4 + (index / Math.max(1, Math.floor(w / 2.4) - 1)) * w * 0.8
+    plan.add(sphereGeo(8), index % 2 === 0 ? 'weatheringMoss' : 'earthDark', {
+      pos: [x, plinthH + 0.04, -d / 2 - 0.125],
+      size: [0.72 + (index % 3) * 0.16, 0.1, 0.08],
+      rot: [0, 0, (index - 1) * 0.04],
+    })
+  }
+
   // window frames + glass + glow quads
   for (const wf of winFrames) {
     const f = wallFrame(spec, wf.wall)
@@ -197,6 +220,11 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
     plan.solid('concrete', {
       pos: [px - sin * stepOut, plinthH / 2 - 0.02, pz + cos * stepOut],
       size: [dw + 0.5, plinthH + 0.04, 1.0],
+      rot: [0, f.rotY, 0],
+    })
+    plan.box('stoneCounter', {
+      pos: [px - sin * 0.76, plinthH + 0.025, pz + cos * 0.76],
+      size: [dw + 0.24, 0.08, 0.38],
       rot: [0, f.rotY, 0],
     })
     door = {
@@ -292,6 +320,37 @@ export function buildShell(plan: BuildPlan, glow: BuildPlan, spec: ShellSpec): D
       size: [0.14, 0.14, d + 0.65],
     })
   }
+
+  if (roof !== 'glassGable') {
+    // Repeated eave blocks create a crafted roof cadence from walking distance.
+    const bracketCount = Math.max(4, Math.floor(w / 1.65))
+    for (const side of [-1, 1]) {
+      for (let index = 0; index <= bracketCount; index++) {
+        const x = -w / 2 + (index / bracketCount) * w
+        plan.box(trim, {
+          pos: [x, h + plinthH + 0.12, side * (d / 2 + 0.25)],
+          size: [0.12, 0.28, 0.42],
+          rot: [side * 0.16, 0, 0],
+        })
+      }
+    }
+  }
+
+  // A single rain chain and dark runoff landing tell the weathering story
+  // without turning every wall into a photoreal texture exercise.
+  const chainX = w / 2 + 0.24
+  const chainZ = -d / 2 - 0.24
+  for (let index = 0; index < 8; index++) {
+    plan.add(cylGeo(8), index % 2 === 0 ? 'metalDark' : 'metalBrushed', {
+      pos: [chainX, plinthH + 0.28 + index * 0.38, chainZ],
+      size: [0.07, 0.31, 0.07],
+      rot: [0, 0, (index % 2 === 0 ? 1 : -1) * 0.34],
+    })
+  }
+  plan.add(sphereGeo(8), 'earthDark', {
+    pos: [chainX, plinthH + 0.01, chainZ],
+    size: [0.72, 0.035, 0.58],
+  })
 
   // porch deck
   if (spec.porch && spec.door) {

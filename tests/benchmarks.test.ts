@@ -76,6 +76,8 @@ describe('visual benchmark registry', () => {
     expect(low.map((scenario) => scenario.view)).toEqual([
       'arrival-bridge',
       'garden-pond',
+      'village-threshold',
+      'market-lane',
       'east-edge',
       'galecrest-turtle-reveal',
       'forest-interior',
@@ -110,10 +112,12 @@ describe('visual benchmark registry', () => {
   it('runs every dry capture before rain so slow wetness cannot leak into clear evidence', () => {
     const firstRain = BENCHMARK_SCENARIOS.findIndex((scenario) => scenario.weather === 'rain')
     expect(firstRain).toBeGreaterThan(0)
-    expect(BENCHMARK_SCENARIOS.slice(0, firstRain).every((scenario) => scenario.weather === 'clear'))
-      .toBe(true)
-    expect(BENCHMARK_SCENARIOS.slice(firstRain).every((scenario) => scenario.weather === 'rain'))
-      .toBe(true)
+    expect(
+      BENCHMARK_SCENARIOS.slice(0, firstRain).every((scenario) => scenario.weather === 'clear'),
+    ).toBe(true)
+    expect(
+      BENCHMARK_SCENARIOS.slice(firstRain).every((scenario) => scenario.weather === 'rain'),
+    ).toBe(true)
   })
 
   it('derives unique quality/condition/view capture paths purely', () => {

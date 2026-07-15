@@ -678,3 +678,303 @@ export function outdoorSculpture(
   }
   p.collider({ pos: [x, y0 + 0.7, z], size: [1.6, 1.4, 1.6] })
 }
+
+// ---------------------------------------------------------------------------
+// Slice 5 village-life vocabulary
+// ---------------------------------------------------------------------------
+
+/** Soft irregular earth/moss shapes keep prop groups visually attached. */
+export function contactPatch(p: P, x: number, z: number, r: number, y0: number, scale = 1): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (const [index, values] of [
+    [0, 0, 1.65, 1.05],
+    [1, -0.62, 1.05, 0.72],
+    [2, 0.66, 0.88, 0.64],
+  ].entries()) {
+    const [, offset, width, depth] = values
+    const [px, pz] = at(offset * scale, (index - 1) * 0.13 * scale)
+    p.add(sphereGeo(10), index === 1 ? 'weatheringMoss' : 'earthDark', {
+      pos: [px, y0 + 0.015 + index * 0.002, pz],
+      size: [width * scale, 0.035, depth * scale],
+      rot: [0, r + index * 0.27, 0],
+    })
+  }
+}
+
+export function iconSignpost(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  accent: 'fabricTeal' | 'fabricRust' | 'fabricSand' | 'paint.coral' = 'fabricTeal',
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  contactPatch(p, x, z, r, y0, 0.85)
+  for (const side of [-0.62, 0.62]) {
+    const [px, pz] = at(side, 0)
+    p.box('woodDark', { pos: [px, y0 + 0.85, pz], size: [0.12, 1.7, 0.12], rot: [0, r, 0] })
+  }
+  p.box('woodWarm', { pos: [x, y0 + 1.45, z], size: [1.55, 0.78, 0.16], rot: [0, r, 0] })
+  const [panelX, panelZ] = at(0, 0.1)
+  p.box(accent, {
+    pos: [panelX, y0 + 1.49, panelZ],
+    size: [1.2, 0.48, 0.055],
+    rot: [0, r, 0],
+  })
+  const [leafX, leafZ] = at(0, 0.145)
+  p.add(sphereGeo(8), 'woodPale', {
+    pos: [leafX - Math.cos(r) * 0.14, y0 + 1.5, leafZ + Math.sin(r) * 0.14],
+    size: [0.18, 0.28, 0.035],
+    rot: [0, r, 0.45],
+  })
+  p.add(sphereGeo(8), 'woodPale', {
+    pos: [leafX + Math.cos(r) * 0.14, y0 + 1.5, leafZ - Math.sin(r) * 0.14],
+    size: [0.18, 0.28, 0.035],
+    rot: [0, r, -0.45],
+  })
+  p.collider({ pos: [x, y0 + 0.78, z], size: [1.5, 1.6, 0.24], rot: [0, r, 0] })
+}
+
+export function handcart(p: P, x: number, z: number, r: number, y0: number): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  contactPatch(p, x, z, r, y0, 1.05)
+  p.box('woodWarm', { pos: [x, y0 + 0.63, z], size: [1.85, 0.18, 1.05], rot: [0.02, r, 0] })
+  for (const side of [-0.86, 0.86]) {
+    const [px, pz] = at(side, 0)
+    p.box('woodDark', { pos: [px, y0 + 0.92, pz], size: [0.1, 0.65, 1.05], rot: [0, r, 0] })
+  }
+  for (const side of [-0.7, 0.7]) {
+    const [px, pz] = at(side, -0.5)
+    p.add(cylGeo(16), 'woodDark', {
+      pos: [px, y0 + 0.42, pz],
+      size: [0.65, 0.12, 0.65],
+      rot: [Math.PI / 2, r, 0],
+    })
+    p.add(cylGeo(16), 'metalDark', {
+      pos: [px, y0 + 0.42, pz],
+      size: [0.18, 0.15, 0.18],
+      rot: [Math.PI / 2, r, 0],
+    })
+  }
+  for (const side of [-0.55, 0.55]) {
+    const [px, pz] = at(side, 1.15)
+    p.box('woodDark', { pos: [px, y0 + 0.54, pz], size: [0.1, 0.1, 1.55], rot: [0, r, 0] })
+  }
+  p.collider({ pos: [x, y0 + 0.62, z], size: [2.05, 1.05, 1.25], rot: [0, r, 0] })
+}
+
+export function crateStack(p: P, x: number, z: number, r: number, y0: number, seed = 1): void {
+  const rng = mulberry32(seed)
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (let index = 0; index < 3; index++) {
+    const level = index === 2 ? 1 : 0
+    const dx = index === 0 ? -0.45 : index === 1 ? 0.45 : 0.05
+    const dz = level ? 0.02 : (rng() - 0.5) * 0.12
+    const [px, pz] = at(dx, dz)
+    const yaw = r + (rng() - 0.5) * 0.16
+    p.box(index === 2 ? 'woodPale' : 'woodWarm', {
+      pos: [px, y0 + 0.34 + level * 0.66, pz],
+      size: [0.78, 0.62, 0.68],
+      rot: [0, yaw, 0],
+    })
+    for (const h of [-0.18, 0.18]) {
+      p.box('woodDark', {
+        pos: [px, y0 + 0.34 + level * 0.66 + h, pz],
+        size: [0.84, 0.055, 0.73],
+        rot: [0, yaw, 0],
+      })
+    }
+  }
+}
+
+export function basketCluster(p: P, x: number, z: number, r: number, y0: number, seed = 1): void {
+  const rng = mulberry32(seed)
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (let index = 0; index < 4; index++) {
+    const [px, pz] = at((index - 1.5) * 0.36, (rng() - 0.5) * 0.45)
+    const radius = 0.28 + rng() * 0.1
+    const height = 0.26 + rng() * 0.22
+    p.add(cylGeo(12), index % 2 === 0 ? 'rope' : 'woodPale', {
+      pos: [px, y0 + height / 2, pz],
+      size: [radius * 2, height, radius * 2],
+    })
+    p.add(cylGeo(12), 'woodDark', {
+      pos: [px, y0 + height, pz],
+      size: [radius * 2.12, 0.045, radius * 2.12],
+    })
+  }
+}
+
+export function toolRack(p: P, x: number, z: number, r: number, y0: number): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (const side of [-0.85, 0.85]) {
+    const [px, pz] = at(side, 0)
+    p.box('woodDark', { pos: [px, y0 + 0.78, pz], size: [0.1, 1.56, 0.1], rot: [0, r, 0] })
+  }
+  p.box('woodWarm', { pos: [x, y0 + 1.16, z], size: [1.82, 0.12, 0.18], rot: [0, r, 0] })
+  for (let index = 0; index < 5; index++) {
+    const [px, pz] = at(-0.65 + index * 0.32, 0.08)
+    p.box('woodPale', {
+      pos: [px, y0 + 0.58, pz],
+      size: [0.055, 1.05 - (index % 2) * 0.16, 0.055],
+      rot: [0, r, (index - 2) * 0.025],
+    })
+    p.box(index % 2 === 0 ? 'metalDark' : 'metalBrushed', {
+      pos: [px, y0 + 0.12, pz],
+      size: [0.2 + (index % 2) * 0.12, 0.14, 0.08],
+      rot: [0, r, 0],
+    })
+  }
+  p.collider({ pos: [x, y0 + 0.7, z], size: [1.9, 1.45, 0.32], rot: [0, r, 0] })
+}
+
+export function dryingLine(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  palette: readonly ('fabricSand' | 'fabricTeal' | 'fabricRust')[] = [
+    'fabricSand',
+    'fabricTeal',
+    'fabricRust',
+  ],
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  contactPatch(p, x, z, r, y0, 1.25)
+  for (const side of [-1.65, 1.65]) {
+    const [px, pz] = at(side, 0)
+    p.box('woodDark', { pos: [px, y0 + 1.15, pz], size: [0.12, 2.3, 0.12], rot: [0, r, 0] })
+    p.add(cylGeo(10), 'concrete', { pos: [px, y0 + 0.08, pz], size: [0.34, 0.16, 0.34] })
+  }
+  p.box('rope', { pos: [x, y0 + 2.02, z], size: [3.35, 0.025, 0.025], rot: [0, r, 0.025] })
+  for (let index = 0; index < 5; index++) {
+    const [px, pz] = at(-1.25 + index * 0.62, 0.05)
+    const height = 0.55 + (index % 2) * 0.18
+    p.box(palette[index % palette.length], {
+      pos: [px, y0 + 1.73 - height / 2, pz],
+      size: [0.48, height, 0.035],
+      rot: [0, r, (index - 2) * 0.015],
+    })
+  }
+  for (const side of [-1, 1]) {
+    const [px, pz] = at(side * 1.65, 0)
+    p.collider({ pos: [px, y0 + 1.0, pz], size: [0.22, 2.0, 0.22] })
+  }
+}
+
+export function firewoodRack(p: P, x: number, z: number, r: number, y0: number, seed = 1): void {
+  const rng = mulberry32(seed)
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  contactPatch(p, x, z, r, y0, 1.05)
+  for (const side of [-1, 1]) {
+    const [px, pz] = at(side * 0.92, 0)
+    p.box('woodDark', { pos: [px, y0 + 0.7, pz], size: [0.1, 1.4, 0.72], rot: [0, r, 0] })
+  }
+  p.box('woodDeck', { pos: [x, y0 + 1.47, z], size: [2.15, 0.12, 1.0], rot: [-0.08, r, 0] })
+  for (let row = 0; row < 4; row++) {
+    for (let column = 0; column < 7 - (row % 2); column++) {
+      const [px, pz] = at(-0.7 + column * 0.23 + (row % 2) * 0.1, (rng() - 0.5) * 0.14)
+      p.add(cylGeo(8), row % 2 === 0 ? 'woodWarm' : 'woodPale', {
+        pos: [px, y0 + 0.17 + row * 0.24, pz],
+        size: [0.19, 0.68, 0.19],
+        rot: [Math.PI / 2, r, 0],
+      })
+    }
+  }
+  p.collider({ pos: [x, y0 + 0.72, z], size: [2.0, 1.45, 1.0], rot: [0, r, 0] })
+}
+
+export function workBench(p: P, x: number, z: number, r: number, y0: number): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  p.solid('woodWarm', { pos: [x, y0 + 0.78, z], size: [2.25, 0.14, 0.78], rot: [0, r, 0] })
+  for (const [dx, dz] of [
+    [-0.9, -0.25],
+    [0.9, -0.25],
+    [-0.9, 0.25],
+    [0.9, 0.25],
+  ] as const) {
+    const [px, pz] = at(dx, dz)
+    p.box('woodDark', { pos: [px, y0 + 0.38, pz], size: [0.1, 0.76, 0.1], rot: [0, r, 0] })
+  }
+  for (let index = 0; index < 5; index++) {
+    const [px, pz] = at(-0.78 + index * 0.39, 0)
+    p.add(cylGeo(10), index % 2 === 0 ? 'ceramicTerracotta' : 'ceramicWhite', {
+      pos: [px, y0 + 0.95, pz],
+      size: [0.28, 0.22 + (index % 3) * 0.08, 0.28],
+    })
+  }
+}
+
+export function shrineGarden(p: P, x: number, z: number, r: number, y0: number): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  contactPatch(p, x, z, r, y0, 1.15)
+  p.add(cylGeo(18), 'concrete', { pos: [x, y0 + 0.18, z], size: [1.65, 0.36, 1.65] })
+  p.add(cylGeo(18), 'stoneCounter', { pos: [x, y0 + 0.43, z], size: [1.2, 0.18, 1.2] })
+  p.box('woodDark', { pos: [x, y0 + 1.18, z], size: [0.5, 1.42, 0.44], rot: [0, r, 0] })
+  p.box('woodPale', { pos: [x, y0 + 1.92, z], size: [1.1, 0.16, 0.76], rot: [-0.08, r, 0] })
+  const [frontX, frontZ] = at(0, 0.42)
+  p.add(sphereGeo(10), 'lanternGlass', {
+    pos: [frontX, y0 + 1.25, frontZ],
+    size: [0.28, 0.42, 0.16],
+  })
+  for (const side of [-0.78, 0.78]) {
+    const [px, pz] = at(side, 0.42)
+    p.add(sphereGeo(8), side < 0 ? 'leafDeep' : 'weatheringMoss', {
+      pos: [px, y0 + 0.46, pz],
+      size: [0.65, 0.75, 0.65],
+    })
+  }
+  p.collider({ pos: [x, y0 + 0.72, z], size: [1.4, 1.45, 1.2], rot: [0, r, 0] })
+}
+
+export function lanternStand(p: P, x: number, z: number, r: number, y0: number, count = 3): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  for (let index = 0; index < count; index++) {
+    const [px, pz] = at((index - (count - 1) / 2) * 0.85, (index % 2) * 0.22)
+    const height = 1.15 + (index % 2) * 0.4
+    p.box('woodDark', {
+      pos: [px, y0 + height / 2, pz],
+      size: [0.09, height, 0.09],
+      rot: [0, r, 0],
+    })
+    p.box('metalDark', {
+      pos: [px, y0 + height + 0.02, pz],
+      size: [0.38, 0.08, 0.38],
+      rot: [0, r, 0],
+    })
+    p.box('lanternGlass', {
+      pos: [px, y0 + height - 0.18, pz],
+      size: [0.28, 0.42, 0.28],
+      rot: [0, r, 0],
+    })
+    p.box('metalDark', {
+      pos: [px, y0 + height - 0.39, pz],
+      size: [0.34, 0.06, 0.34],
+      rot: [0, r, 0],
+    })
+  }
+}
+
+export function stonePathEdge(
+  p: P,
+  x: number,
+  z: number,
+  r: number,
+  y0: number,
+  length = 3.6,
+): void {
+  const at = (dx: number, dz: number) => rot(x, z, r, dx, dz)
+  const count = Math.max(4, Math.round(length / 0.55))
+  for (const side of [-1, 1]) {
+    for (let index = 0; index <= count; index++) {
+      const [px, pz] = at(-length / 2 + (index / count) * length, side * 0.92)
+      p.add(sphereGeo(8), index % 3 === 0 ? 'weatheringMoss' : 'concrete', {
+        pos: [px, y0 + 0.09, pz],
+        size: [0.5 + (index % 2) * 0.12, 0.2, 0.42],
+        rot: [0, r + index * 0.33, 0],
+      })
+    }
+  }
+}

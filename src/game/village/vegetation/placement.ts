@@ -8,6 +8,7 @@ import {
 } from '../../world/shell/shellShape'
 import type { VegetationLayer, VegetationPopulation, VegetationTransform } from './types'
 import { crownwoodInfluence } from '../forest/layout'
+import { VILLAGE_PROP_EXCLUSION_ZONES } from '../dressing/layout'
 
 export const VEGETATION_PLACEMENT_MARGINS: Readonly<Record<VegetationLayer, number>> = {
   grass: 1.6,
@@ -36,6 +37,18 @@ export function isVegetationPlacementAllowed(x: number, z: number, margin: numbe
     if (dx * dx + dz * dz < (feature.r + 1.5) * (feature.r + 1.5)) return false
   }
   return true
+}
+
+function isClearOfVillageStoryCluster(
+  transform: VegetationTransform,
+  layer: VegetationLayer,
+): boolean {
+  const margin = VEGETATION_PLACEMENT_MARGINS[layer] * 0.25
+  return VILLAGE_PROP_EXCLUSION_ZONES.every((zone) => {
+    const dx = transform.x - zone.x
+    const dz = transform.z - zone.z
+    return dx * dx + dz * dz >= (zone.radius + margin) ** 2
+  })
 }
 
 function scatter(
@@ -222,8 +235,22 @@ export function buildCellVegetationPopulation(input: {
     // meadow trees only beyond that biome so toy-scale crowns do not leak into
     // the showcase corridor while other districts retain their sparse accents.
     layers: {
-      ...details.layers,
-      trees: canonicalTrees.filter((tree) => crownwoodInfluence(tree.x, tree.z) < 0.24),
+      grass: details.layers.grass.filter((transform) =>
+        isClearOfVillageStoryCluster(transform, 'grass'),
+      ),
+      flowers: details.layers.flowers.filter((transform) =>
+        isClearOfVillageStoryCluster(transform, 'flowers'),
+      ),
+      bushes: details.layers.bushes.filter((transform) =>
+        isClearOfVillageStoryCluster(transform, 'bushes'),
+      ),
+      rocks: details.layers.rocks.filter((transform) =>
+        isClearOfVillageStoryCluster(transform, 'rocks'),
+      ),
+      trees: canonicalTrees.filter(
+        (tree) =>
+          crownwoodInfluence(tree.x, tree.z) < 0.24 && isClearOfVillageStoryCluster(tree, 'trees'),
+      ),
     },
   }
 }

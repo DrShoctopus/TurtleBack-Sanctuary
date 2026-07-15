@@ -79,6 +79,14 @@ const medium = MEDIUM_CONDITIONS.flatMap((condition) =>
 const low = [
   scenario('arrival-bridge', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('garden-pond', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
+  scenario('village-threshold', 'low', { timeName: 'noon', weather: 'clear' }, [
+    'smoke',
+    'village',
+  ]),
+  scenario('market-lane', 'low', { timeName: 'noon', weather: 'clear' }, [
+    'village',
+    'story-clusters',
+  ]),
   scenario('east-edge', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('galecrest-turtle-reveal', 'low', { timeName: 'noon', weather: 'clear' }, ['smoke']),
   scenario('forest-interior', 'low', { timeName: 'noon', weather: 'clear' }, [
