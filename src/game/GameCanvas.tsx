@@ -11,6 +11,7 @@ import { QUALITY_PROFILES, resolveCanvasDpr } from './core/quality'
 import { useSettings } from './state/settingsStore'
 import { Bloom, EffectComposer } from '@react-three/postprocessing'
 import { configureRendererColor } from './rendering/colorContract'
+import { PainterlyColorGrade } from './rendering/PainterlyColorGrade'
 import { useDevicePixelRatio } from './core/devicePixelRatio'
 import { AssetProvider } from './assets/AssetProvider'
 
@@ -69,16 +70,23 @@ export function GameCanvas() {
 
 function SanctuaryPostProcessing({ bloomAllowed }: { bloomAllowed: boolean }) {
   const enabled = useSettings((s) => s.graphics.bloom)
-  if (!enabled || !bloomAllowed) return null
+  if (!enabled || !bloomAllowed) {
+    return (
+      <EffectComposer multisampling={0} enableNormalPass={false}>
+        <PainterlyColorGrade />
+      </EffectComposer>
+    )
+  }
   return (
     <EffectComposer multisampling={0} enableNormalPass={false}>
       <Bloom
         mipmapBlur
-        intensity={0.22}
-        luminanceThreshold={0.88}
-        luminanceSmoothing={0.28}
-        radius={0.5}
+        intensity={0.18}
+        luminanceThreshold={0.9}
+        luminanceSmoothing={0.24}
+        radius={0.46}
       />
+      <PainterlyColorGrade />
     </EffectComposer>
   )
 }

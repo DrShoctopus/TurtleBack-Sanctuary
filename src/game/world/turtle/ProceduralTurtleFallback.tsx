@@ -12,6 +12,7 @@ import {
 import { getSurfaceDetail, getTexture } from '../textures'
 import { runtime } from '../../core/runtime'
 import { ComfortMotionClock } from '../../core/comfortMotion'
+import { createPainterlyMaterial } from '../../rendering/painterlyMaterials'
 
 /**
  * The colossal turtle herself. The walkable shell remains a stable physics
@@ -299,7 +300,7 @@ function buildMaterials() {
   const skinTexture = getTexture('turtleSkin')
   const skinDetail = getSurfaceDetail('turtleSkin')
   const shellTexture = getTexture('shellRock')
-  const skin = new MeshStandardMaterial({
+  const skin = createPainterlyMaterial('turtleSkin', {
     color: '#d9ded0',
     roughness: 0.84,
     metalness: 0,
@@ -310,7 +311,7 @@ function buildMaterials() {
     roughnessMap: skinDetail.roughnessMap,
     normalScale: new Vector2(0.32, 0.32),
   })
-  const hide = new MeshStandardMaterial({
+  const hide = createPainterlyMaterial('rock', {
     color: '#4a5346',
     roughness: 0.92,
     metalness: 0,

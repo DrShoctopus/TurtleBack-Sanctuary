@@ -2,10 +2,14 @@ import { useEffect, useMemo, useRef } from 'react'
 import { useFrame, useThree } from '@react-three/fiber'
 import { Color, DirectionalLight, FogExp2, HemisphereLight, Object3D, Vector3 } from 'three'
 import { runtime } from '../../core/runtime'
-import { FOG_COLOR, SUN_COLOR, hemiIntensityAt, sampleColor, sunIntensityAt } from './palette'
-import { lerp } from '../../core/mathUtils'
+import { SUN_COLOR, hemiIntensityAt, sampleColor, sunIntensityAt } from './palette'
 import { useQualityProfile } from '../../core/useQualityProfile'
 import { resolveShadowMapSize } from '../../core/quality'
+import {
+  createPainterlyEnvironmentSample,
+  samplePainterlyEnvironment,
+} from '../../rendering/painterlyPalette'
+import { updatePainterlyMaterialEnvironment } from '../../rendering/painterlyMaterials'
 
 /**
  * Sun + moon + hemisphere lighting and scene fog, all driven per-frame from
@@ -25,7 +29,7 @@ export function TimeLighting() {
   const moonTarget = useMemo(() => new Object3D(), [])
   const scene = useThree((s) => s.scene)
   const fog = useMemo(() => new FogExp2('#cfe3ea', 0.0016), [])
-  const fogColor = useMemo(() => new Color(), [])
+  const atmosphere = useMemo(() => createPainterlyEnvironmentSample(), [])
   const tmp = useMemo(() => new Vector3(), [])
 
   useEffect(() => {
@@ -54,6 +58,9 @@ export function TimeLighting() {
     const moon = moonRef.current
     const hemi = hemiRef.current
     const p = runtime.player.pos
+    const rain = runtime.weather.rain
+    samplePainterlyEnvironment(atmosphere, c.t, rain, c.sunDir)
+    updatePainterlyMaterialEnvironment(atmosphere)
 
     if (sun) {
       // Snap the shadow anchor to a coarse grid so the shadow map doesn't swim.
@@ -64,7 +71,7 @@ export function TimeLighting() {
       tmp.set(c.sunDir[0], Math.max(0.03, c.sunDir[1]), c.sunDir[2]).multiplyScalar(190)
       sun.position.set(ax + tmp.x, tmp.y, az + tmp.z)
       sampleColor(sun.color, SUN_COLOR, c.t)
-      sun.intensity = sunIntensityAt(c.t) * (1 - runtime.weather.rain * 0.62)
+      sun.intensity = sunIntensityAt(c.t) * (1 - rain * 0.62)
       sun.castShadow = q.shadowsEnabled && sun.intensity > 0.05
       const cam = sun.shadow.camera
       const ext = q.shadowDistance
@@ -93,36 +100,27 @@ export function TimeLighting() {
         Math.max(8, c.moonDir[1] * 180),
         p.z + c.moonDir[2] * 180,
       )
-      moon.intensity = 0.32 * c.moonPhaseVisible * c.nightFactor * (1 - runtime.weather.rain * 0.5)
+      moon.intensity = 0.3 * c.moonPhaseVisible * c.nightFactor * (1 - rain * 0.5)
     }
 
     if (hemi) {
-      hemi.intensity = hemiIntensityAt(c.t) * (1 - runtime.weather.rain * 0.25)
-      sampleColor(hemi.color, FOG_COLOR, c.t)
-      hemi.color.lerp(SKY_TINT, 0.35)
-      hemi.groundColor.setRGB(0.16, 0.14, 0.12)
+      hemi.intensity = hemiIntensityAt(c.t) * (1 - rain * 0.25)
+      hemi.color.copy(atmosphere.skyFill)
+      hemi.groundColor.copy(atmosphere.groundFill)
     }
 
-    // fog: denser at night and in rain, tinted by the cycle
-    sampleColor(fogColor, FOG_COLOR, c.t)
-    const rain = runtime.weather.rain
-    fogColor.lerp(RAIN_FOG, rain * 0.6)
-    fog.color.copy(fogColor)
-    const base = lerp(0.0015, 0.0026, c.nightFactor)
-    fog.density = base + rain * 0.0022
-    if (scene.background instanceof Color) scene.background.copy(fogColor)
+    fog.color.copy(atmosphere.fogMid)
+    fog.density = atmosphere.fogDensity
+    if (scene.background instanceof Color) scene.background.copy(atmosphere.fogFar)
   })
 
   return (
     <>
       <directionalLight ref={sunRef} castShadow intensity={3} />
-      <directionalLight ref={moonRef} intensity={0} color="#a9c3e8" />
+      <directionalLight ref={moonRef} intensity={0} color="#8ea7b3" />
       <hemisphereLight ref={hemiRef} intensity={0.8} />
       {/* faint constant fill so nothing ever reads as pure black */}
-      <ambientLight intensity={0.055} color="#8fa8c0" />
+      <ambientLight intensity={0.06} color="#77939d" />
     </>
   )
 }
-
-const SKY_TINT = new Color('#bcd6e4')
-const RAIN_FOG = new Color('#8fa1ad')

@@ -6,6 +6,11 @@
 import { Color, DoubleSide, MeshStandardMaterial, Vector2 } from 'three'
 import { getSurfaceDetail, getTexture, type SurfaceDetailName } from '../../world/textures'
 import { registerWetMaterial } from '../../weather/simpleWet'
+import {
+  applyPainterlySurface,
+  painterlyFamilyOf,
+  type PainterlySurfaceFamily,
+} from '../../rendering/painterlyMaterials'
 
 export type MatKey =
   | 'plasterWarm'
@@ -34,6 +39,19 @@ export type MatKey =
   | 'paint.night'
   | 'water'
 
+const PAINTERLY_MATERIAL_FAMILIES: Partial<Record<MatKey, PainterlySurfaceFamily>> = {
+  woodWarm: 'paintedWood',
+  woodDeck: 'paintedWood',
+  woodDark: 'paintedWood',
+  woodPale: 'paintedWood',
+  concrete: 'rock',
+  stoneCounter: 'rock',
+  leafGreen: 'foliage',
+  leafDeep: 'foliage',
+  'paint.coral': 'paintedWood',
+  'paint.night': 'paintedWood',
+}
+
 let cache: Map<MatKey, MeshStandardMaterial> | null = null
 let exteriorCache: Map<MatKey, MeshStandardMaterial> | null = null
 
@@ -41,6 +59,8 @@ export function villageMaterials(): Map<MatKey, MeshStandardMaterial> {
   if (cache) return cache
   const m = new Map<MatKey, MeshStandardMaterial>()
   const mk = (key: MatKey, mat: MeshStandardMaterial) => {
+    const family = PAINTERLY_MATERIAL_FAMILIES[key]
+    if (family) applyPainterlySurface(mat, family)
     mat.name = key
     m.set(key, mat)
   }
@@ -270,6 +290,8 @@ export function exteriorVillageMaterials(): Map<MatKey, MeshStandardMaterial> {
   exteriorCache = new Map()
   for (const [key, source] of villageMaterials()) {
     const material = source.clone()
+    const family = painterlyFamilyOf(source)
+    if (family) applyPainterlySurface(material, family)
     material.name = `${key}.exterior`
     exteriorCache.set(key, material)
     if (!wettable.has(key)) continue

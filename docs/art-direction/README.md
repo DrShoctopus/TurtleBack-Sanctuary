@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Candidate direction complete; owner approval is the gate before Slice 2
+**Status:** Approved; Slice 2 rendering language implemented
 
 ## Decision
 
@@ -93,6 +93,6 @@ The target is achievable through a small authored kit, instanced/clustered place
 - [x] The turtle rejects the current cute frontal treatment.
 - [x] The forest shows the required density layers.
 - [x] The direction has an explicit WebGL2 translation.
-- [ ] Owner approves this visual direction for Slice 2 implementation.
+- [x] Owner approved this visual direction for Slice 2 implementation on 2026-07-14.
 
 Generation provenance and prompt records are in [generation-record.md](generation-record.md).

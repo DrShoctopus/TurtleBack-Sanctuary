@@ -19,6 +19,7 @@ import { mergeGeometries } from './kit/merge'
 import { buildCellVegetationPopulation } from './vegetation/placement'
 import { partitionVegetationByCell } from './vegetation/partition'
 import { VegetationCell, type VegetationRenderResources } from './vegetation/VegetationCell'
+import { createPainterlyMaterial } from '../rendering/painterlyMaterials'
 
 interface MutableUniform {
   value: number
@@ -35,6 +36,7 @@ export class VegetationResourceOwner {
 
   constructor() {
     const grassGeometry = makeGrassTuft()
+    addWindWeightAttribute(grassGeometry)
     const grassPosition = grassGeometry.getAttribute('position')
     const grassColors = new Float32Array(grassPosition.count * 3)
     for (let index = 0; index < grassPosition.count; index++) {
@@ -47,7 +49,7 @@ export class VegetationResourceOwner {
     grassGeometry.setAttribute('color', new BufferAttribute(grassColors, 3))
 
     const grassMaterial = this.makeSwayMaterial(
-      new MeshStandardMaterial({
+      createPainterlyMaterial('foliage', {
         color: '#ffffff',
         side: DoubleSide,
         roughness: 1,
@@ -56,8 +58,9 @@ export class VegetationResourceOwner {
       0.05,
     )
     const flowerGeometry = makeFlowerSprig()
+    addWindWeightAttribute(flowerGeometry)
     const flowerMaterial = this.makeSwayMaterial(
-      new MeshStandardMaterial({
+      createPainterlyMaterial('foliage', {
         color: '#ffffff',
         side: DoubleSide,
         roughness: 0.9,
@@ -66,26 +69,46 @@ export class VegetationResourceOwner {
       0.09,
     )
     const bushGeometry = makeBushCluster()
-    const bushMaterial = new MeshStandardMaterial({ color: '#ffffff', roughness: 1 })
+    addWindWeightAttribute(bushGeometry)
+    const bushMaterial = this.makeSwayMaterial(
+      createPainterlyMaterial('foliage', { color: '#ffffff', roughness: 1 }),
+      0.055,
+    )
     const rockGeometry = new IcosahedronGeometry(0.5, 0)
-    const rockMaterial = new MeshStandardMaterial({
+    const rockMaterial = createPainterlyMaterial('rock', {
       color: '#ffffff',
       roughness: 0.95,
       flatShading: true,
     })
 
     const treeGeometry = makeTreeGeometry()
-    const treeTrunkMaterial = new MeshStandardMaterial({ color: '#6a4e38', roughness: 0.95 })
+    treeGeometry.canopies.forEach(addWindWeightAttribute)
+    const treeTrunkMaterial = createPainterlyMaterial('bark', {
+      color: '#6c4b35',
+      roughness: 0.95,
+    })
     const treeCanopyMaterials = [
-      new MeshStandardMaterial({ color: '#567d42', roughness: 0.96 }),
-      new MeshStandardMaterial({ color: '#3f6949', roughness: 0.98 }),
-      new MeshStandardMaterial({ color: '#628e59', roughness: 0.96 }),
+      this.makeSwayMaterial(
+        createPainterlyMaterial('foliage', { color: '#496247', roughness: 0.96 }),
+        0.085,
+      ),
+      this.makeSwayMaterial(
+        createPainterlyMaterial('foliage', { color: '#30483a', roughness: 0.98 }),
+        0.075,
+      ),
+      this.makeSwayMaterial(
+        createPainterlyMaterial('foliage', { color: '#6b8056', roughness: 0.96 }),
+        0.09,
+      ),
     ] as const
 
     const horizonGeometry = new IcosahedronGeometry(0.85, 0)
     horizonGeometry.scale(1, 0.74, 1)
     horizonGeometry.translate(0, 2.15, 0)
-    const horizonMaterial = new MeshStandardMaterial({ color: '#ffffff', roughness: 1 })
+    const horizonMaterial = createPainterlyMaterial('foliage', {
+      color: '#ffffff',
+      roughness: 1,
+    })
 
     this.resources = {
       grass: {
@@ -178,7 +201,10 @@ export class VegetationResourceOwner {
 
   private makeSwayMaterial(material: MeshStandardMaterial, strength: number): MeshStandardMaterial {
     let compiledTimeUniform: MutableUniform | null = null
-    material.onBeforeCompile = (shader) => {
+    const previousCompile = material.onBeforeCompile
+    const previousProgramKey = material.customProgramCacheKey.bind(material)
+    material.onBeforeCompile = (shader, renderer) => {
+      previousCompile(shader, renderer)
       if (compiledTimeUniform) this.swayTimeUniforms.delete(compiledTimeUniform)
       compiledTimeUniform = { value: 0 }
       this.swayTimeUniforms.add(compiledTimeUniform)
@@ -188,6 +214,7 @@ export class VegetationResourceOwner {
         .replace(
           '#include <common>',
           `#include <common>
+          attribute float aWindWeight;
           uniform float uTime;
           uniform float uWind;`,
         )
@@ -200,15 +227,34 @@ export class VegetationResourceOwner {
             #else
               float ph = 0.0;
             #endif
-            float sway = sin(uTime * 1.4 + ph) * ${strength.toFixed(3)} * uWind * max(0.0, transformed.y);
+            float sway = sin(uTime * 1.4 + ph) * ${strength.toFixed(3)} * uWind * aWindWeight;
             transformed.x += sway;
             transformed.z += sway * 0.6;
           }`,
         )
     }
-    material.customProgramCacheKey = () => `turtleback-sway:${strength.toFixed(3)}`
+    material.customProgramCacheKey = () =>
+      `${previousProgramKey()}|turtleback-sway:${strength.toFixed(3)}`
     return material
   }
+}
+
+/** Encodes a stable base-to-tip response instead of inferring wind from scale at runtime. */
+function addWindWeightAttribute(geometry: BufferGeometry): void {
+  const position = geometry.getAttribute('position')
+  let minY = Number.POSITIVE_INFINITY
+  let maxY = Number.NEGATIVE_INFINITY
+  for (let index = 0; index < position.count; index++) {
+    minY = Math.min(minY, position.getY(index))
+    maxY = Math.max(maxY, position.getY(index))
+  }
+  const span = Math.max(0.001, maxY - minY)
+  const weights = new Float32Array(position.count)
+  for (let index = 0; index < position.count; index++) {
+    const normalized = (position.getY(index) - minY) / span
+    weights[index] = normalized * normalized
+  }
+  geometry.setAttribute('aWindWeight', new BufferAttribute(weights, 1))
 }
 
 export function Vegetation() {

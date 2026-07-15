@@ -13,6 +13,7 @@ import { getSurfaceDetail, getTexture } from '../textures'
 import { registerWeatherMaterial } from '../../weather/wetMaterials'
 import { ShellTransitionBand } from '../turtle/ShellTransitionBand'
 import { authoredTraversalCollisionViolations } from '../turtle/shellAlignment'
+import { applyPainterlySurface } from '../../rendering/painterlyMaterials'
 
 const STEP = 2.2
 const MARGIN = 1.12 // generate slightly past the rim so the skirt hides the underside
@@ -240,5 +241,5 @@ function buildMaterial() {
       )
     registerWeatherMaterial(shader.uniforms as { wetness: { value: number } })
   }
-  return mat
+  return applyPainterlySurface(mat, 'soilPath')
 }

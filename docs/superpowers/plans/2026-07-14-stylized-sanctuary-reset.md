@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slice 1 candidate direction complete; owner approval pending before Slice 2
+**Status:** Slices 1–2 complete; Slice 3 not started
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -169,7 +169,7 @@ Every slice ends with targeted tests, an in-engine review artifact, a size repor
 
 ### Slice 1 — Concept and style-frame gate
 
-**Implementation record:** completed on 2026-07-14 in `docs/art-direction/`; the owner approval checkbox remains open.
+**Implementation record:** completed on 2026-07-14 in `docs/art-direction/`; owner approved the direction on 2026-07-14.
 
 **Goal:** prove the new direction cheaply before building assets.
 
@@ -194,6 +194,8 @@ Expected runtime asset delta: 0 MiB.
 Suggested commit: `docs: lock painterly sanctuary art direction`
 
 ### Slice 2 — Stylized renderer and material proof
+
+**Implementation record:** completed on 2026-07-14. Runtime comparisons and the condition matrix are recorded in `docs/art-direction/runtime-evidence/slice-2/`.
 
 **Goal:** reproduce the approved style frame with a tiny reusable runtime kit.
 

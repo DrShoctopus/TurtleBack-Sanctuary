@@ -2,7 +2,7 @@
 
 **Direction:** painterly monumental naturalism
 
-**Status:** Slice 1 candidate direction, ready for owner review
+**Status:** Approved direction; Slice 2 rendering language implemented
 
 This is the rendering and asset contract for every environment, creature, architecture, and effects pass. Turtleback must feel warm, ancient, richly inhabited, and breathtaking without chasing photorealism or collapsing into simple low-poly shorthand.
 
