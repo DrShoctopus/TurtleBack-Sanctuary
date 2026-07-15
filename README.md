@@ -144,7 +144,7 @@ Look sensitivity, stick deadzone, invert-Y, and (where supported) subtle vibrati
 - A living, animated **giant turtle** — head, neck, blinking eyes, stroking flippers, foam and wake — with an endless-travel illusion that never moves the physics world.
 - **Ten+ enterable buildings**, each with a distinct exterior, interior, furniture, lighting, and at least one calming interaction, plus a fully designed **player home**.
 - Continuous **day/night cycle** (24-minute default) and **clear ↔ gentle rain** weather, both fully player-controllable with smooth 6–10 s crossfades.
-- An **original, seeded generative lo-fi soundtrack** (dawn / day / rain / night) plus a layered ambient soundscape with indoor/outdoor audio zones — all synthesized with the Web Audio API.
+- An **original, seeded adaptive lo-fi soundtrack** with seven long-form musical sections, four instrumentation palettes, biome/turtle accents, and dawn / day / rain / night colour — plus a layered ambient soundscape with indoor/outdoor audio zones, all synthesized with the Web Audio API.
 - A home **television** that plays YouTube videos through the official embed, a **music player** (built-in tracks, your local files, direct radio URLs), a private **journal**, and more.
 - Eight seeded, pooled **distant landmarks** (moon gates, a striding lighthouse, jellyfish processions, a floating station, a whale constellation, mirror cities…) that drift past on the horizon.
 - Deep **accessibility & comfort** options: reduced motion, head-bob / sway toggles, FOV, UI scale, high-contrast prompts, subtitles, separate volume buses, and more.

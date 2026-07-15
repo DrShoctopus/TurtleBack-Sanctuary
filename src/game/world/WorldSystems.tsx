@@ -34,6 +34,7 @@ import {
   PIPELINE_SMOKE_IDS,
 } from '../assets/AssetProvider'
 import { readActiveAssetDiagnostics } from '../assets/diagnostics'
+import { audio } from '../audio/AudioManager'
 
 export interface TurtlebackDebug {
   teleport: (x: number, z: number, yaw?: number, pitch?: number) => void
@@ -172,6 +173,21 @@ export function WorldSystems() {
         resonanceStrength: runtime.turtle.resonanceStrength,
         activeEvent: runtime.turtle.activeEvent?.kind ?? null,
       }))
+      const unregisterMusic = registerProbeSection('audio', 'music', () => {
+        const music = audio.music?.snapshot()
+        if (!music) return {}
+        return {
+          musicForm: music.form,
+          musicPalette: music.palette,
+          musicLead: music.lead,
+          musicSectionIndex: music.sectionIndex,
+          musicGlobalBar: music.globalBar,
+          musicScheduledEvents: music.scheduledEvents,
+          musicSchedulerTimers: music.schedulerTimers,
+          musicBiome: music.biome,
+          musicTurtleEvent: music.turtleEvent,
+        }
+      })
       const teleport = (x: number, z: number, yaw = 0, pitch = 0) => {
         fixedCamera.current = null
         events.emit('teleport', {
@@ -254,6 +270,7 @@ export function WorldSystems() {
       }
       window.addEventListener('keydown', onBenchmarkKey)
       return () => {
+        unregisterMusic()
         unregisterTurtle()
         unregisterVegetation()
         unregisterSpatial()

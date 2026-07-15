@@ -56,6 +56,15 @@ export interface AudioProbeSection {
   wildlifeOwnedCalls?: number
   wildlifeOrphanCalls?: number
   wildlifeEmitterCount?: number
+  musicForm?: 'intro' | 'a' | 'b' | 'breakdown' | 'ambient-bridge' | 'reprise' | 'outro-rest'
+  musicPalette?: 'harbor-tape' | 'woodland-felt' | 'shell-guitar' | 'moon-glass'
+  musicLead?: 'air-flute' | 'soft-mallets' | 'nylon-guitar' | 'felt-piano'
+  musicSectionIndex?: number
+  musicGlobalBar?: number
+  musicScheduledEvents?: number
+  musicSchedulerTimers?: number
+  musicBiome?: 'forest' | 'village' | 'edge'
+  musicTurtleEvent?: boolean
 }
 
 export interface AtmosphereProbeSection {

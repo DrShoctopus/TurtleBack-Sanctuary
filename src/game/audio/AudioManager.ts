@@ -3,8 +3,11 @@ import { useSettings } from '../state/settingsStore'
 import { runtime } from '../core/runtime'
 import { MusicEngine } from './proceduralMusic/MusicEngine'
 import type { MusicMood } from './proceduralMusic/moods'
+import type { MusicBiome } from './proceduralMusic/MusicalEventPlan'
 import { AmbienceEngine } from './ambience/AmbienceEngine'
 import { SfxEngine } from './SfxEngine'
+import { crownwoodInfluence } from '../village/forest/layout'
+import { shellRadius } from '../world/shell/shellShape'
 
 export type BusName = 'master' | 'music' | 'ambient' | 'sfx' | 'media'
 
@@ -86,6 +89,13 @@ class AudioManager {
     return 'day'
   }
 
+  private musicBiomeFromWorld(): MusicBiome {
+    const { x, z } = runtime.player.pos
+    if (crownwoodInfluence(x, z) > 0.55) return 'forest'
+    if (shellRadius(x, z) > 0.78) return 'edge'
+    return 'village'
+  }
+
   /** Called from the world loop each frame (throttled internally). */
   private ambienceAcc = 0
   update(dt: number): void {
@@ -99,6 +109,10 @@ class AudioManager {
         const enabled = this.musicEnabled && !useSettings.getState().audio.muteAll
         bus.gain.setTargetAtTime(enabled ? volumeToGain(useSettings.getState().audio.music) : 0, this.now, 0.3)
         this.music.setMood(this.moodFromWorld())
+        this.music.setWorldContext({
+          biome: this.musicBiomeFromWorld(),
+          turtleEvent: runtime.turtle.activeEvent !== null,
+        })
       }
     }
   }

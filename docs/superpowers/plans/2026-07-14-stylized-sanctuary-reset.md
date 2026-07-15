@@ -2,7 +2,7 @@
 
 **Date:** 2026-07-14
 
-**Status:** Slices 1–6 complete; Slice 7 not started
+**Status:** Slices 1–7 complete; Slice 8 next
 
 **Supersedes:** the near-photorealistic direction in the 2026-07-13 overhaul spec and master rollout
 
@@ -350,6 +350,8 @@ Acceptance:
 Runtime asset budget: 6 MiB for this slice; a second 6 MiB audio slice requires a separate approval and commit plus equivalent savings elsewhere or an explicit total-budget revision.
 
 Suggested commit: `feat: expand the adaptive lofi score`
+
+**Implemented 2026-07-15:** a pure seeded 120-minute event plan now drives seven forms, four complete instrumentation palettes, sixteen motif/progression seeds, register/voicing/rhythm/density/microtiming variation, and 100 deliberate breathing spaces. The live Web Audio renderer follows one continuous global bar clock across dawn/day/rain/night crossfades, while forest/village/edge and turtle-event overlays colour sections without restarting them. The deterministic soak contains 350 unique section arrangements, two bounded scheduler timers, and no failure-silence sections; proof is recorded under `docs/audio/runtime-evidence/slice-7/`. Owner listening approval remains part of final release review.
 
 ### Slice 8 — Remaining biome expansion
 
